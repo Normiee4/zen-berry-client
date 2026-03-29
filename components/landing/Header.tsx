@@ -22,7 +22,7 @@ export function Header() {
           <div className="flex size-8 items-center justify-center rounded-full bg-matcha">
             <Leaf className="size-4 text-white" />
           </div>
-          <span className="text-lg font-semibold text-foreground">Zen Berry</span>
+          <span className="text-lg text-matcha font-semibold ">Zen Berry</span>
         </Link>
 
         {/* Desktop Navigation */}
