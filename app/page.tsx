@@ -1,25 +1,21 @@
+import { Header } from "@/components/landing/Header"
+import { Hero } from "@/components/landing/Hero"
+import { Features } from "@/components/landing/Features"
+import { HowItWorks } from "@/components/landing/How-it-works"
+import { CTA } from "@/components/landing/CTA"
+import { Footer } from "@/components/landing/Footer"
 
-
-export default function LandingPage() {
+export default function Home() {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-(--color-background)">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-(--color-accent-dark)">
-          Zen Berry 🍓
-        </h1>
-        <p className="mt-2 text-(--color-accent)">
-          Focus on what truly matters.
-        </p>
-
-        <div className="mt-6 flex gap-4 justify-center">
-          <a href="/login" className="px-4 py-2 bg-(--color-primary) rounded">
-            Login
-          </a>
-          <a href="/register" className="px-4 py-2 border rounded">
-            Get Started
-          </a>
-        </div>
-      </div>
-    </main>
-  );
+    <div className="min-h-screen">
+      <Header />
+      <main>
+        <Hero />
+        <Features />
+        <HowItWorks />
+        <CTA />
+      </main>
+      <Footer />
+    </div>
+  )
 }
