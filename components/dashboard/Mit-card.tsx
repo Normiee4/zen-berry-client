@@ -1,60 +1,80 @@
 "use client"
 
-import { CheckCircle2, Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useState } from "react"
+
+interface MIT {
+  id: number
+  title: string
+  completed: boolean
+}
 
 export function MITCard() {
-  const mits = [
-    { id: 1, title: "Complete project proposal", completed: false },
-    { id: 2, title: "Review team feedback", completed: true },
-    { id: 3, title: "Update documentation", completed: false },
-  ]
+  const [mits, setMits] = useState<MIT[]>([
+    { id: 1, title: "Finish project proposal", completed: false },
+    { id: 2, title: "Review design mockups", completed: false },
+    { id: 3, title: "", completed: false },
+  ])
+
+  const toggleMit = (id: number) => {
+    setMits(mits.map((mit) => 
+      mit.id === id ? { ...mit, completed: !mit.completed } : mit
+    ))
+  }
+
+  const updateMitTitle = (id: number, title: string) => {
+    setMits(mits.map((mit) => 
+      mit.id === id ? { ...mit, title } : mit
+    ))
+  }
 
   return (
-    <div className="flex h-full flex-col rounded-2xl border border-border bg-linear-to-br from-white/80 to-strawberry-light/30 p-6 backdrop-blur">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-foreground">Today&apos;s MITs</h3>
-        <span className="rounded-full bg-strawberry/20 px-3 py-1 text-xs font-medium text-foreground">
-          2 of 3
-        </span>
+    <div className="flex h-full flex-col rounded-3xl bg-strawberry-light/30 p-6">
+      {/* Header */}
+      <div className="mb-4 flex items-center gap-2">
+        <span className="text-base">&#x1F3AF;</span>
+        <h3 className="text-lg font-semibold text-foreground">Top 3 MIT</h3>
+        <span className="text-base">&#x1F331;</span>
       </div>
+      <p className="mb-4 text-sm text-muted-foreground">
+        Your most important tasks today — they stay until done!
+      </p>
 
+      {/* Tasks */}
       <div className="flex flex-1 flex-col gap-3">
-        {mits.map((mit) => (
+        {mits.map((mit, index) => (
           <div
             key={mit.id}
-            className="flex items-center gap-3 rounded-lg bg-white/50 p-3 hover:bg-white/70 transition-colors"
+            className="flex items-center gap-3 rounded-xl bg-white/70 p-4"
           >
+            <span className="flex size-6 items-center justify-center text-sm font-medium text-muted-foreground">
+              {index + 1}
+            </span>
             <button
-              className={`shrink-0 rounded-full ${
+              onClick={() => toggleMit(mit.id)}
+              className={`flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
                 mit.completed
-                  ? "bg-matcha text-white"
-                  : "border-2 border-matcha"
-              } w-5 h-5 flex items-center justify-center`}
-            >
-              {mit.completed && <CheckCircle2 className="size-4" />}
-            </button>
-            <span
-              className={`flex-1 text-sm ${
-                mit.completed
-                  ? "line-through text-muted-foreground"
-                  : "text-foreground"
+                  ? "border-matcha bg-matcha"
+                  : "border-muted-foreground/30 bg-white"
               }`}
             >
-              {mit.title}
-            </span>
+              {mit.completed && (
+                <svg className="size-3 text-white" viewBox="0 0 12 12" fill="none">
+                  <path d="M2.5 6L5 8.5L9.5 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+            </button>
+            <input
+              type="text"
+              value={mit.title}
+              onChange={(e) => updateMitTitle(mit.id, e.target.value)}
+              placeholder="Add a task..."
+              className={`flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/50 ${
+                mit.completed ? "text-muted-foreground line-through" : "text-foreground"
+              }`}
+            />
           </div>
         ))}
       </div>
-
-      <Button
-        variant="outline"
-        className="mt-4 w-full border-matcha text-matcha hover:bg-matcha/10"
-        size="sm"
-      >
-        <Plus className="mr-2 size-4" />
-        Add task
-      </Button>
     </div>
   )
 }

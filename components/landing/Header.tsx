@@ -41,10 +41,14 @@ export function Header() {
         {/* Desktop CTA */}
         <div className="hidden items-center gap-3 md:flex">
           <Button variant="ghost" className="text-foreground hover:bg-strawberry-light hover:text-foreground">
-            Log in
+            <Link href="/auth/login">
+              Log in
+            </Link>  
           </Button>
           <Button className="bg-matcha text-white hover:bg-matcha/90">
-            Get Started
+            <Link href='/auth/sign-up'>
+              Get Started
+            </Link> 
           </Button>
         </div>
 
@@ -73,11 +77,15 @@ export function Header() {
               </a>
             ))}
             <hr className="border-strawberry-light" />
-            <Button variant="ghost" className="w-full justify-start text-foreground">
-              Log in
+            <Button variant="ghost" className="text-foreground hover:bg-strawberry-light hover:text-foreground">
+              <Link href="/auth/login">
+                Log in
+              </Link>  
             </Button>
-            <Button className="w-full bg-matcha text-white hover:bg-matcha/90">
-              Get Started
+            <Button className="bg-matcha text-white hover:bg-matcha/90">
+              <Link href='/auth/sign-up'>
+                Get Started
+              </Link> 
             </Button>
           </nav>
         </div>

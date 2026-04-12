@@ -10,20 +10,16 @@ const footerLinks = {
   product: [
     { label: "Features", href: "#features" },
     { label: "Pricing", href: "#pricing" },
-    { label: "Roadmap", href: "#" },
-    { label: "Changelog", href: "#" },
   ],
   company: [
     { label: "About", href: "#" },
     { label: "Blog", href: "#" },
-    { label: "Careers", href: "#" },
     { label: "Contact", href: "#" },
   ],
   resources: [
     { label: "Help Center", href: "#" },
     { label: "Community", href: "#" },
     { label: "Guides", href: "#" },
-    { label: "API", href: "#" },
   ],
   legal: [
     { label: "Privacy", href: "#" },
@@ -33,7 +29,7 @@ const footerLinks = {
 }
 
 const socialLinks = [
-  { icon: Mail, href: "#", label: "Email"},
+  { icon: Mail, href: "#  ", label: "Email"},
   { icon: GitHubIcon, href: "https://github.com/Norman-Bautista?tab=repositories", label: "GitHub" },
   { icon: LinkedInIcon, href: "https://www.linkedin.com/in/norman-enricko-bautista-1769572a8/", label: "LinkedIn" },
 ]

@@ -1,5 +1,7 @@
 
 "use client"
+import { Metadata } from 'next';
+
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/query-client";
 import { Nunito_Sans } from "next/font/google"; 
@@ -9,14 +11,14 @@ import "./globals.css";
 const nunitoSans = Nunito_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  variable: "--font-nunito-sans", // optional CSS variable
+  variable: "--font-nunito-sans", 
   display: "swap",
 });
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={nunitoSans.className}>
-      <body>
+    <html lang="en">
+      <body className={nunitoSans.className}>
         <QueryClientProvider client={queryClient}>
           {children}
         </QueryClientProvider>
