@@ -2,7 +2,7 @@ export function BackgroundBlobs() {
   return (
     <>
       <svg
-        className="absolute -right-40 top-32 h-150 w-150 opacity-35"
+        className="absolute -right-40 top-32 h-[150px] w-[150px] opacity-35"
         viewBox="0 0 200 200"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -13,7 +13,7 @@ export function BackgroundBlobs() {
         />
       </svg>
       <svg
-        className="absolute -left-32 bottom-10 h-137.5 w-137.5 opacity-30"
+        className="absolute -left-32 bottom-10 h-[137.5px] w-[137.5px] opacity-30"
         viewBox="0 0 200 200"
         xmlns="http://www.w3.org/2000/svg"
       >

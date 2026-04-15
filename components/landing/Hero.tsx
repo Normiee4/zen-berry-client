@@ -1,9 +1,9 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { ArrowRight, Sparkles } from "lucide-react"
 import { MatchaCupIllustration } from "@/components/landing/illustrations/Matcha-cup"
 import { ProductivityDashboard } from "@/components/landing/illustrations/Productivity-dashboard"
+import { Button } from "@/components/ui/button"
+import { ArrowRight, Sparkles } from "lucide-react"
 
 export function Hero() {
   return (
@@ -12,7 +12,7 @@ export function Hero() {
       <div className="absolute inset-0 overflow-hidden">
         {/* Large matcha blob - top right */}
         <svg
-          className="absolute -right-32 -top-32 h-150 w-150 opacity-40"
+          className="absolute -right-32 -top-32 h-37.5 w-37.5 opacity-40"
           viewBox="0 0 200 200"
           xmlns="http://www.w3.org/2000/svg"
         >
@@ -25,7 +25,7 @@ export function Hero() {
         
         {/* Medium strawberry blob - bottom left */}
         <svg
-          className="absolute -bottom-20 -left-20 h-125w-125 opacity-50"
+          className="absolute -bottom-20 -left-20 h-31.25 w-31.25 opacity-50"
           viewBox="0 0 200 200"
           xmlns="http://www.w3.org/2000/svg"
         >
@@ -38,7 +38,7 @@ export function Hero() {
         
         {/* Small accent blob - center */}
         <svg
-          className="absolute left-1/3 top-1/4 h-75 w-75 opacity-30"
+          className="absolute left-1/3 top-1/4 h-18.75 w-18.75 opacity-30"
           viewBox="0 0 200 200"
           xmlns="http://www.w3.org/2000/svg"
         >

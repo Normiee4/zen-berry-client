@@ -1,18 +1,19 @@
 "use client"
 
-import { useState } from "react"
-import { Play, RotateCcw, Settings, X, Plus } from "lucide-react"
-import { RadialBarChart, RadialBar, PolarAngleAxis } from "recharts"
 import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useResponsive } from "@/hooks/useResponsive"
+import { Play, Plus, RotateCcw, Settings } from "lucide-react"
+import { useState } from "react"
+import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts"
 
 interface Preset {
   id: string
@@ -40,6 +41,13 @@ export function TimerCard() {
   const activePreset = presets.find((p) => p.id === activePresetId) || presets[0]
   const totalMinutes = mode === "focus" ? activePreset.focusMinutes : activePreset.breakMinutes
   const progress = 100
+
+  const { isMobile, isTablet } = useResponsive()
+  const chartSize = isMobile ? 180 : isTablet ? 210 : 240
+  const chartCenter = chartSize / 2
+  const chartInnerRadius = chartSize * 0.35
+  const chartOuterRadius = chartSize * 0.45
+  const chartBarSize = isMobile ? 12 : 16
 
   const chartData = [
     {
@@ -92,15 +100,15 @@ export function TimerCard() {
       </div>
 
       {/* Circular Timer */}
-      <div className="relative mx-auto mb-4 flex items-center justify-center">
+      <div className="relative mx-auto mb-4 flex w-full max-w-[260px] items-center justify-center">
         <RadialBarChart
-          width={220}
-          height={220}
-          cx={110}
-          cy={110}
-          innerRadius={85}
-          outerRadius={105}
-          barSize={16}
+          width={chartSize}
+          height={chartSize}
+          cx={chartCenter}
+          cy={chartCenter}
+          innerRadius={chartInnerRadius}
+          outerRadius={chartOuterRadius}
+          barSize={chartBarSize}
           data={chartData}
           startAngle={90}
           endAngle={-270}

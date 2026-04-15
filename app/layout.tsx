@@ -7,6 +7,7 @@ import { queryClient } from "@/lib/query-client";
 import { Nunito_Sans } from "next/font/google"; 
 import { cn } from "@/lib/utils";
 import "./globals.css";
+import { Toaster } from "@/components/ui/sonner";
 
 const nunitoSans = Nunito_Sans({
   subsets: ["latin"],
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={nunitoSans.className}>
         <QueryClientProvider client={queryClient}>
           {children}
+          <Toaster richColors position="top-right" /> 
         </QueryClientProvider>
       </body>
     </html>

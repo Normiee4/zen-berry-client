@@ -1,18 +1,21 @@
 "use client"
 
-import Link from 'next/link'
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Menu, X, Leaf } from "lucide-react"
+import { useResponsive } from "@/hooks/useResponsive"
+import { Leaf, Menu, X } from "lucide-react"
+import Link from "next/link"
+import { useState } from "react"
 
 const navLinks = [
   { href: "#features", label: "Features" },
   { href: "#how-it-works", label: "How It Works" },
-  { href: "#pricing", label: "Pricing" },
+  { href: "#about-zenberry", label: "About" },
 ]
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { isTabletOrUp } = useResponsive()
+  const showMobileMenu = isMenuOpen && !isTabletOrUp
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-strawberry-light/50 bg-cream/80 backdrop-blur-md">
@@ -46,7 +49,7 @@ export function Header() {
             </Link>  
           </Button>
           <Button className="bg-matcha text-white hover:bg-matcha/90">
-            <Link href='/auth/sign-up'>
+            <Link href='/auth/signup'>
               Get Started
             </Link> 
           </Button>
@@ -63,7 +66,7 @@ export function Header() {
       </div>
 
       {/* Mobile Menu */}
-      {isMenuOpen && (
+      {showMobileMenu && (
         <div className="border-t border-strawberry-light/50 bg-cream px-4 py-4 md:hidden">
           <nav className="flex flex-col gap-4">
             {navLinks.map((link) => (

@@ -1,9 +1,10 @@
+import { Metadata } from 'next'
 import { BackgroundBlobs } from "@/components/ui/Background-blobs"
 import { BrandHeader } from "@/components/ui/Brand-header"
 import { SignupForm } from "@/components/sign-up/Signup-form"
 import { LoginLink } from "@/components/sign-up/Login-link"
 
-export const metadata = {
+export const metadata:Metadata = {
   title: "Sign Up — Zen Berry",
   description: "Create your Zen Berry account and start focusing sweetly",
 }

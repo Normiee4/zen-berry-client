@@ -84,22 +84,7 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Company */}
-          <div>
-            <h4 className="mb-4 text-sm font-semibold text-foreground">Company</h4>
-            <ul className="space-y-3">
-              {footerLinks.company.map((link) => (
-                <li key={link.label}>
-                  <a
-                    href={link.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-matcha"
-                  >
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
+         
 
           {/* Resources */}
           <div>
@@ -142,7 +127,7 @@ export function Footer() {
             © {new Date().getFullYear()} Zen Berry. All rights reserved.
           </p>
           <p className="flex items-center gap-1 text-sm text-muted-foreground">
-            Made with <Heart className="size-4 fill-strawberry text-strawberry" /> and matcha
+            Made with <Heart className="size-4 fill-strawberry text-strawberry" /> and matcha by Norman Bautista
           </p>
         </div>
       </div>

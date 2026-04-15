@@ -1,18 +1,19 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import { Play, Pause, RotateCcw, Settings, CheckCircle2, Plus, Trash2 } from "lucide-react"
-import { RadialBarChart, RadialBar, PolarAngleAxis } from "recharts"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useResponsive } from "@/hooks/useResponsive"
+import { CheckCircle2, Pause, Play, Plus, RotateCcw, Settings, Trash2 } from "lucide-react"
+import { useCallback, useEffect, useState } from "react"
+import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts"
 
 interface TimerPreset {
   id: string
@@ -39,6 +40,12 @@ export function ProductivityDashboard() {
   const [newPresetName, setNewPresetName] = useState("")
   const [newFocusMinutes, setNewFocusMinutes] = useState(25)
   const [newBreakMinutes, setNewBreakMinutes] = useState(5)
+  const { isMobile, isTablet } = useResponsive()
+  const chartSize = isMobile ? 140 : isTablet ? 160 : 180
+  const chartCenter = chartSize / 2
+  const chartInnerRadius = chartSize * 0.34
+  const chartOuterRadius = chartSize * 0.42
+  const chartBarSize = isMobile ? 10 : 12
 
   const maxSeconds = isBreak ? activePreset.breakMinutes * 60 : activePreset.focusMinutes * 60
   const progress = ((maxSeconds - totalSeconds) / maxSeconds) * 100
@@ -245,15 +252,15 @@ export function ProductivityDashboard() {
 
       {/* Timer Circle with Recharts */}
       <div className="mb-6 flex justify-center">
-        <div className="relative flex size-40 items-center justify-center">
+        <div className="relative flex w-full max-w-[220px] items-center justify-center">
           <RadialBarChart
-            width={160}
-            height={160}
-            cx={80}
-            cy={80}
-            innerRadius={60}
-            outerRadius={75}
-            barSize={12}
+            width={chartSize}
+            height={chartSize}
+            cx={chartCenter}
+            cy={chartCenter}
+            innerRadius={chartInnerRadius}
+            outerRadius={chartOuterRadius}
+            barSize={chartBarSize}
             data={chartData}
             startAngle={90}
             endAngle={-270}
