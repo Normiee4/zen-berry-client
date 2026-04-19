@@ -12,6 +12,10 @@ const navLinks = [
   { href: "#about-zenberry", label: "About" },
 ]
 
+const loginEnabled = process.env.NEXT_PUBLIC_ENABLE_LOGIN === "true"
+const signupEnabled = process.env.NEXT_PUBLIC_ENABLE_SIGNUP === "true"
+const authEnabled = loginEnabled || signupEnabled
+
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { isTabletOrUp } = useResponsive()
@@ -43,16 +47,26 @@ export function Header() {
 
         {/* Desktop CTA */}
         <div className="hidden items-center gap-3 md:flex">
-          <Button variant="ghost" className="text-foreground hover:bg-strawberry-light hover:text-foreground">
-            <Link href="/auth/login">
-              Log in
-            </Link>  
-          </Button>
-          <Button className="bg-matcha text-white hover:bg-matcha/90">
-            <Link href='/auth/signup'>
-              Get Started
-            </Link> 
-          </Button>
+          {authEnabled ? (
+            <>
+              <Button variant="ghost" className="text-foreground hover:bg-strawberry-light hover:text-foreground">
+                <Link href="/auth/login">
+                  Log in
+                </Link>
+              </Button>
+              <Button className="bg-matcha text-white hover:bg-matcha/90">
+                <Link href="/auth/signup">
+                  Get Started
+                </Link>
+              </Button>
+            </>
+          ) : (
+            <Button className="bg-matcha text-white hover:bg-matcha/90">
+              <Link href="/auth/waitlist">
+                Join Now
+              </Link>
+            </Button>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -80,16 +94,26 @@ export function Header() {
               </a>
             ))}
             <hr className="border-strawberry-light" />
-            <Button variant="ghost" className="text-foreground hover:bg-strawberry-light hover:text-foreground">
-              <Link href="/auth/login">
-                Log in
-              </Link>  
-            </Button>
-            <Button className="bg-matcha text-white hover:bg-matcha/90">
-              <Link href='/auth/sign-up'>
-                Get Started
-              </Link> 
-            </Button>
+            {authEnabled ? (
+              <>
+                <Button variant="ghost" className="text-foreground hover:bg-strawberry-light hover:text-foreground">
+                  <Link href="/auth/login">
+                    Log in
+                  </Link>
+                </Button>
+                <Button className="bg-matcha text-white hover:bg-matcha/90">
+                  <Link href="/auth/signup">
+                    Get Started
+                  </Link>
+                </Button>
+              </>
+            ) : (
+              <Button className="bg-matcha text-white hover:bg-matcha/90">
+                <Link href="/auth/waitlist">
+                  Join Now
+                </Link>
+              </Button>
+            )}
           </nav>
         </div>
       )}

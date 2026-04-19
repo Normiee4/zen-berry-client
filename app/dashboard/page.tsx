@@ -38,35 +38,26 @@ export default function DashboardPage() {
       </header>
 
       {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-8xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Bento Grid - 2 columns on desktop */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 items-start lg:grid-cols-3">
           {/* Left Column */}
           <div className="flex flex-col gap-6">
-            {/* Timer Card */}
             <TimerCard />
-            
-            {/* Streak Card */}
             <StreakCard />
+            <MatchaProgressCard />
           </div>
 
-          {/* Right Column */}
+          {/* Middle Column */}
           <div className="flex flex-col gap-6">
-            {/* MIT Card */}
             <MITCard />
-            
-            {/* Brain Dump Card */}
-            <BrainDumpCard />
+            <BrainDumpCard />  
           </div>
-        </div>
 
-        {/* Bottom Row - Full Width */}
-        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* AI Insights Card */}
-          <AIInsightsCard />
-          
-          {/* Matcha Cup Reward Card */}
-          <MatchaProgressCard />
+          {/* Left Column */}
+          <div className="flex">
+             <AIInsightsCard />
+          </div>
         </div>
       </main>
     </div>

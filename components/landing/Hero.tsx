@@ -4,6 +4,7 @@ import { MatchaCupIllustration } from "@/components/landing/illustrations/Matcha
 import { ProductivityDashboard } from "@/components/landing/illustrations/Productivity-dashboard"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Sparkles } from "lucide-react"
+import Link from "next/link"
 
 export function Hero() {
   return (
@@ -79,11 +80,14 @@ export function Hero() {
             {/* CTA Buttons */}
             <div className="flex flex-col gap-4 sm:flex-row">
               <Button 
+                asChild
                 size="lg" 
                 className="bg-matcha px-8 text-white hover:bg-matcha/90"
               >
-                Get Started — It&apos;s Free
-                <ArrowRight className="size-4" />
+                <Link href="/auth/waitlist" className="inline-flex items-center gap-2">
+                  Get Started — It&apos;s Free
+                  <ArrowRight className="size-4" />
+                </Link>
               </Button>
               <Button 
                 size="lg" 

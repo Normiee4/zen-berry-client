@@ -4,7 +4,7 @@ import { Sparkles } from "lucide-react"
 
 export function AIInsightsCard() {
   return (
-    <div className="flex h-full flex-col rounded-3xl bg-strawberry-light/30 p-6">
+    <div className="flex h-full  flex-col rounded-3xl bg-strawberry-light/30 p-6">
       {/* Header */}
       <div className="mb-4 flex items-center gap-2">
         <Sparkles className="size-5 text-matcha" />

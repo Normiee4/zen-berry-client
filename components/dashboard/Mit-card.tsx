@@ -1,6 +1,9 @@
 "use client"
 
+
 import { useState } from "react"
+import { CircleCheck } from 'lucide-react';
+
 
 interface MIT {
   id: number
@@ -63,6 +66,7 @@ export function MITCard() {
                 </svg>
               )}
             </button>
+          
             <input
               type="text"
               value={mit.title}
@@ -72,6 +76,9 @@ export function MITCard() {
                 mit.completed ? "text-muted-foreground line-through" : "text-foreground"
               }`}
             />
+            <button className="flex size-10 p-2 shrink-0 items-center justify-center rounded-full transition-colors text-matcha cursor-pointer hover:bg-gray-200">
+              <CircleCheck/>
+            </button>
           </div>
         ))}
       </div>

@@ -11,9 +11,10 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useResponsive } from "@/hooks/useResponsive"
-import { Play, Plus, RotateCcw, Settings } from "lucide-react"
-import { useState } from "react"
+import { Pause, Play, Plus, RotateCcw, Settings } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
 import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts"
+import { useTimerStore } from "@/features/timer/store/timer-store"
 
 interface Preset {
   id: string
@@ -30,17 +31,47 @@ const defaultPresets: Preset[] = [
 ]
 
 export function TimerCard() {
-  const [mode, setMode] = useState<"focus" | "break">("focus")
-  const [presets, setPresets] = useState<Preset[]>(defaultPresets)
-  const [activePresetId, setActivePresetId] = useState("classic")
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [newPresetName, setNewPresetName] = useState("")
   const [newFocusMinutes, setNewFocusMinutes] = useState(25)
   const [newBreakMinutes, setNewBreakMinutes] = useState(5)
 
-  const activePreset = presets.find((p) => p.id === activePresetId) || presets[0]
-  const totalMinutes = mode === "focus" ? activePreset.focusMinutes : activePreset.breakMinutes
-  const progress = 100
+  const {
+    mode,
+    timeLeft,
+    isRunning,
+    presets,
+    activePresetId,
+    toggle,
+    reset,
+    setMode,
+    setPreset,
+    addPreset,
+  } = useTimerStore()
+
+  const activePreset = useMemo(
+    () => presets.find((p) => p.id === activePresetId) || presets[0],
+    [presets, activePresetId],
+  )
+
+  const totalSeconds = useMemo(
+    () =>
+      activePreset
+        ? (mode === "focus" ? activePreset.focusMinutes : activePreset.breakMinutes) * 60
+        : 0,
+    [activePreset, mode],
+  )
+
+  const progress = useMemo(() => {
+    if (totalSeconds === 0) return 0
+    return Math.round(((totalSeconds - timeLeft) / totalSeconds) * 100)
+  }, [timeLeft, totalSeconds])
+
+  const formattedTime = useMemo(() => {
+    const minutes = Math.floor(timeLeft / 60).toString().padStart(2, "0")
+    const seconds = Math.floor(timeLeft % 60).toString().padStart(2, "0")
+    return `${minutes}:${seconds}`
+  }, [timeLeft])
 
   const { isMobile, isTablet } = useResponsive()
   const chartSize = isMobile ? 180 : isTablet ? 210 : 240
@@ -59,25 +90,23 @@ export function TimerCard() {
 
   const handleAddPreset = () => {
     if (!newPresetName.trim()) return
-    const newPreset: Preset = {
-      id: `custom-${Date.now()}`,
+    addPreset({
       name: newPresetName,
       focusMinutes: newFocusMinutes,
       breakMinutes: newBreakMinutes,
-    }
-    setPresets([...presets, newPreset])
+    })
     setNewPresetName("")
     setNewFocusMinutes(25)
     setNewBreakMinutes(5)
   }
 
   return (
-    <div className="flex h-full flex-col rounded-3xl bg-strawberry-light/30 p-6">
+    <div className="flex min-h-0 flex-col rounded-3xl bg-strawberry-light/30 p-6 overflow-hidden">
       {/* Mode Toggle */}
       <div className="mx-auto mb-6 flex gap-2">
         <button
           onClick={() => setMode("focus")}
-          className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+          className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium cursor-pointer transition-colors ${
             mode === "focus"
               ? "bg-matcha text-white"
               : "bg-white/60 text-foreground hover:bg-white/80"
@@ -100,7 +129,7 @@ export function TimerCard() {
       </div>
 
       {/* Circular Timer */}
-      <div className="relative mx-auto mb-4 flex w-full max-w-[260px] items-center justify-center">
+      <div className="relative mx-auto mb-4 flex w-full max-w-65 items-center justify-center">
         <RadialBarChart
           width={chartSize}
           height={chartSize}
@@ -124,13 +153,15 @@ export function TimerCard() {
             dataKey="value"
             cornerRadius={10}
             angleAxisId={0}
+            isAnimationActive={true}
+            animationDuration={600}
           />
         </RadialBarChart>
 
         {/* Center Content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono text-5xl font-bold text-foreground">
-            {String(totalMinutes).padStart(2, "0")}:00
+          <span className="font-mono text-4xl font-bold text-primary">
+            {formattedTime}
           </span>
           <span className="mt-1 text-sm text-muted-foreground">
             {mode === "focus" ? "Time to focus" : "Take a break"}
@@ -151,15 +182,29 @@ export function TimerCard() {
       </div>
 
       {/* Controls */}
-      <div className="mx-auto flex gap-3">
-        <Button className="gap-2 rounded-full bg-matcha px-6 text-white hover:bg-matcha/90">
-          <Play className="size-4" fill="currentColor" />
-          Start
+      <div className="mx-auto flex flex-wrap items-center justify-center gap-3">
+        <Button
+          onClick={toggle}
+          className="gap-2 rounded-full bg-matcha px-6 text-white hover:bg-matcha/90 cursor-pointer"
+        >
+          {isRunning ? (
+            <>
+              <Pause className="size-4" fill="currentColor" />
+              Pause
+            </>
+          ) : (
+            <>
+              <Play className="size-4" fill="currentColor" />
+              Start
+            </>
+          )}
         </Button>
         <Button
+          onClick={reset}
           size="icon"
           variant="outline"
-          className="size-10 rounded-full border-border bg-white/60 hover:bg-white"
+          className="size-10 rounded-full border-border bg-white/60 hover:bg-white cursor-pointer"
+          aria-label="Reset timer"
         >
           <RotateCcw className="size-4 text-foreground" />
         </Button>
@@ -168,7 +213,7 @@ export function TimerCard() {
             <Button
               size="icon"
               variant="outline"
-              className="size-10 rounded-full border-border bg-white/60 hover:bg-white"
+              className="size-10 rounded-full border-border bg-white/60 hover:bg-white cursor-ponter"
             >
               <Settings className="size-4 text-foreground" />
             </Button>
@@ -186,7 +231,7 @@ export function TimerCard() {
                   {presets.map((preset) => (
                     <button
                       key={preset.id}
-                      onClick={() => setActivePresetId(preset.id)}
+                      onClick={() => setPreset(preset.id)}
                       className={`flex flex-col rounded-lg border p-4 text-left transition-colors ${
                         activePresetId === preset.id
                           ? "border-l-4 border-l-matcha border-t-matcha-light/50 border-r-matcha-light/50 border-b-matcha-light/50 bg-matcha-light/20"

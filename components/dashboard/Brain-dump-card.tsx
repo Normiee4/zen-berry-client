@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Plus } from "lucide-react"
+import { Plus, Trash2 } from "lucide-react"
+
 
 interface Task {
   id: number
@@ -71,12 +72,12 @@ export function BrainDumpCard() {
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
         {tasks.map((task) => (
           <div
-            key={task.id}
-            className={`flex items-center gap-3 rounded-xl p-3 transition-colors ${
-              task.completed
-                ? "bg-matcha-light/40"
-                : "bg-white/70"
-            }`}
+              key={task.id}
+              className={`flex items-center gap-3 rounded-xl p-3 transition-colors ${
+                task.completed
+                  ? "bg-matcha-light/40"
+                  : "bg-white/70"
+              }`}
           >
             <button
               onClick={() => toggleTask(task.id)}
@@ -101,6 +102,9 @@ export function BrainDumpCard() {
             >
               {task.title}
             </span>
+            <button className="flex size-10 p-2 shrink-0 items-center justify-center rounded-full transition-colors text-red-400 cursor-pointer hover:bg-gray-200">
+              <Trash2 />
+            </button>
           </div>
         ))}
       </div>
