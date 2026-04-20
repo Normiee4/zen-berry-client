@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { taskQuerySchema } from '@/lib/validator'
+import { taskQuerySchema } from '@/lib/input-validator'
 
 export async function validationMiddleware(request: NextRequest) {
   const url = request.nextUrl
