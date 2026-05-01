@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Plus, Trash2 } from "lucide-react"
-
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
 interface Task {
   id: number
@@ -30,6 +30,10 @@ export function BrainDumpCard() {
     if (!newTask.trim()) return
     setTasks([...tasks, { id: Date.now(), title: newTask, completed: false }])
     setNewTask("")
+  }
+
+  const deleteTask = (id: number) => {
+    setTasks(tasks.filter((task) => task.id !== id))
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -69,44 +73,63 @@ export function BrainDumpCard() {
       </div>
 
       {/* Task List */}
-      <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
-        {tasks.map((task) => (
-          <div
-              key={task.id}
-              className={`flex items-center gap-3 rounded-xl p-3 transition-colors ${
-                task.completed
-                  ? "bg-matcha-light/40"
-                  : "bg-white/70"
-              }`}
-          >
-            <button
-              onClick={() => toggleTask(task.id)}
-              className={`flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                task.completed
-                  ? "border-matcha bg-matcha"
-                  : "border-muted-foreground/30 bg-white"
-              }`}
-            >
-              {task.completed && (
-                <svg className="size-3 text-white" viewBox="0 0 12 12" fill="none">
-                  <path d="M2.5 6L5 8.5L9.5 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
-            </button>
-            <span
-              className={`flex-1 text-sm ${
-                task.completed
-                  ? "text-muted-foreground line-through"
-                  : "text-foreground"
-              }`}
-            >
-              {task.title}
-            </span>
-            <button className="flex size-10 p-2 shrink-0 items-center justify-center rounded-full transition-colors text-red-400 cursor-pointer hover:bg-gray-200">
-              <Trash2 />
-            </button>
-          </div>
-        ))}
+      <div className="h-96 flex flex-col">
+        <ScrollArea className="flex flex-1 flex-col overflow-hidden">
+          {tasks.length === 0 ? (
+            <div className="flex flex-1 items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/20 bg-white/30 p-6">
+              <div className="flex flex-col items-center gap-2 text-center">
+                <span className="text-3xl">🧠</span>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Having a Foggy Brain? — Dump your thoughts here!
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4 pr-4">
+              {tasks.map((task) => (
+                <div
+                  key={task.id}
+                  className={`flex items-center gap-3 rounded-xl p-3 transition-colors ${
+                    task.completed
+                      ? "bg-matcha-light/40"
+                      : "bg-white/70"
+                  }`}
+                >
+                  <button
+                    onClick={() => toggleTask(task.id)}
+                    className={`flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                      task.completed
+                        ? "border-matcha bg-matcha"
+                        : "border-muted-foreground/30 bg-white"
+                    }`}
+                  >
+                    {task.completed && (
+                      <svg className="size-3 text-white" viewBox="0 0 12 12" fill="none">
+                        <path d="M2.5 6L5 8.5L9.5 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </button>
+                  <span
+                    className={`flex-1 text-sm ${
+                      task.completed
+                        ? "text-muted-foreground line-through"
+                        : "text-foreground"
+                    }`}
+                  >
+                    {task.title}
+                  </span>
+                  <button 
+                    onClick={() => deleteTask(task.id)}
+                    className="flex size-10 p-2 shrink-0 items-center justify-center rounded-full transition-colors text-red-400 cursor-pointer hover:bg-red-100"
+                  >
+                    <Trash2 />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <ScrollBar orientation="vertical" className="bg-matcha/30 hover:bg-matcha/60" />
+        </ScrollArea>
       </div>
     </div>
   )
