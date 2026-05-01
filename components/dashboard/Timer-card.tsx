@@ -1,84 +1,70 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useResponsive } from "@/hooks/useResponsive"
-import { Pause, Play, Plus, RotateCcw, Settings } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
-import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts"
-import { useTimerStore } from "@/features/timer/store/timer-store"
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useResponsive } from "@/hooks/useResponsive";
+import { Pause, Play, Plus, RotateCcw, Settings } from "lucide-react";
+import { useMemo, useState } from "react";
+import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts";
+import { useTimer } from "@/features/timer/useTimer";
+import { useTimerLogic } from '@/features/timer/timer-logic';
 
-interface Preset {
-  id: string
-  name: string
-  focusMinutes: number
-  breakMinutes: number
-  isDefault?: boolean
-}
-
-const defaultPresets: Preset[] = [
-  { id: "classic", name: "Classic Pomodoro", focusMinutes: 25, breakMinutes: 5, isDefault: true },
-  { id: "deep", name: "Deep Work", focusMinutes: 50, breakMinutes: 10, isDefault: true },
-  { id: "sprint", name: "Quick Sprint", focusMinutes: 15, breakMinutes: 3, isDefault: true },
-]
 
 export function TimerCard() {
-  const [settingsOpen, setSettingsOpen] = useState(false)
-  const [newPresetName, setNewPresetName] = useState("")
-  const [newFocusMinutes, setNewFocusMinutes] = useState(25)
-  const [newBreakMinutes, setNewBreakMinutes] = useState(5)
-
+  useTimerLogic();
   const {
     mode,
     timeLeft,
     isRunning,
     presets,
-    activePresetId,
+    activePreset,
     toggle,
     reset,
     setMode,
     setPreset,
     addPreset,
-  } = useTimerStore()
+  } = useTimer();
 
-  const activePreset = useMemo(
-    () => presets.find((p) => p.id === activePresetId) || presets[0],
-    [presets, activePresetId],
-  )
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [newPresetName, setNewPresetName] = useState("");
+  const [newFocusMinutes, setNewFocusMinutes] = useState(25);
+  const [newBreakMinutes, setNewBreakMinutes] = useState(5);
 
   const totalSeconds = useMemo(
     () =>
-      activePreset
-        ? (mode === "focus" ? activePreset.focusMinutes : activePreset.breakMinutes) * 60
-        : 0,
-    [activePreset, mode],
-  )
+      (mode === "focus" ? activePreset.focusMinutes : activePreset.breakMinutes) * 60,
+    [activePreset, mode]
+  );
 
   const progress = useMemo(() => {
-    if (totalSeconds === 0) return 0
-    return Math.round(((totalSeconds - timeLeft) / totalSeconds) * 100)
-  }, [timeLeft, totalSeconds])
+    if (totalSeconds === 0) return 0;
+    return Math.round(((totalSeconds - timeLeft) / totalSeconds) * 100);
+  }, [timeLeft, totalSeconds]);
 
   const formattedTime = useMemo(() => {
-    const minutes = Math.floor(timeLeft / 60).toString().padStart(2, "0")
-    const seconds = Math.floor(timeLeft % 60).toString().padStart(2, "0")
-    return `${minutes}:${seconds}`
-  }, [timeLeft])
+    const minutes = Math.floor(timeLeft / 60)
+      .toString()
+      .padStart(2, "0");
+    const seconds = Math.floor(timeLeft % 60)
+      .toString()
+      .padStart(2, "0");
+    return `${minutes}:${seconds}`;
+  }, [timeLeft]);
 
-  const { isMobile, isTablet } = useResponsive()
-  const chartSize = isMobile ? 180 : isTablet ? 210 : 240
-  const chartCenter = chartSize / 2
-  const chartInnerRadius = chartSize * 0.35
-  const chartOuterRadius = chartSize * 0.45
-  const chartBarSize = isMobile ? 12 : 16
+  const { isMobile, isTablet } = useResponsive();
+  const chartSize = isMobile ? 180 : isTablet ? 210 : 240;
+  const chartCenter = chartSize / 2;
+  const chartInnerRadius = chartSize * 0.35;
+  const chartOuterRadius = chartSize * 0.45;
+  const chartBarSize = isMobile ? 12 : 16;
 
   const chartData = [
     {
@@ -86,19 +72,19 @@ export function TimerCard() {
       value: progress,
       fill: mode === "focus" ? "#FFCFCF" : "#86A788",
     },
-  ]
+  ];
 
   const handleAddPreset = () => {
-    if (!newPresetName.trim()) return
+    if (!newPresetName.trim()) return;
     addPreset({
       name: newPresetName,
       focusMinutes: newFocusMinutes,
       breakMinutes: newBreakMinutes,
-    })
-    setNewPresetName("")
-    setNewFocusMinutes(25)
-    setNewBreakMinutes(5)
-  }
+    });
+    setNewPresetName("");
+    setNewFocusMinutes(25);
+    setNewBreakMinutes(5);
+  };
 
   return (
     <div className="flex min-h-0 flex-col rounded-3xl bg-strawberry-light/30 p-6 overflow-hidden">
@@ -112,7 +98,7 @@ export function TimerCard() {
               : "bg-white/60 text-foreground hover:bg-white/80"
           }`}
         >
-          <span className="text-base">&#x1F331;</span>
+          <span className="text-base">🌱</span>
           Focus
         </button>
         <button
@@ -123,7 +109,7 @@ export function TimerCard() {
               : "bg-white/60 text-foreground hover:bg-white/80"
           }`}
         >
-          <span className="text-base">&#x1F353;</span>
+          <span className="text-base">🍓</span>
           Break
         </button>
       </div>
@@ -142,12 +128,7 @@ export function TimerCard() {
           startAngle={90}
           endAngle={-270}
         >
-          <PolarAngleAxis
-            type="number"
-            domain={[0, 100]}
-            angleAxisId={0}
-            tick={false}
-          />
+          <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
           <RadialBar
             background={{ fill: mode === "focus" ? "#FFE2E2" : "#B8D4B8" }}
             dataKey="value"
@@ -160,9 +141,7 @@ export function TimerCard() {
 
         {/* Center Content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono text-4xl font-bold text-primary">
-            {formattedTime}
-          </span>
+          <span className="font-mono text-4xl font-bold text-primary">{formattedTime}</span>
           <span className="mt-1 text-sm text-muted-foreground">
             {mode === "focus" ? "Time to focus" : "Take a break"}
           </span>
@@ -176,7 +155,13 @@ export function TimerCard() {
           <rect x="10" y="14" width="20" height="16" rx="3" fill="#86A788" />
           <circle cx="15" cy="22" r="1.5" fill="#2D3A2D" />
           <circle cx="25" cy="22" r="1.5" fill="#2D3A2D" />
-          <path d="M18 26 Q20 28 22 26" stroke="#2D3A2D" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+          <path
+            d="M18 26 Q20 28 22 26"
+            stroke="#2D3A2D"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            fill="none"
+          />
           <ellipse cx="20" cy="12" rx="10" ry="2" fill="#B8D4B8" />
         </svg>
       </div>
@@ -213,7 +198,7 @@ export function TimerCard() {
             <Button
               size="icon"
               variant="outline"
-              className="size-10 rounded-full border-border bg-white/60 hover:bg-white cursor-ponter"
+              className="size-10 rounded-full border-border bg-white/60 hover:bg-white cursor-pointer"
             >
               <Settings className="size-4 text-foreground" />
             </Button>
@@ -233,7 +218,7 @@ export function TimerCard() {
                       key={preset.id}
                       onClick={() => setPreset(preset.id)}
                       className={`flex flex-col rounded-lg border p-4 text-left transition-colors ${
-                        activePresetId === preset.id
+                        activePreset.id === preset.id
                           ? "border-l-4 border-l-matcha border-t-matcha-light/50 border-r-matcha-light/50 border-b-matcha-light/50 bg-matcha-light/20"
                           : "border-border hover:bg-cream/50"
                       }`}
@@ -301,5 +286,5 @@ export function TimerCard() {
         </Dialog>
       </div>
     </div>
-  )
+  );
 }

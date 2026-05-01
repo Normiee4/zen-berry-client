@@ -4,8 +4,17 @@ import { Features } from "@/components/landing/Features"
 import { HowItWorks } from "@/components/landing/How-it-works"
 import { About } from "@/components/landing/About"
 import { Footer } from "@/components/landing/Footer"
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 
-export default function Home() {
+export default async function Home() {  
+  const cookieStore = await cookies()  
+  const betaCookie = cookieStore.get('beta_bypass')
+
+  if (betaCookie?.value === 'true') {
+    redirect('/dashboard')
+  }
+
   return (
     <div className="min-h-screen">
       <Header />
