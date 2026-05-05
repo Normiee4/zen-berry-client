@@ -2,6 +2,8 @@
 import { getTimerData, createTimerPreset, recordPomodoroCompletion } from '@/app/api/timer-service/controller'
 
 export async function GET(request: NextRequest) {
+  // request is param name, and NextRequest is the type since 
+  // I am using typescript here.
   return getTimerData(request)
 }
 

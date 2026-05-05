@@ -1,4 +1,3 @@
-// app/api/timer/timer.controller.ts
 import { NextResponse } from 'next/server'
 import * as timerService from '@/app/api/timer-service/service'
 import { createSupabaseClient } from '@/app/api/timer-service/service'
@@ -6,7 +5,7 @@ import { createSupabaseClient } from '@/app/api/timer-service/service'
 export async function getTimerData(request: Request) {
   try {
     const supabase = createSupabaseClient(request)
-    const { data: { user }, error: userError } = await timerService.getAuthenticatedUser(supabase)  // ✅ fixed
+    const { data: { user }, error: userError } = await timerService.getAuthenticatedUser(supabase)  
 
     if (userError || !user) {
       return NextResponse.json(
@@ -59,21 +58,21 @@ export async function getTimerData(request: Request) {
 export async function createTimerPreset(request: Request) {
   try {
     const supabase = createSupabaseClient(request)
-    const { data: { user }, error: userError } = await timerService.getAuthenticatedUser(supabase)  // ✅ fixed
+    const { data: { user }, error: userError } = await timerService.getAuthenticatedUser(supabase)  
 
     if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized User' }, { status: 401 })
     }
 
-    const { name, focusMinutes, breakMinutes } = await request.json()
-    if (!name || typeof focusMinutes !== 'number' || typeof breakMinutes !== 'number') {
+    const { name, focusDuration, breakDuration } = await request.json()
+    if (!name || typeof focusDuration !== 'number' || typeof breakDuration !== 'number') {
       return NextResponse.json({ error: 'Invalid timer preset payload' }, { status: 400 })
     }
 
     const { data, error } = await timerService.createPreset(supabase, user.id, {
       name,
-      focusMinutes,
-      breakMinutes,
+      focusDuration,
+      breakDuration,
     })
 
     if (error) {

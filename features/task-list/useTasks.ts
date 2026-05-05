@@ -1,4 +1,3 @@
-// hooks/useTasks.ts
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 
 export interface Task {
@@ -11,10 +10,19 @@ export interface Task {
 export function useTasks() {
   const [tasks, setTasks] = useLocalStorage<Task[]>('zenberry_tasks', [])
 
-  const addTask = (task: Task) => setTasks([...tasks, task])
+  // ✅ Now accepts a task without an id
+  const addTask = (task: Omit<Task, 'id'>) => {
+    const newTask: Task = {
+      ...task,
+      id: crypto.randomUUID(), // or Date.now().toString()
+    }
+    setTasks([...tasks, newTask])
+  }
+
   const updateTask = (id: string, updates: Partial<Task>) => {
     setTasks(tasks.map(t => t.id === id ? { ...t, ...updates } : t))
   }
+
   const deleteTask = (id: string) => setTasks(tasks.filter(t => t.id !== id))
 
   return { tasks, addTask, updateTask, deleteTask }

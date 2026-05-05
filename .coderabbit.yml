@@ -1,0 +1,32 @@
+version: 1
+language: en
+
+reviews:
+  auto_review:
+    enabled: true
+    base_branches: [main, develop]
+
+  tools:
+    eslint:
+      enabled: true
+      config: ".eslintrc.json"
+      extensions: [".js", ".jsx", ".ts", ".tsx"]
+
+    typescript:
+      enabled: true
+      config: "tsconfig.json"
+      strict: true
+
+    supabase:
+      enabled: true
+      check_rls: true
+      check_anon_key_exposure: true
+
+  bug_detection:
+    enabled: true
+
+  security:
+    enabled: true
+
+  performance:
+    enabled: true

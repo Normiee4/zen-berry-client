@@ -34,7 +34,7 @@ export default function DashboardPage() {
         completed: false,
         type: "braindump",
       });
-      removeMIT(mit.id);
+      ;
     }
 
     // Move from Brain Dump → MIT
@@ -91,15 +91,16 @@ export default function DashboardPage() {
                 remainingSlots={remainingSlots}
               />
               <BrainDumpCard
-                tasks={brainDumpTasks}
-                droppableId="braindump-list"
-                onAdd={addTask}
-                onToggleComplete={(id) => {
-                  const task = tasks.find(t => t.id === id);
-                  if (task) updateTask(id, { completed: !task.completed });
-                }}
-                onDelete={deleteTask}
-              />
+                  tasks={brainDumpTasks}
+                  droppableId="braindump-list"
+                  onAdd={(task) => addTask({ ...task, type: 'braindump', completed: false })}
+                  // task from BrainDumpCard might only have { title } or similar
+                  onToggleComplete={(id) => {
+                    const task = tasks.find(t => t.id === id);
+                    if (task) updateTask(id, { completed: !task.completed });
+                  }}
+                  onDelete={deleteTask}
+                />
             </div>
 
             {/* Right Column */}

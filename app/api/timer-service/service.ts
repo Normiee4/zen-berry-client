@@ -15,8 +15,8 @@ export interface TimerPresetRow {
 interface FormattedPreset {
   id: string
   name: string
-  focusMinutes: number
-  breakMinutes: number
+  focusDuration: number
+  breakDuration: number
   isDefault: boolean
 }
 
@@ -28,8 +28,8 @@ export const getYesterday = (): string =>
 export const formatPreset = (row: TimerPresetRow): FormattedPreset => ({
   id: String(row.preset_id),
   name: row.preset_name,
-  focusMinutes: row.focus_duration,
-  breakMinutes: row.break_duration,
+  focusDuration: row.focus_duration,
+  breakDuration: row.break_duration,
   isDefault: Boolean(row.is_default ?? false),
 })
 
@@ -78,6 +78,8 @@ export const getAuthenticatedUser = async (supabase: SupabaseClient) => {
 }
 
 // ---------- Data Operations ----------
+// supabaseClient is used here as param as supabase
+// userId: string is another param that we will use as variable to compare
 export const fetchPresets = async (supabase: SupabaseClient, userId: string) => {
   return supabase
     .from('timer_presets')
@@ -98,7 +100,7 @@ export const fetchTodayStats = async (supabase: SupabaseClient, userId: string) 
 export const createPreset = async (
   supabase: SupabaseClient,
   userId: string,
-  preset: { name: string; focusMinutes: number; breakMinutes: number }
+  preset: { name: string; focusDuration: number; breakDuration: number }
 ) => {
   return supabase
     .from('timer_presets')
@@ -106,8 +108,8 @@ export const createPreset = async (
       {
         user_id: userId,
         preset_name: preset.name,
-        focus_duration: preset.focusMinutes,
-        break_duration: preset.breakMinutes,
+        focus_duration: preset.focusDuration,
+        break_duration: preset.breakDuration,
         is_default: false,
       },
     ])
