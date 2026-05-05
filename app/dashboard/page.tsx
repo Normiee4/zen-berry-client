@@ -29,7 +29,6 @@ export default function DashboardPage() {
       const mit = mits[source.index];
       if (!mit) return;
       addTask({
-        id: Date.now().toString(),
         title: mit.title,
         completed: false,
         type: "braindump",
