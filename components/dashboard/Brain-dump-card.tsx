@@ -1,38 +1,48 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Plus, Trash2 } from "lucide-react"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import { useTasks } from "@/features/task-list/useTasks"
+import { useState } from "react";
+import { Plus, Trash2 } from "lucide-react";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Draggable, Droppable } from "@hello-pangea/dnd";
 
-export function BrainDumpCard() {
-  const { tasks, addTask, updateTask, deleteTask } = useTasks()
+interface Task {
+  id: string;
+  title: string;
+  completed: boolean;
+  type: string;
+}
 
-  // Filter only brain dump tasks
-  const brainDumpTasks = tasks.filter(t => t.type === 'braindump')
-  const [newTaskTitle, setNewTaskTitle] = useState("")
+interface BrainDumpCardProps {
+  tasks: Task[];
+  droppableId: string;
+  onAdd: (task: Omit<Task, "id"> & { id?: string }) => void;
+  onToggleComplete: (id: string) => void;
+  onDelete: (id: string) => void;
+}
+
+export function BrainDumpCard({
+  tasks,
+  droppableId,
+  onAdd,
+  onToggleComplete,
+  onDelete,
+}: BrainDumpCardProps) {
+  const [newTaskTitle, setNewTaskTitle] = useState("");
 
   const handleAdd = () => {
-    if (!newTaskTitle.trim()) return
-    addTask({
+    if (!newTaskTitle.trim()) return;
+    onAdd({
       id: Date.now().toString(),
       title: newTaskTitle,
       completed: false,
-      type: 'braindump',
-    })
-    setNewTaskTitle("")
-  }
-
-  const toggleComplete = (id: string) => {
-    const task = tasks.find(t => t.id === id)
-    if (task) {
-      updateTask(id, { completed: !task.completed })
-    }
-  }
+      type: "braindump",
+    });
+    setNewTaskTitle("");
+  };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") handleAdd()
-  }
+    if (e.key === "Enter") handleAdd();
+  };
 
   return (
     <div className="flex h-full flex-col rounded-3xl bg-strawberry-light/30 p-6">
@@ -65,60 +75,83 @@ export function BrainDumpCard() {
       </div>
 
       {/* Task List */}
-      <div className="h-96 flex flex-col">
-        <ScrollArea className="flex flex-1 flex-col overflow-hidden">
-          {brainDumpTasks.length === 0 ? (
-            <div className="flex flex-1 items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/20 bg-white/30 p-6">
-              <div className="flex flex-col items-center gap-2 text-center">
-                <span className="text-3xl">🧠</span>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Having a Foggy Brain? — Dump your thoughts here!
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-4 pr-4">
-              {brainDumpTasks.map((task) => (
-                <div
-                  key={task.id}
-                  className={`flex items-center gap-3 rounded-xl p-3 transition-colors ${
-                    task.completed ? "bg-matcha-light/40" : "bg-white/70"
-                  }`}
-                >
-                  <button
-                    onClick={() => toggleComplete(task.id)}
-                    className={`flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                      task.completed
-                        ? "border-matcha bg-matcha"
-                        : "border-muted-foreground/30 bg-white"
-                    }`}
-                  >
-                    {task.completed && (
-                      <svg className="size-3 text-white" viewBox="0 0 12 12" fill="none">
-                        <path d="M2.5 6L5 8.5L9.5 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    )}
-                  </button>
-                  <span
-                    className={`flex-1 text-sm ${
-                      task.completed ? "text-muted-foreground line-through" : "text-foreground"
-                    }`}
-                  >
-                    {task.title}
-                  </span>
-                  <button
-                    onClick={() => deleteTask(task.id)}
-                    className="flex size-10 p-2 shrink-0 items-center justify-center rounded-full transition-colors text-red-400 cursor-pointer hover:bg-red-100"
-                  >
-                    <Trash2 />
-                  </button>
+      <Droppable droppableId={droppableId}>
+        {(provided) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            className="flex flex-col overflow-y-auto h-96"
+          >
+            <ScrollArea className="flex-1">
+              {tasks.length === 0 ? (
+                <div className="flex flex-1 items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/20 bg-white/30 p-6">
+                  <div className="flex flex-col items-center gap-2 text-center">
+                    <span className="text-3xl">🧠</span>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Having a Foggy Brain? — Dump your thoughts here!
+                    </p>
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
-          <ScrollBar orientation="vertical" className="bg-matcha/30 hover:bg-matcha/60" />
-        </ScrollArea>
-      </div>
+              ) : (
+                <div className="flex flex-col gap-4 pr-4">
+                  {tasks.map((task, index) => (
+                    <Draggable key={task.id} draggableId={task.id} index={index}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          className={`flex items-center gap-3 rounded-xl p-3 transition-colors ${
+                            task.completed ? "bg-matcha-light/40" : "bg-white/70"
+                          } ${snapshot.isDragging ? "shadow-lg" : ""}`}
+                        >
+                          <button
+                            onClick={() => onToggleComplete(task.id)}
+                            className={`flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                              task.completed
+                                ? "border-matcha bg-matcha"
+                                : "border-muted-foreground/30 bg-white"
+                            }`}
+                          >
+                            {task.completed && (
+                              <svg className="size-3 text-white" viewBox="0 0 12 12" fill="none">
+                                <path
+                                  d="M2.5 6L5 8.5L9.5 4"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            )}
+                          </button>
+                          <span
+                            className={`flex-1 text-sm ${
+                              task.completed
+                                ? "text-muted-foreground line-through"
+                                : "text-foreground"
+                            }`}
+                          >
+                            {task.title}
+                          </span>
+                          <button
+                            onClick={() => onDelete(task.id)}
+                            className="flex size-10 p-2 shrink-0 items-center justify-center rounded-full transition-colors text-red-400 cursor-pointer hover:bg-red-100"
+                          >
+                            <Trash2 />
+                          </button>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                </div>
+              )}
+              <ScrollBar orientation="vertical" />
+            </ScrollArea>
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
     </div>
-  )
+  );
 }

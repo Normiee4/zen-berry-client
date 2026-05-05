@@ -2,20 +2,20 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useTimerLogic } from '@/features/timer/timer-logic';
+import { useTimer } from "@/features/timer/useTimer";
 import { useResponsive } from "@/hooks/useResponsive";
 import { Pause, Play, Plus, RotateCcw, Settings } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts";
-import { useTimer } from "@/features/timer/useTimer";
-import { useTimerLogic } from '@/features/timer/timer-logic';
 
 
 export function TimerCard() {
@@ -31,7 +31,51 @@ export function TimerCard() {
     setMode,
     setPreset,
     addPreset,
+    loadPresets,
+    loadStats,
+    completedFocusCycle,
+    clearCompletedFocusCycle,
   } = useTimer();
+
+  useEffect(() => {
+    const loadTimerState = async () => {
+      try {
+        const response = await fetch('/api/timer-service');
+        if (!response.ok) return;
+        const data = await response.json();
+        if (data.presets?.length) {
+          loadPresets(data.presets);
+        }
+        if (data.streak) {
+          loadStats(data.streak);
+        }
+      } catch {
+        // ignore load failures
+      }
+    };
+
+    loadTimerState();
+  }, [loadPresets, loadStats]);
+
+  useEffect(() => {
+    if (!completedFocusCycle) return;
+
+    const recordCompletion = async () => {
+      try {
+        await fetch('/api/timer-service', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'recordCompletion' }),
+        })
+      } catch {
+        // ignore network failures for now
+      } finally {
+        clearCompletedFocusCycle();
+      }
+    };
+
+    recordCompletion();
+  }, [completedFocusCycle, clearCompletedFocusCycle]);
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [newPresetName, setNewPresetName] = useState("");
@@ -74,16 +118,29 @@ export function TimerCard() {
     },
   ];
 
-  const handleAddPreset = () => {
+  const handleAddPreset = async () => {
     if (!newPresetName.trim()) return;
-    addPreset({
+
+    const presetPayload = {
       name: newPresetName,
       focusMinutes: newFocusMinutes,
       breakMinutes: newBreakMinutes,
-    });
+    };
+
+    addPreset(presetPayload);
     setNewPresetName("");
     setNewFocusMinutes(25);
     setNewBreakMinutes(5);
+
+    try {
+      await fetch('/api/timer-service', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(presetPayload),
+      });
+    } catch {
+      // ignore save failure for now
+    }
   };
 
   return (

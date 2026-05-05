@@ -12,6 +12,12 @@ export function useTimer() {
     setMode,
     setPreset,
     addPreset,
+    loadPresets,
+    loadStats,
+    completedFocusCycle,
+    clearCompletedFocusCycle,
+    currentStreak,
+    pomodorosToday,
   } = useTimerStore()
 
   return {
@@ -21,13 +27,19 @@ export function useTimer() {
     isRunning,
     presets,
     activePresetId,
+    currentStreak,
+    pomodorosToday,
+    completedFocusCycle,
     // Computed (optional, but keeps component simple)
-    activePreset: presets.find(p => p.id === activePresetId) || presets[0],
+    activePreset: presets.find((p) => p.id === activePresetId) || presets[0],
     // Actions
     toggle,
     reset,
     setMode,
     setPreset,
     addPreset,
+    loadPresets,
+    loadStats,
+    clearCompletedFocusCycle,
   }
 }

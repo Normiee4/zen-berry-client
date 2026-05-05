@@ -1,6 +1,10 @@
 "use client"
 
+import { useTimer } from "@/features/timer/useTimer"
+
 export function StreakCard() {
+  const { currentStreak, pomodorosToday } = useTimer()
+
   return (
     <div className="flex items-center gap-4 rounded-3xl bg-strawberry-light/30 p-4">
       {/* Matcha Cup Icon */}
@@ -18,12 +22,12 @@ export function StreakCard() {
       {/* Stats */}
       <div className="flex flex-col">
         <div className="flex items-baseline gap-1">
-          <span className="text-2xl font-bold text-foreground">5</span>
+          <span className="text-2xl font-bold text-foreground">{currentStreak || 0}</span>
           <span className="text-sm text-muted-foreground">day streak</span>
           <span className="ml-1 text-base">&#x1F331;</span>
         </div>
         <div className="flex items-center gap-1 text-sm text-muted-foreground">
-          <span>3 pomodoros today</span>
+          <span>{pomodorosToday || 0} pomodoros today</span>
           <span className="text-base">&#x1F353;</span>
         </div>
       </div>
