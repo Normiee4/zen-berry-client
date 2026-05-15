@@ -1,4 +1,4 @@
-"use client"; // Drag & drop needs client components
+"use client";
 
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import { AIInsightsCard } from "@/components/dashboard/Ai-insights-card";
@@ -9,46 +9,42 @@ import { StreakCard } from "@/components/dashboard/Streak-card";
 import { TimerCard } from "@/components/dashboard/Timer-card";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
-import { useMIT } from "@/features/mit/useMIT";
-import { useTasks } from "@/features/task-list/useTasks";
+import { useMITApi } from "@/features/task-list/useTasksApi";
+import { useTasksApi } from "@/features/task-list/useTasksApi";
 
 export default function DashboardPage() {
-  const { mits, addMIT, updateTitle, markAsDone, remainingSlots } = useMIT();
-  const { tasks, addTask, deleteTask, updateTask } = useTasks();
+  const { mits, addMIT, updateTitle, markAsDone, remainingSlots } = useMITApi();
+  const { tasks, addTask, deleteTask, updateTask } = useTasksApi();
 
   const brainDumpTasks = tasks.filter((t) => t.type === "braindump");
 
   const onDragEnd = (result: DropResult) => {
-    const { source, destination, draggableId } = result;
+    const { source, destination } = result;
 
     if (!destination) return;
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
-    // Move from MIT → Brain Dump
     if (source.droppableId === "mit-list" && destination.droppableId === "braindump-list") {
       const mit = mits[source.index];
       if (!mit) return;
-      addTask({
-        title: mit.title,
-        completed: false,
-        type: "braindump",
-      });
-      ;
+      addTask({ title: mit.title, completed: false, type: "braindump" });
+      markAsDone(mit.id);
     }
 
-    // Move from Brain Dump → MIT
     if (source.droppableId === "braindump-list" && destination.droppableId === "mit-list") {
       const task = brainDumpTasks[source.index];
       if (!task) return;
-      addMIT(task.title);
-      deleteTask(task.id);
+      addMIT(task.title).then((result) => {
+        if (result.success) {
+          deleteTask(task.id);
+        }
+      });
     }
   };
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="min-h-screen bg-cream">
-        {/* Header remains unchanged */}
         <header className="border-b border-border/30 bg-white/50">
           <div className="mx-auto flex flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
             <div className="flex items-center gap-3">
@@ -72,14 +68,12 @@ export default function DashboardPage() {
 
         <main className="mx-auto max-w-8xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-6 items-start lg:grid-cols-3">
-            {/* Left Column */}
             <div className="flex flex-col gap-6">
               <TimerCard />
               <StreakCard />
               <MatchaProgressCard />
             </div>
 
-            {/* Middle Column - now passes props to both cards */}
             <div className="flex flex-col gap-6">
               <MITCard
                 mits={mits}
@@ -90,19 +84,17 @@ export default function DashboardPage() {
                 remainingSlots={remainingSlots}
               />
               <BrainDumpCard
-                  tasks={brainDumpTasks}
-                  droppableId="braindump-list"
-                  onAdd={(task) => addTask({ ...task, type: 'braindump', completed: false })}
-                  // task from BrainDumpCard might only have { title } or similar
-                  onToggleComplete={(id) => {
-                    const task = tasks.find(t => t.id === id);
-                    if (task) updateTask(id, { completed: !task.completed });
-                  }}
-                  onDelete={deleteTask}
-                />
+                tasks={brainDumpTasks}
+                droppableId="braindump-list"
+                onAdd={(task) => addTask({ ...task, type: "braindump", completed: false })}
+                onToggleComplete={(id) => {
+                  const task = tasks.find((t) => t.id === id);
+                  if (task) updateTask(id, { completed: !task.completed });
+                }}
+                onDelete={deleteTask}
+              />
             </div>
 
-            {/* Right Column */}
             <div className="flex">
               <AIInsightsCard />
             </div>
