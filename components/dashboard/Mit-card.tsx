@@ -12,7 +12,7 @@ interface MIT {
 interface MITCardProps {
   mits: MIT[];
   droppableId: string;
-  onAdd: (title: string) => { success?: boolean; error?: string } | void;
+  onAdd: (title: string) => { success?: boolean; error?: string } | void | Promise<{ success?: boolean; error?: string }>;
   onUpdateTitle: (id: string, title: string) => void;
   onMarkDone: (id: string) => void;
   remainingSlots: number;

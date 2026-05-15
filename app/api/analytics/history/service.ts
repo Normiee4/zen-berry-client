@@ -46,11 +46,11 @@ export const getAuthenticatedUser = async (supabase: SupabaseClient) => {
 }
 
 // ---------- Helpers ----------
-const getDaysAgo = (days: number): string => {
+export const getDaysAgo = (days: number): string => {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
 }
 
-const getDayName = (dateStr: string): string => {
+export const getDayName = (dateStr: string): string => {
   const date = new Date(dateStr)
   return date.toLocaleDateString('en-US', { weekday: 'short' })
 }

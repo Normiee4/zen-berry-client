@@ -212,7 +212,7 @@ export const callGeminiAPI = async (prompt: string): Promise<GeminiResponse> => 
         suggestion: parsed.suggestion || FALLBACK_RESPONSE.suggestion,
       }
     } catch {
-      const lines = text.split('\n').filter(l => l.trim())
+      const lines = text.split('\n').filter((l: string) => l.trim())
       return {
         insight: lines[0] || FALLBACK_RESPONSE.insight,
         suggestion: lines[1] || FALLBACK_RESPONSE.suggestion,
