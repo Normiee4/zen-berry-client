@@ -29,11 +29,12 @@ export function MITCard({
   const [newMit, setNewMit] = useState("");
   const [error, setError] = useState("");
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newMit.trim()) return;
     const result = onAdd(newMit);
-    if (result && !result.success) {
-      setError(result.error || "Failed to add");
+    const resolved = result instanceof Promise ? await result : result;
+    if (resolved && !resolved.success) {
+      setError(resolved.error || "Failed to add");
     } else {
       setNewMit("");
       setError("");

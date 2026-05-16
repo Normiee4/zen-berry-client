@@ -47,11 +47,11 @@ export function useTasksApi(options: UseTasksOptions = {}) {
   })
 
   const tasks = apiEnabled && !apiError && apiData
-    ? apiData.tasks.map((t: { id: string; title: string; isMIT: boolean; completed: boolean }) => ({
+    ? apiData.tasks.map((t) => ({
         id: t.id,
         title: t.title,
         completed: t.completed,
-        type: t.isMIT ? "mit" as const : "braindump" as const,
+        type: t.type,
       }))
     : localTasks.filter((t) => !type || t.type === type)
 

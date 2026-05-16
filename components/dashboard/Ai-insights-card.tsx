@@ -134,7 +134,7 @@ export function AIInsightsCard() {
               <span>{summary.today.streak}-day streak</span>
             </div>
           ) : null}
-          {summary?.hoursSinceBreak !== null && summary?.hoursSinceBreak > 2 && (
+          {summary?.hoursSinceBreak != null && summary.hoursSinceBreak > 2 && (
             <div className="flex items-center gap-1.5 text-xs text-strawberry font-medium">
               <Clock className="size-3.5" />
               <span>No break in {formatHours(summary?.hoursSinceBreak ?? 0)}</span>
