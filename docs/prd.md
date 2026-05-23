@@ -49,6 +49,10 @@ To provide a distraction-free environment where users can:
 * **Logic:** Sends today's metrics (sessions, MITs completed) to Gemini.
 * **Output:** A short, punchy, 2-sentence motivational insight.
 
+### 3.7 Progressive Web App Functionality 
+* **Mechanism:** Can be used offline of timer and task crud logic.
+* **Logic:** User should be able to make custom preset time offline and add tasks.
+
 ---
 
 ## 4. Technical Stack
@@ -59,38 +63,6 @@ To provide a distraction-free environment where users can:
 * **Database:** PostgreSQL (via Supabase).
 * **Validation:** Zod.
 * **AI:** Gemini API.
-
----
-
-## 5. Database Schema (Lean)
-
-| Table | Columns |
-| :--- | :--- |
-| **users** | `id`, `email`, `password_hash`, `created_at` |
-| **tasks** | `id`, `user_id`, `title`, `is_mit (bool)`, `completed (bool)`, `created_at` |
-| **sessions** | `id`, `user_id`, `duration`, `completed_at` |
-| **streaks** | `user_id`, `current_streak (int)`, `last_active_date` |
-
----
-
-## 6. API Routes (Minimalist)
-
-### Auth (`/auth`)
-* `POST /register` - New user creation.
-* `POST /login` - Credential verification & cookie setting.
-* `POST /logout` - Clear cookies.
-
-### Tasks (`/tasks`)
-* `GET /today` - Fetch active MITs and Brain Dump.
-* `POST /` - Add new task (Validate MIT count < 3).
-* `PATCH /:id` - Toggle completion or promote to MIT.
-* `DELETE /:id` - Remove task.
-
-### Sessions (`/sessions`)
-* `POST /` - Log a completed Pomodoro session (updates streak logic).
-
-### AI (`/ai`)
-* `POST /review` - Triggers Gemini prompt with daily data.
 
 ---
 
