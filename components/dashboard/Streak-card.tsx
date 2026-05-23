@@ -1,6 +1,6 @@
 "use client"
 
-import { useTimer } from "@/features/timer/useTimer"
+import { useTimer } from "@/hooks/useTimer"
 
 export function StreakCard() {
   const { currentStreak, pomodorosToday } = useTimer()

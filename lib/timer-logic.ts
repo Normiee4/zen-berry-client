@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useTimerStore } from './store/timer-store';
+import { useTimerStore } from '../store/timer-store';
 
 export function useTimerLogic() {
   const isRunning = useTimerStore((state) => state.isRunning);
