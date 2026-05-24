@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ArrowRight, Loader2 } from "lucide-react"
+import { PasswordInput } from "@/components/ui/Password-input"
 import Link from "next/link"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase"
@@ -82,9 +83,8 @@ export function LoginForm() {
             Forgot?
           </Link>
         </div>
-        <Input
+        <PasswordInput
           id="password"
-          type="password"
           placeholder="••••••••"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
