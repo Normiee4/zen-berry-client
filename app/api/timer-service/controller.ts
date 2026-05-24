@@ -90,15 +90,10 @@ export async function createTimerPreset(request: Request) {
 export async function recordPomodoroCompletion(request: Request) {
   try {
     const supabase = createSupabaseClient(request)
-    const { data: { user }, error: userError } = await timerService.getAuthenticatedUser(supabase)  // ✅ fixed
+    const { data: { user }, error: userError } = await timerService.getAuthenticatedUser(supabase)
 
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { action } = await request.json()
-    if (action !== 'recordCompletion') {
-      return NextResponse.json({ error: 'Unsupported action' }, { status: 400 })
     }
 
     const result = await timerService.recordPomodoro(supabase, user.id)
@@ -120,6 +115,76 @@ export async function recordPomodoroCompletion(request: Request) {
     )
   } catch (error) {
     console.error('Timer service PATCH error', error)
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+  }
+}
+
+export async function handleTimerAction(request: Request) {
+  try {
+    const supabase = createSupabaseClient(request)
+    const { data: { user }, error: userError } = await timerService.getAuthenticatedUser(supabase)
+
+    if (userError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { action, presetId, name, focusDuration, breakDuration } = await request.json()
+
+    if (action === 'recordCompletion') {
+      const result = await timerService.recordPomodoro(supabase, user.id)
+
+      if (result.error) {
+        return NextResponse.json({ error: result.error.message }, { status: 400 })
+      }
+
+      return NextResponse.json(
+        {
+          streak: {
+            currentStreak: result.data.streak_maintained,
+            pomodorosToday: result.data.daily_pomodoro,
+            dailyTasksCompleted: result.data.daily_task_completed,
+            lastPomodoroDate: result.data.date,
+          },
+        },
+        { status: 200 }
+      )
+    }
+
+    if (action === 'updatePreset') {
+      if (!presetId) {
+        return NextResponse.json({ error: 'presetId is required' }, { status: 400 })
+      }
+
+      const { data, error } = await timerService.updatePreset(supabase, presetId, {
+        name,
+        focusDuration,
+        breakDuration,
+      })
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 400 })
+      }
+
+      return NextResponse.json({ preset: timerService.formatPreset(data as timerService.TimerPresetRow) }, { status: 200 })
+    }
+
+    if (action === 'deletePreset') {
+      if (!presetId) {
+        return NextResponse.json({ error: 'presetId is required' }, { status: 400 })
+      }
+
+      const { error } = await timerService.deletePreset(supabase, presetId)
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 400 })
+      }
+
+      return NextResponse.json({ success: true }, { status: 200 })
+    }
+
+    return NextResponse.json({ error: 'Unsupported action' }, { status: 400 })
+  } catch (error) {
+    console.error('Timer service action error', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }

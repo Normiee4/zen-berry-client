@@ -1,4 +1,4 @@
-import { useTimerStore } from "@/features/timer/store/timer-store"
+import { useTimerStore } from "@/store/timer-store"
 
 export function useTimer() {
   const {
@@ -12,6 +12,8 @@ export function useTimer() {
     setMode,
     setPreset,
     addPreset,
+    updatePreset,
+    deletePreset,
     loadPresets,
     loadStats,
     completedFocusCycle,
@@ -38,6 +40,8 @@ export function useTimer() {
     setMode,
     setPreset,
     addPreset,
+    updatePreset,
+    deletePreset,
     loadPresets,
     loadStats,
     clearCompletedFocusCycle,

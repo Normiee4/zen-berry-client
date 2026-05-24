@@ -10,16 +10,22 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useTimerLogic } from '@/features/timer/timer-logic';
-import { useTimer } from "@/features/timer/useTimer";
 import { useResponsive } from "@/hooks/useResponsive";
-import { Pause, Play, Plus, RotateCcw, Settings } from "lucide-react";
+import { useTimer } from "@/hooks/useTimer";
+import { useTimerLogic } from '@/lib/timer-logic';
+import { useTimerStore } from "@/store/timer-store";
+import { useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
+import { Pause, Play, Plus, Pencil, RotateCcw, Settings, Trash2, Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts";
+import { Skeleton } from "@/components/ui/skeleton";
 
 
 export function TimerCard() {
   useTimerLogic();
+  const queryClient = useQueryClient()
+  const [loaded, setLoaded] = useState(false)
   const {
     mode,
     timeLeft,
@@ -31,6 +37,8 @@ export function TimerCard() {
     setMode,
     setPreset,
     addPreset,
+    updatePreset,
+    deletePreset,
     loadPresets,
     loadStats,
     completedFocusCycle,
@@ -51,6 +59,8 @@ export function TimerCard() {
         }
       } catch {
         // ignore load failures
+      } finally {
+        setLoaded(true);
       }
     };
 
@@ -62,11 +72,15 @@ export function TimerCard() {
 
     const recordCompletion = async () => {
       try {
-        await fetch('/api/timer-service', {
+        const res = await fetch('/api/timer-service', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'recordCompletion' }),
         })
+        if (res.ok) {
+          queryClient.invalidateQueries({ queryKey: ['analytics-summary'] })
+          queryClient.invalidateQueries({ queryKey: ['ai-insights-latest'] })
+        }
       } catch {
         // ignore network failures for now
       } finally {
@@ -77,10 +91,22 @@ export function TimerCard() {
     recordCompletion();
   }, [completedFocusCycle, clearCompletedFocusCycle]);
 
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && useTimerStore.getState().completedFocusCycle) {
+        toast.success('Focus session completed while you were away! 🎉')
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [])
+
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [newPresetName, setNewPresetName] = useState("");
   const [newFocusMinutes, setNewFocusMinutes] = useState(25);
   const [newBreakMinutes, setNewBreakMinutes] = useState(5);
+
+  const [editingPreset, setEditingPreset] = useState<{ id: string; name: string; focusMinutes: number; breakMinutes: number } | null>(null);
 
   const totalSeconds = useMemo(
     () =>
@@ -118,6 +144,47 @@ export function TimerCard() {
     },
   ];
 
+  const handleEditPreset = async () => {
+    if (!editingPreset || !editingPreset.name.trim()) return
+
+    try {
+      await fetch('/api/timer-service', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'updatePreset',
+          presetId: editingPreset.id,
+          name: editingPreset.name,
+          focusDuration: editingPreset.focusMinutes,
+          breakDuration: editingPreset.breakMinutes,
+        }),
+      })
+      updatePreset(editingPreset.id, {
+        name: editingPreset.name,
+        focusMinutes: editingPreset.focusMinutes,
+        breakMinutes: editingPreset.breakMinutes,
+      })
+      setEditingPreset(null)
+      toast.success('Preset updated')
+    } catch {
+      toast.error('Failed to update preset')
+    }
+  }
+
+  const handleDeletePreset = async (presetId: string, presetName: string) => {
+    try {
+      await fetch('/api/timer-service', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'deletePreset', presetId }),
+      })
+      deletePreset(presetId)
+      toast.success(`"${presetName}" deleted`)
+    } catch {
+      toast.error('Failed to delete preset')
+    }
+  }
+
   const handleAddPreset = async () => {
     if (!newPresetName.trim()) return;
 
@@ -142,6 +209,16 @@ export function TimerCard() {
       // ignore save failure for now
     }
   };
+
+  if (!loaded) {
+    return (
+      <div className="flex flex-col items-center gap-4 rounded-3xl bg-strawberry-light/30 p-6">
+        <Skeleton className="h-8 w-48 rounded-full" />
+        <Skeleton className="size-60 rounded-full" />
+        <Skeleton className="h-10 w-32 rounded-full" />
+      </div>
+    )
+  }
 
   return (
     <div className="flex min-h-0 flex-col rounded-3xl bg-strawberry-light/30 p-6 overflow-hidden">
@@ -271,20 +348,49 @@ export function TimerCard() {
                 <h4 className="mb-4 text-sm font-medium text-muted-foreground">Presets</h4>
                 <div className="flex flex-col gap-2">
                   {presets.map((preset) => (
-                    <button
+                    <div
                       key={preset.id}
-                      onClick={() => setPreset(preset.id)}
-                      className={`flex flex-col rounded-lg border p-4 text-left transition-colors ${
+                      className={`flex items-center rounded-lg border p-4 transition-colors ${
                         activePreset.id === preset.id
                           ? "border-l-4 border-l-matcha border-t-matcha-light/50 border-r-matcha-light/50 border-b-matcha-light/50 bg-matcha-light/20"
                           : "border-border hover:bg-cream/50"
                       }`}
                     >
-                      <span className="font-medium text-foreground">{preset.name}</span>
-                      <span className="mt-1 text-sm text-muted-foreground">
-                        {preset.focusMinutes}min focus / {preset.breakMinutes}min break
-                      </span>
-                    </button>
+                      <button
+                        onClick={() => setPreset(preset.id)}
+                        className="flex-1 text-left"
+                      >
+                        <span className="font-medium text-foreground">{preset.name}</span>
+                        <span className="mt-1 block text-sm text-muted-foreground">
+                          {preset.focusMinutes}min focus / {preset.breakMinutes}min break
+                        </span>
+                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() =>
+                            setEditingPreset({
+                              id: preset.id,
+                              name: preset.name,
+                              focusMinutes: preset.focusMinutes,
+                              breakMinutes: preset.breakMinutes,
+                            })
+                          }
+                          className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-matcha-light/30 hover:text-matcha transition-colors"
+                          title="Edit preset"
+                        >
+                          <Pencil className="size-3.5" />
+                        </button>
+                        {!preset.isDefault && (
+                          <button
+                            onClick={() => handleDeletePreset(preset.id, preset.name)}
+                            className="flex size-8 items-center justify-center rounded-full text-red-400 hover:bg-red-100 transition-colors"
+                            title="Delete preset"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -338,6 +444,60 @@ export function TimerCard() {
                   Add Preset
                 </Button>
               </div>
+
+              {/* Edit Preset Dialog */}
+              <Dialog open={editingPreset !== null} onOpenChange={(open) => { if (!open) setEditingPreset(null) }}>
+                <DialogContent className="max-w-md bg-white p-0">
+                  <DialogHeader className="flex flex-row items-center justify-between border-b border-border p-6 pb-4">
+                    <DialogTitle className="text-lg font-semibold">Edit Preset</DialogTitle>
+                  </DialogHeader>
+                  <div className="p-6 pt-4">
+                    <div className="mb-4">
+                      <Label className="mb-2 block text-sm text-muted-foreground">Preset Name</Label>
+                      <Input
+                        value={editingPreset?.name ?? ''}
+                        onChange={(e) => setEditingPreset((prev) => prev ? { ...prev, name: e.target.value } : null)}
+                        className="border-border bg-white"
+                      />
+                    </div>
+                    <div className="mb-4 grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="mb-2 block text-sm text-muted-foreground">Focus (minutes)</Label>
+                        <Input
+                          type="number"
+                          value={editingPreset?.focusMinutes ?? 25}
+                          onChange={(e) => setEditingPreset((prev) => prev ? { ...prev, focusMinutes: Number(e.target.value) } : null)}
+                          className="border-border bg-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="mb-2 block text-sm text-muted-foreground">Break (minutes)</Label>
+                        <Input
+                          type="number"
+                          value={editingPreset?.breakMinutes ?? 5}
+                          onChange={(e) => setEditingPreset((prev) => prev ? { ...prev, breakMinutes: Number(e.target.value) } : null)}
+                          className="border-border bg-white"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => setEditingPreset(null)}
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleEditPreset}
+                        className="flex-1 bg-matcha hover:bg-matcha/90 text-white"
+                      >
+                        Save Changes
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </DialogContent>
         </Dialog>

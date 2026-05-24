@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { CircleCheck, Plus } from "lucide-react";
+import { toast } from "sonner"
 import { Draggable, Droppable } from "@hello-pangea/dnd";
+import { DnDWrapper } from "@/components/DnDWrapper";
 
 interface MIT {
   id: string;
@@ -16,6 +18,57 @@ interface MITCardProps {
   onUpdateTitle: (id: string, title: string) => void;
   onMarkDone: (id: string) => void;
   remainingSlots: number;
+}
+
+function StaticMITList({
+  mits,
+  onUpdateTitle,
+  onMarkDone,
+}: {
+  mits: MIT[]
+  onUpdateTitle: (id: string, title: string) => void
+  onMarkDone: (id: string) => void
+}) {
+  if (mits.length === 0) {
+    return (
+      <div className="flex flex-1 items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/20 bg-white/30 p-6">
+        <div className="flex flex-col items-center gap-2 text-center">
+          <span className="text-3xl">📌</span>
+          <p className="text-sm font-medium text-muted-foreground">
+            Add your top priorities here.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {mits.map((mit, index) => (
+        <div
+          key={mit.id}
+          className="flex items-center gap-3 rounded-xl p-4 bg-white/70"
+        >
+          <span className="flex size-6 items-center justify-center text-sm font-medium text-muted-foreground">
+            {index + 1}
+          </span>
+          <input
+            type="text"
+            value={mit.title}
+            onChange={(e) => onUpdateTitle(mit.id, e.target.value)}
+            className="flex-1 bg-transparent text-sm outline-none text-foreground"
+          />
+                      <button
+                        onClick={() => { onMarkDone(mit.id); toast.success("MIT completed!") }}
+                        className="flex size-10 p-2 shrink-0 items-center justify-center rounded-full transition-colors text-matcha cursor-pointer hover:bg-gray-200"
+                        title="Mark as done"
+                      >
+                        <CircleCheck />
+                      </button>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 export function MITCard({
@@ -79,59 +132,71 @@ export function MITCard({
       </div>
 
       {/* MIT List */}
-      <Droppable droppableId={droppableId}>
-        {(provided) => (
-          <div
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-            className="flex flex-1 flex-col gap-3 overflow-y-auto"
-          >
-            {mits.length === 0 ? (
-              <div className="flex flex-1 items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/20 bg-white/30 p-6">
-                <div className="flex flex-col items-center gap-2 text-center">
-                  <span className="text-3xl">📌</span>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Add your top priorities here.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              mits.map((mit, index) => (
-                <Draggable key={mit.id} draggableId={mit.id} index={index}>
-                  {(provided, snapshot) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      {...provided.dragHandleProps}
-                      className={`flex items-center gap-3 rounded-xl p-4 ${
-                        snapshot.isDragging ? "bg-matcha-light/80 shadow-lg" : "bg-white/70"
-                      }`}
-                    >
-                      <span className="flex size-6 items-center justify-center text-sm font-medium text-muted-foreground">
-                        {index + 1}
-                      </span>
-                      <input
-                        type="text"
-                        value={mit.title}
-                        onChange={(e) => onUpdateTitle(mit.id, e.target.value)}
-                        className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/50 text-foreground"
-                      />
-                      <button
-                        onClick={() => onMarkDone(mit.id)}
-                        className="flex size-10 p-2 shrink-0 items-center justify-center rounded-full transition-colors text-matcha cursor-pointer hover:bg-gray-200"
-                        title="Mark as done"
-                      >
-                        <CircleCheck />
-                      </button>
-                    </div>
-                  )}
-                </Draggable>
-              ))
-            )}
-            {provided.placeholder}
+      <DnDWrapper
+        fallback={
+          <div className="flex flex-1 flex-col gap-3 overflow-y-auto">
+            <StaticMITList
+              mits={mits}
+              onUpdateTitle={onUpdateTitle}
+              onMarkDone={onMarkDone}
+            />
           </div>
-        )}
-      </Droppable>
+        }
+      >
+        <Droppable droppableId={droppableId}>
+          {(provided) => (
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className="flex flex-1 flex-col gap-3 overflow-y-auto"
+            >
+              {mits.length === 0 ? (
+                <div className="flex flex-1 items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/20 bg-white/30 p-6">
+                  <div className="flex flex-col items-center gap-2 text-center">
+                    <span className="text-3xl">📌</span>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Add your top priorities here.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                mits.map((mit, index) => (
+                  <Draggable key={mit.id} draggableId={mit.id} index={index}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        className={`flex items-center gap-3 rounded-xl p-4 ${
+                          snapshot.isDragging ? "bg-matcha-light/80 shadow-lg" : "bg-white/70"
+                        }`}
+                      >
+                        <span className="flex size-6 items-center justify-center text-sm font-medium text-muted-foreground">
+                          {index + 1}
+                        </span>
+                        <input
+                          type="text"
+                          value={mit.title}
+                          onChange={(e) => onUpdateTitle(mit.id, e.target.value)}
+                          className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/50 text-foreground"
+                        />
+          <button
+            onClick={() => { onMarkDone(mit.id); toast.success("MIT completed!") }}
+            className="flex size-10 p-2 shrink-0 items-center justify-center rounded-full transition-colors text-matcha cursor-pointer hover:bg-gray-200"
+            title="Mark as done"
+          >
+            <CircleCheck />
+          </button>
+                      </div>
+                    )}
+                  </Draggable>
+                ))
+              )}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DnDWrapper>
     </div>
   );
 }

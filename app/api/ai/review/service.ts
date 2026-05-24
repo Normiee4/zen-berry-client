@@ -152,20 +152,167 @@ export const incrementAIReviewCount = async (supabase: SupabaseClient, userId: s
     )
 }
 
+// ---------- Persistence Metrics ----------
+
+export const fetchCyclesTotal = async (supabase: SupabaseClient, userId: string): Promise<number> => {
+  const { count, error } = await supabase
+    .from('session_logs')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('was_break', false)
+
+  if (error || count === null) return 0
+  return count
+}
+
+export const fetchConsistencyRate = async (supabase: SupabaseClient, userId: string): Promise<number> => {
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+
+  const { data, error } = await supabase
+    .from('daily_stats')
+    .select('date')
+    .eq('user_id', userId)
+    .gte('date', sevenDaysAgo)
+    .gt('daily_pomodoro', 0)
+
+  if (error || !data) return 0
+
+  return Math.round((data.length / 7) * 100) / 100
+}
+
+export const fetchPeakDays = async (supabase: SupabaseClient, userId: string): Promise<string[]> => {
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+
+  const { data, error } = await supabase
+    .from('daily_activity_log')
+    .select('date, pomodoros_completed')
+    .eq('user_id', userId)
+    .gte('date', sevenDaysAgo)
+
+  if (error || !data) return []
+
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  const dayTotals = new Map<string, number>()
+
+  data.forEach((row) => {
+    const dayName = dayNames[new Date(row.date + 'T00:00:00').getDay()]
+    const current = dayTotals.get(dayName) || 0
+    dayTotals.set(dayName, current + row.pomodoros_completed)
+  })
+
+  const sorted = [...dayTotals.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([day]) => day)
+
+  return sorted
+}
+
+export const fetchMostUsedPreset = async (supabase: SupabaseClient, userId: string): Promise<number | null> => {
+  const { data, error } = await supabase
+    .from('session_logs')
+    .select('preset_used')
+    .eq('user_id', userId)
+    .not('preset_used', 'is', null)
+    .order('completed_at', { ascending: false })
+
+  if (error || !data || data.length === 0) return null
+
+  const freq = new Map<string, number>()
+  data.forEach((row) => {
+    const key = String(row.preset_used)
+    freq.set(key, (freq.get(key) || 0) + 1)
+  })
+
+  const mostUsed = [...freq.entries()].sort((a, b) => b[1] - a[1])[0][0]
+
+  const { data: preset } = await supabase
+    .from('timer_presets')
+    .select('preset_id')
+    .eq('user_id', userId)
+    .eq('preset_name', mostUsed)
+    .maybeSingle()
+
+  return preset?.preset_id ?? null
+}
+
+export const detectMilestone = (
+  cyclesTotal: number,
+  streak: number,
+  pomodorosToday: number,
+  tasksCompleted: number,
+  isFirstReview: boolean
+): string | null => {
+  if (isFirstReview) return 'First AI Review!'
+  if (streak >= 50) return 'Legendary — 50-Day Streak!'
+  if (streak >= 30) return 'Unstoppable — 30-Day Streak!'
+  if (streak >= 20) return 'On a Roll — 20-Day Streak!'
+  if (streak >= 10) return 'You\'re on Fire — 10-Day Streak!'
+  if (streak >= 7) return '7-Day Streak!'
+  if (cyclesTotal >= 100) return 'Century Club — 100 Pomodoros!'
+  if (cyclesTotal >= 50) return '50 Pomodoros Club!'
+  if (cyclesTotal >= 10) return '10 Pomodoros Club!'
+  if (pomodorosToday >= 8 && tasksCompleted >= 5) return 'Perfect Day!'
+  if (tasksCompleted >= 5) return '5 Tasks Done!'
+  return null
+}
+
+// ---------- Persistence ----------
+
+export interface AIInsightRow {
+  user_id: string
+  insight_date: string
+  productivity_level: number | null
+  consistency_rate: number | null
+  cycles_total: number
+  peak_hours: number
+  peak_days: string[]
+  insight_message: string | null
+  recommendation: string | null
+  milestone: string | null
+  models_used: Record<string, string> | null
+  most_used_preset_timer: number | null
+}
+
+export const persistInsight = async (
+  supabase: SupabaseClient,
+  insight: AIInsightRow
+) => {
+  return supabase
+    .from('ai_insights')
+    .upsert(
+      {
+        user_id: insight.user_id,
+        insight_date: insight.insight_date,
+        productivity_level: insight.productivity_level,
+        consistency_rate: insight.consistency_rate,
+        cycles_total: insight.cycles_total,
+        peak_hours: insight.peak_hours,
+        peak_days: insight.peak_days,
+        insight_message: insight.insight_message,
+        recommendation: insight.recommendation,
+        milestone: insight.milestone,
+        models_used: insight.models_used,
+        most_used_preset_timer: insight.most_used_preset_timer,
+      },
+      { onConflict: 'user_id,insight_date' }
+    )
+}
+
 // ---------- Gemini API Call ----------
-interface GeminiResponse {
+export interface GeminiResponse {
   insight: string
   suggestion: string
 }
 
 const FALLBACK_RESPONSE: GeminiResponse = {
-  insight: 'Every focus session counts! Keep the momentum going.',
-  suggestion: 'Start a 25-minute focus timer to build your streak.',
+  insight: 'Discipline is the bridge between goals and accomplishment. Every session brings you closer to mastery.',
+  suggestion: 'Begin a 25-minute focus block. The path of the strawberry is sweet for those who persist.',
 }
 
 const NO_DATA_RESPONSE: GeminiResponse = {
-  insight: "Start a focus session to unlock your daily insights!",
-  suggestion: 'Complete your first Pomodoro to see personalized productivity tips.',
+  insight: "A empty canvas holds infinite potential. The first stroke is the hardest — and the most important.",
+  suggestion: 'Complete your first Pomodoro, young sprout. Even the sweetest strawberry begins as a seed.',
 }
 
 export const callGeminiAPI = async (prompt: string): Promise<GeminiResponse> => {
@@ -235,11 +382,15 @@ export const generatePrompt = (data: {
   const { pomodoros, totalFocusMinutes, tasksCompleted, breaksTaken, peakHours, hoursSinceBreak } = data
 
   const restWarning = hoursSinceBreak !== null && hoursSinceBreak > 3
-    ? `\n⚠️ Note: User has not taken a break in over ${Math.floor(hoursSinceBreak)} hours.`
-    : ''
+    ? `\n⚠️ The young sprout has not taken a single break in over ${Math.floor(hoursSinceBreak)} hours. This is not sustainable. A withering plant cannot bear fruit.`
+    : hoursSinceBreak !== null && hoursSinceBreak > 2
+      ? `\n⚠️ Note: ${Math.floor(hoursSinceBreak)} hours since last break.`
+      : ''
+  const needsBreak = hoursSinceBreak !== null && hoursSinceBreak > 3
 
-  return `You are Zen Berry, a friendly and encouraging productivity assistant. 
-Analyze the user's productivity data and provide a short, punchy insight.
+  return `You are Zensei, a strawberry-themed AI productivity master — part wise teacher, part gentle drill instructor. Your voice is warm yet commanding, like a sensei who has cultivated focus for centuries. You refer to the user as "young sprout" or "apprentice". You occasionally weave in strawberry metaphors (ripeness, sweetness, seeds, harvest). You are direct but never harsh — you push because you believe in their potential.
+
+Analyze the user's productivity data and deliver a short, punchy insight like a master addressing their student.
 
 Today's Stats:
 - Focus sessions completed: ${pomodoros}
@@ -249,9 +400,11 @@ Today's Stats:
 - Peak productivity hours: ${peakHours || 'Not enough data'}
 - Hours since last break: ${hoursSinceBreak !== null ? Math.floor(hoursSinceBreak) + ' hours' : 'N/A'}${restWarning}
 
+${needsBreak ? 'IMPORTANT: The user badly needs a break. Make your first sentence a kind but firm order to rest before continuing. The insight should lead with rest, not productivity.' : ''}
+
 Response format (JSON):
 {
-  "insight": "2 sentences max, motivational and warm",
-  "suggestion": "1 specific, actionable recommendation"
+  "insight": "2 sentences max. Calm, warm, master-to-student tone. Can use one strawberry metaphor. Keep the user relaxed — motivation should feel like a deep breath, not a sprint.",
+  "suggestion": "1 specific, actionable recommendation in Zensei's teaching voice."
 }`
 }

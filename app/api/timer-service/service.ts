@@ -117,6 +117,34 @@ export const createPreset = async (
     .single()
 }
 
+export const updatePreset = async (
+  supabase: SupabaseClient,
+  presetId: string,
+  updates: { name?: string; focusDuration?: number; breakDuration?: number }
+) => {
+  const dbUpdates: Record<string, string | number> = {}
+  if (updates.name !== undefined) dbUpdates.preset_name = updates.name
+  if (updates.focusDuration !== undefined) dbUpdates.focus_duration = updates.focusDuration
+  if (updates.breakDuration !== undefined) dbUpdates.break_duration = updates.breakDuration
+
+  return supabase
+    .from('timer_presets')
+    .update(dbUpdates)
+    .eq('preset_id', presetId)
+    .select()
+    .single()
+}
+
+export const deletePreset = async (
+  supabase: SupabaseClient,
+  presetId: string
+) => {
+  return supabase
+    .from('timer_presets')
+    .delete()
+    .eq('preset_id', presetId)
+}
+
 export const recordPomodoro = async (supabase: SupabaseClient, userId: string) => {
   const today = getToday()
   const yesterday = getYesterday()

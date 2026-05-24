@@ -67,7 +67,7 @@ export default function DashboardPage() {
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="min-h-screen bg-cream">
         <header className="border-b border-border/30 bg-white/50">
-          <div className="mx-auto flex flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+          <div className="mx-auto flex items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-matcha text-cream font-bold">
                 ZB
@@ -89,12 +89,18 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-8xl px-4 py-8 sm:px-6 lg:px-8">
+        <main className="mx-auto max-w-8xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-6 items-start lg:grid-cols-3">
             <div className="flex flex-col gap-6">
-              <TimerCard />
-              <StreakCard />
-              <MatchaProgressCard />
+              <ErrorBoundary name="Timer" fallback={<p className="text-sm text-muted-foreground p-4">Timer unavailable</p>}>
+                <TimerCard />
+              </ErrorBoundary>
+              <ErrorBoundary name="Streak" fallback={<p className="text-sm text-muted-foreground p-4">Streak unavailable</p>}>
+                <StreakCard />
+              </ErrorBoundary>
+              <ErrorBoundary name="Progress" fallback={<p className="text-sm text-muted-foreground p-4">Progress unavailable</p>}>
+                <MatchaProgressCard />
+              </ErrorBoundary>
             </div>
 
             <div className="flex flex-col gap-6">
@@ -118,8 +124,10 @@ export default function DashboardPage() {
               />
             </div>
 
-            <div className="flex">
-              <AIInsightsCard />
+            <div className="flex flex-col gap-6">
+              <ErrorBoundary name="AI Insights" fallback={<p className="text-sm text-muted-foreground p-4">Insights unavailable</p>}>
+                <AIInsightsCard />
+              </ErrorBoundary>
             </div>
           </div>
         </main>
