@@ -1,6 +1,28 @@
 import { NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import * as authService from '@/app/api/auth-service/service'
+import { checkRateLimit } from '@/lib/middleware/rate-limit'
+
+const AUTH_RATE_LIMIT = 5
+const AUTH_RATE_WINDOW = 15 * 60 * 1000
+
+function getClientIp(request: Request): string {
+  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    ?? request.headers.get('x-real-ip')
+    ?? 'unknown'
+}
+
+function rateLimitAuth(request: Request): { allowed: boolean } | NextResponse {
+  const ip = getClientIp(request)
+  const result = checkRateLimit(`auth:${ip}`, AUTH_RATE_LIMIT, AUTH_RATE_WINDOW)
+  if (!result.allowed) {
+    return NextResponse.json(
+      { error: `Too many attempts. Try again in ${Math.ceil(result.resetIn / 60000)} minutes.` },
+      { status: 429 }
+    )
+  }
+  return { allowed: true }
+}
 
 function createClient(request: Request, response: NextResponse) {
   return createServerClient(
@@ -29,6 +51,9 @@ function createClient(request: Request, response: NextResponse) {
 }
 
 export async function register(request: Request) {
+  const rl = rateLimitAuth(request)
+  if (rl instanceof NextResponse) return rl
+
   try {
     const { email, password, fullName } = await request.json()
     if (!email || !password) {
@@ -52,6 +77,9 @@ export async function register(request: Request) {
 }
 
 export async function login(request: Request) {
+  const rl = rateLimitAuth(request)
+  if (rl instanceof NextResponse) return rl
+
   try {
     const { email, password } = await request.json()
     if (!email || !password) {
@@ -102,6 +130,9 @@ export async function getMe(request: Request) {
 }
 
 export async function forgotPassword(request: Request) {
+  const rl = rateLimitAuth(request)
+  if (rl instanceof NextResponse) return rl
+
   try {
     const { email } = await request.json()
     if (!email) {
@@ -113,7 +144,7 @@ export async function forgotPassword(request: Request) {
     const { error } = await authService.sendResetEmail(
       supabase,
       email,
-      `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/auth/login`
+      `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/auth/reset-password`
     )
 
     if (error) {
