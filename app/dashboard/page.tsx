@@ -11,8 +11,10 @@ import { StreakCard } from "@/components/dashboard/Streak-card"
 import { TimerCard } from "@/components/dashboard/Timer-card"
 import { Button } from "@/components/ui/button"
 import { LogOut, Loader2 } from "lucide-react"
-import { useMITApi } from "@/features/task-list/useTasksApi"
-import { useTasksApi } from "@/features/task-list/useTasksApi"
+import { useMITApi } from "@/hooks/useTasksApi"
+import { useTasksApi } from "@/hooks/useTasksApi"
+import { ErrorBoundary } from "@/components/ErrorBoundary"
+
 export default function DashboardPage() {
   const router = useRouter()
   const [user, setUser] = useState<{ email: string; name: string } | null>(null)
