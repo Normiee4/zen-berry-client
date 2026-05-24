@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="leafGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#86A788"/>
+      <stop offset="100%" stop-color="#5A7A5C"/>
+    </linearGradient>
+    <linearGradient id="berryGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFCFCF"/>
+      <stop offset="100%" stop-color="#FF9E9E"/>
+    </linearGradient>
+  </defs>
+  <!-- Outer zen circle -->
+  <circle cx="256" cy="256" r="240" fill="#FEFCF3" stroke="#86A788" stroke-width="12"/>
+  <!-- Strawberry body -->
+  <path d="M256 120 C200 160 180 240 180 300 C180 340 200 370 220 390 C240 410 256 420 256 420 C256 420 272 410 292 390 C312 370 332 340 332 300 C332 240 312 160 256 120Z" fill="url(#berryGrad)"/>
+  <!-- Seeds -->
+  <circle cx="230" cy="260" r="4" fill="#FEFCF3" opacity="0.6"/>
+  <circle cx="256" cy="300" r="4" fill="#FEFCF3" opacity="0.6"/>
+  <circle cx="282" cy="260" r="4" fill="#FEFCF3" opacity="0.6"/>
+  <circle cx="245" cy="340" r="3.5" fill="#FEFCF3" opacity="0.6"/>
+  <circle cx="270" cy="350" r="3.5" fill="#FEFCF3" opacity="0.6"/>
+  <circle cx="256" cy="380" r="3" fill="#FEFCF3" opacity="0.6"/>
+  <circle cx="220" cy="310" r="3.5" fill="#FEFCF3" opacity="0.6"/>
+  <circle cx="292" cy="310" r="3.5" fill="#FEFCF3" opacity="0.6"/>
+  <circle cx="256" cy="240" r="3.5" fill="#FEFCF3" opacity="0.6"/>
+  <!-- Strawberry leaf crown -->
+  <path d="M256 120 Q240 100 220 110 Q240 130 256 120Z" fill="url(#leafGrad)"/>
+  <path d="M256 120 Q256 95 265 90 Q260 115 256 120Z" fill="url(#leafGrad)"/>
+  <path d="M256 120 Q272 100 292 110 Q272 130 256 120Z" fill="url(#leafGrad)"/>
+  <!-- Stem -->
+  <line x1="256" y1="90" x2="256" y2="65" stroke="#5A7A5C" stroke-width="5" stroke-linecap="round"/>
+  <!-- Zen dot -->
+  <circle cx="256" cy="460" r="8" fill="#86A788"/>
+  <!-- Bottom wave line -->
+  <path d="M150 440 Q200 460 256 440 Q312 420 362 440" stroke="#86A788" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.4"/>
+</svg>
