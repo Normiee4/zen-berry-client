@@ -36,7 +36,7 @@ export function useTasksApi(options: UseTasksOptions = {}) {
 
   const [localTasks, setLocalTasks] = useLocalStorage<Task[]>("zenberry_tasks", [])
 
-  const apiEnabled = false
+  const apiEnabled = true
 
   const { data: apiData, isLoading: isApiLoading, error: apiError } = useQuery({
     queryKey,
@@ -46,12 +46,13 @@ export function useTasksApi(options: UseTasksOptions = {}) {
     retry: 1,
   })
 
-  const tasks = apiEnabled && !apiError && apiData
+  const tasks = apiEnabled && apiData && !apiError
     ? apiData.tasks.map((t) => ({
         id: t.id,
         title: t.title,
         completed: t.completed,
-        type: t.type,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        type: ((t as any).isMIT ? "mit" : "braindump") as "mit" | "braindump",
       }))
     : localTasks.filter((t) => !type || t.type === type)
 
@@ -127,7 +128,7 @@ export function useMITApi() {
   const [localMits, setLocalMits] = useLocalStorage<{ id: string; title: string }[]>("zenberry_mit", [])
   const queryClient = useQueryClient()
 
-  const apiEnabled = false
+  const apiEnabled = true
 
   const { data: apiData, isLoading: isApiLoading, error: apiError } = useQuery({
     queryKey: ["tasks", "mit"],
@@ -136,7 +137,7 @@ export function useMITApi() {
     staleTime: 30 * 1000,
   })
 
-  const mits = apiEnabled && !apiError && apiData
+  const mits = apiEnabled && apiData && !apiError
     ? apiData.tasks.map((t: { id: string; title: string }) => ({ id: t.id, title: t.title }))
     : localMits
 

@@ -50,7 +50,3 @@ async function AuthMiddleware(request: NextRequest) {
 }
 
 export default withErrorHandler(AuthMiddleware)
-
-export const config = {
-  matcher: ['/dashboard/:path*', '/api/((?!waitlist).*)', '/auth/:path*'],
-}

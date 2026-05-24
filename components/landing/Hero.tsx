@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { ArrowRight, Sparkles } from "lucide-react"
 import Link from "next/link"
 
+const authEnabled = process.env.NEXT_PUBLIC_ENABLE_LOGIN === "true" || process.env.NEXT_PUBLIC_ENABLE_SIGNUP === "true"
+
 export function Hero() {
   return (
     <section className="relative overflow-hidden bg-linear-to-br from-cream via-strawberry-light/30 to-matcha-light/20">
@@ -84,7 +86,7 @@ export function Hero() {
                 size="lg" 
                 className="bg-matcha px-8 text-white hover:bg-matcha/90"
               >
-                <Link href="/auth/waitlist" className="inline-flex items-center gap-2">
+                <Link href={authEnabled ? "/auth/signup" : "/auth/waitlist"} className="inline-flex items-center gap-2">
                   Get Started — It&apos;s Free
                   <ArrowRight className="size-4" />
                 </Link>
