@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server'
 import * as analyticsService from '@/app/api/analytics/summary/service'
+import { getUserIdFromRequest } from '@/lib/auth-helpers'
 
 export async function getAnalyticsSummary(request: Request) {
   try {
-    const supabase = analyticsService.createSupabaseClient(request)
-    const { data: { user }, error: userError } = await analyticsService.getAuthenticatedUser(supabase)
-
-    if (userError || !user) {
+    const userId = getUserIdFromRequest(request)
+    if (!userId) {
       return NextResponse.json(
         {
           today: {
@@ -23,13 +22,14 @@ export async function getAnalyticsSummary(request: Request) {
       )
     }
 
+    const supabase = analyticsService.createSupabaseClient(request)
     const [statsResult, mitsCompleted, peakHours, totalFocusMinutes, breaksTaken, lastBreak] = await Promise.all([
-      analyticsService.fetchTodayStats(supabase, user.id),
-      analyticsService.fetchMITCount(supabase, user.id),
-      analyticsService.calculatePeakHours(supabase, user.id),
-      analyticsService.calculateTotalFocusMinutes(supabase, user.id),
-      analyticsService.calculateBreaksTaken(supabase, user.id),
-      analyticsService.getLastBreakTime(supabase, user.id),
+      analyticsService.fetchTodayStats(supabase, userId),
+      analyticsService.fetchMITCount(supabase, userId),
+      analyticsService.calculatePeakHours(supabase, userId),
+      analyticsService.calculateTotalFocusMinutes(supabase, userId),
+      analyticsService.calculateBreaksTaken(supabase, userId),
+      analyticsService.getLastBreakTime(supabase, userId),
     ])
 
     let hoursSinceBreak: number | null = null
