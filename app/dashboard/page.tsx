@@ -1,19 +1,39 @@
 "use client"
 
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { DragDropContext, DropResult } from "@hello-pangea/dnd"
-import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { AIInsightsCard } from "@/components/dashboard/Ai-insights-card"
-
 import { BrainDumpCard } from "@/components/dashboard/Brain-dump-card"
 import { MatchaProgressCard } from "@/components/dashboard/Matcha-progress-card"
 import { MITCard } from "@/components/dashboard/Mit-card"
 import { StreakCard } from "@/components/dashboard/Streak-card"
 import { TimerCard } from "@/components/dashboard/Timer-card"
 import { Button } from "@/components/ui/button"
-import { LogOut } from "lucide-react"
-import { useMITApi, useTasksApi } from "@/hooks/useTasksApi"
-
+import { LogOut, Loader2 } from "lucide-react"
+import { useMITApi } from "@/features/task-list/useTasksApi"
+import { useTasksApi } from "@/features/task-list/useTasksApi"
 export default function DashboardPage() {
+  const router = useRouter()
+  const [user, setUser] = useState<{ email: string; name: string } | null>(null)
+  const [loadingUser, setLoadingUser] = useState(true)
+
+  useEffect(() => {
+    fetch("/api/auth-service/me")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.user) setUser(data.user)
+        setLoadingUser(false)
+      })
+      .catch(() => setLoadingUser(false))
+  }, [])
+
+  const handleLogout = async () => {
+    await fetch("/api/auth-service/logout", { method: "POST" })
+    router.push("/auth/login")
+    router.refresh()
+  }
+
   const { mits, addMIT, updateTitle, markAsDone, remainingSlots } = useMITApi()
   const { tasks, addTask, deleteTask, updateTask } = useTasksApi()
 
@@ -54,10 +74,18 @@ export default function DashboardPage() {
               </div>
               <h1 className="text-xl font-bold text-foreground">Zen Berry</h1>
             </div>
-            <Button size="sm" variant="outline" className="border-border">
-              <LogOut className="mr-2 size-4" />
-              Log out
-            </Button>
+            <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+              <div className="text-right sm:text-left">
+                <p className="text-sm font-medium text-foreground">Welcome back!</p>
+                <p className="text-xs text-muted-foreground">
+                  {loadingUser ? "Loading..." : user?.name}
+                </p>
+              </div>
+              <Button size="sm" variant="outline" className="border-border" onClick={handleLogout} disabled={loadingUser}>
+                {loadingUser ? <Loader2 className="mr-2 size-4 animate-spin" /> : <LogOut className="mr-2 size-4" />}
+                Log out
+              </Button>
+            </div>
           </div>
         </header>
 
@@ -76,28 +104,24 @@ export default function DashboardPage() {
             </div>
 
             <div className="flex flex-col gap-6">
-              <ErrorBoundary name="MIT" fallback={<p className="text-sm text-muted-foreground p-4">Tasks unavailable</p>}>
-                <MITCard
-                  mits={mits}
-                  droppableId="mit-list"
-                  onAdd={addMIT}
-                  onUpdateTitle={updateTitle}
-                  onMarkDone={markAsDone}
-                  remainingSlots={remainingSlots}
-                />
-              </ErrorBoundary>
-              <ErrorBoundary name="Brain Dump" fallback={<p className="text-sm text-muted-foreground p-4">Brain dump unavailable</p>}>
-                <BrainDumpCard
-                  tasks={brainDumpTasks}
-                  droppableId="braindump-list"
-                  onAdd={(task) => addTask({ ...task, type: "braindump", completed: false })}
-                  onToggleComplete={(id) => {
-                    const task = tasks.find((t) => t.id === id)
-                    if (task) updateTask(id, { completed: !task.completed })
-                  }}
-                  onDelete={deleteTask}
-                />
-              </ErrorBoundary>
+              <MITCard
+                mits={mits}
+                droppableId="mit-list"
+                onAdd={addMIT}
+                onUpdateTitle={updateTitle}
+                onMarkDone={markAsDone}
+                remainingSlots={remainingSlots}
+              />
+              <BrainDumpCard
+                tasks={brainDumpTasks}
+                droppableId="braindump-list"
+                onAdd={(task) => addTask({ ...task, type: "braindump", completed: false })}
+                onToggleComplete={(id) => {
+                  const task = tasks.find((t) => t.id === id)
+                  if (task) updateTask(id, { completed: !task.completed })
+                }}
+                onDelete={deleteTask}
+              />
             </div>
 
             <div className="flex flex-col gap-6">
