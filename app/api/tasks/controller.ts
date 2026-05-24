@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server'
 import * as taskService from '@/app/api/tasks/service'
+import { getUserIdFromRequest } from '@/lib/auth-helpers'
 
 const MIT_LIMIT = 3
 
 export async function getTasks(request: Request) {
   try {
-    const supabase = taskService.createSupabaseClient(request)
-    const { data: { user }, error: userError } = await taskService.getAuthenticatedUser(supabase)
-
-    if (userError || !user) {
+    const userId = getUserIdFromRequest(request)
+    if (!userId) {
       return NextResponse.json({ tasks: [], mitCount: 0 }, { status: 200 })
     }
 
+    const supabase = taskService.createSupabaseClient(request)
     const url = new URL(request.url)
     const type = url.searchParams.get('type') as 'mit' | 'braindump' | null
     const completed = url.searchParams.get('completed')
@@ -21,8 +21,8 @@ export async function getTasks(request: Request) {
     if (completed !== null) filters.completed = completed === 'true'
 
     const [tasksResult, mitCountResult] = await Promise.all([
-      taskService.fetchTasks(supabase, user.id, filters),
-      taskService.fetchMITCount(supabase, user.id),
+      taskService.fetchTasks(supabase, userId, filters),
+      taskService.fetchMITCount(supabase, userId),
     ])
 
     if (tasksResult.error) {
@@ -47,13 +47,12 @@ export async function getTasks(request: Request) {
 
 export async function createTask(request: Request) {
   try {
-    const supabase = taskService.createSupabaseClient(request)
-    const { data: { user }, error: userError } = await taskService.getAuthenticatedUser(supabase)
-
-    if (userError || !user) {
+    const userId = getUserIdFromRequest(request)
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const supabase = taskService.createSupabaseClient(request)
     const body = await request.json()
     const { title, type } = body
 
@@ -64,7 +63,7 @@ export async function createTask(request: Request) {
     const isMIT = type === 'mit'
 
     if (isMIT) {
-      const mitCountResult = await taskService.fetchMITCount(supabase, user.id)
+      const mitCountResult = await taskService.fetchMITCount(supabase, userId)
       if (mitCountResult.count >= MIT_LIMIT) {
         return NextResponse.json(
           { error: `You can only have ${MIT_LIMIT} Most Important Tasks at a time.` },
@@ -73,7 +72,7 @@ export async function createTask(request: Request) {
       }
     }
 
-    const result = await taskService.insertTask(supabase, user.id, {
+    const result = await taskService.insertTask(supabase, userId, {
       title: title.trim(),
       isMIT,
     })
@@ -94,13 +93,12 @@ export async function createTask(request: Request) {
 
 export async function updateTask(request: Request) {
   try {
-    const supabase = taskService.createSupabaseClient(request)
-    const { data: { user }, error: userError } = await taskService.getAuthenticatedUser(supabase)
-
-    if (userError || !user) {
+    const userId = getUserIdFromRequest(request)
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const supabase = taskService.createSupabaseClient(request)
     const body = await request.json()
     const { id, title, completed, isMIT } = body
 
@@ -113,7 +111,7 @@ export async function updateTask(request: Request) {
     if (completed !== undefined) updates.completed = completed
     if (isMIT !== undefined) updates.is_mit = isMIT
 
-    const result = await taskService.modifyTask(supabase, user.id, id, updates)
+    const result = await taskService.modifyTask(supabase, userId, id, updates)
 
     if (result.error) {
       return NextResponse.json({ error: result.error.message }, { status: 400 })
@@ -131,13 +129,12 @@ export async function updateTask(request: Request) {
 
 export async function deleteTask(request: Request) {
   try {
-    const supabase = taskService.createSupabaseClient(request)
-    const { data: { user }, error: userError } = await taskService.getAuthenticatedUser(supabase)
-
-    if (userError || !user) {
+    const userId = getUserIdFromRequest(request)
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const supabase = taskService.createSupabaseClient(request)
     const url = new URL(request.url)
     const id = url.searchParams.get('id')
 
@@ -145,7 +142,7 @@ export async function deleteTask(request: Request) {
       return NextResponse.json({ error: 'Task ID is required' }, { status: 400 })
     }
 
-    const result = await taskService.removeTask(supabase, user.id, id)
+    const result = await taskService.removeTask(supabase, userId, id)
 
     if (result.error) {
       return NextResponse.json({ error: result.error.message }, { status: 400 })

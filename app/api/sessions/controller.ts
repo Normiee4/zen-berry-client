@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server'
 import * as sessionService from '@/app/api/sessions/service'
+import { getUserIdFromRequest } from '@/lib/auth-helpers'
 
 export async function recordSession(request: Request) {
   try {
-    const supabase = sessionService.createSupabaseClient(request)
-    const { data: { user }, error: userError } = await sessionService.getAuthenticatedUser(supabase)
-
-    if (userError || !user) {
+    const userId = getUserIdFromRequest(request)
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const supabase = sessionService.createSupabaseClient(request)
     const body = await request.json()
     const { action, durationMinutes, wasBreak, presetUsed } = body
 
@@ -18,15 +18,15 @@ export async function recordSession(request: Request) {
     }
 
     const results = await Promise.all([
-      sessionService.insertSessionLog(supabase, user.id, {
+      sessionService.insertSessionLog(supabase, userId, {
         durationMinutes: durationMinutes || 25,
         wasBreak: wasBreak || false,
         presetUsed: presetUsed || 'classic',
       }),
-      sessionService.recordPomodoroInDailyStats(supabase, user.id),
+      sessionService.recordPomodoroInDailyStats(supabase, userId),
       wasBreak 
         ? Promise.resolve({ data: null }) 
-        : sessionService.incrementHourlyActivity(supabase, user.id, true),
+        : sessionService.incrementHourlyActivity(supabase, userId, true),
     ])
 
     const [sessionResult, statsResult, activityResult] = results
@@ -55,14 +55,13 @@ export async function recordSession(request: Request) {
 
 export async function getTodayStats(request: Request) {
   try {
-    const supabase = sessionService.createSupabaseClient(request)
-    const { data: { user }, error: userError } = await sessionService.getAuthenticatedUser(supabase)
-
-    if (userError || !user) {
+    const userId = getUserIdFromRequest(request)
+    if (!userId) {
       return NextResponse.json({ stats: null }, { status: 200 })
     }
 
-    const statsResult = await sessionService.getTodayStats(supabase, user.id)
+    const supabase = sessionService.createSupabaseClient(request)
+    const statsResult = await sessionService.getTodayStats(supabase, userId)
 
     if (statsResult.error) {
       return NextResponse.json({ error: statsResult.error.message }, { status: 400 })
