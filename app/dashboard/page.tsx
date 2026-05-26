@@ -11,9 +11,15 @@ import { StreakCard } from "@/components/dashboard/Streak-card"
 import { TimerCard } from "@/components/dashboard/Timer-card"
 import { Button } from "@/components/ui/button"
 import { LogOut, Loader2 } from "lucide-react"
-import { useMITApi } from "@/hooks/useTasksApi"
-import { useTasksApi } from "@/hooks/useTasksApi"
+import { useMITApi, useTasksApi } from "@/hooks/useTasksApi"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
+import { ConfirmDragDialog } from "@/components/dashboard/ConfirmDragDialog"
+
+interface PendingDrag {
+  direction: "to-mit" | "to-braindump"
+  taskTitle: string
+  sourceIndex: number
+}
 
 export default function DashboardPage() {
   const router = useRouter()

@@ -16,7 +16,7 @@ import { useTimerLogic } from '@/lib/timer-logic';
 import { useTimerStore } from "@/store/timer-store";
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { Pause, Play, Plus, Pencil, RotateCcw, Settings, Trash2, Loader2 } from "lucide-react";
+import { Pause, Play, Plus, Pencil, RotateCcw, Settings, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
