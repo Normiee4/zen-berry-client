@@ -63,8 +63,8 @@ export const fetchMITCount = async (supabase: SupabaseClient, userId: string) =>
     .from('tasks')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', userId)
-    .eq('is_mit', true)
-    .eq('completed', true)
+    .eq('type', 'MIT')
+    .not('complete_at', 'is', null)
 
   return { count: count ?? 0, error }
 }

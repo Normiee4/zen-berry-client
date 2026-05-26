@@ -33,8 +33,8 @@ export async function getAnalyticsHistory(request: Request) {
 
     const mitsByDate = new Map<string, number>()
     ;(mitsResult.data || []).forEach(m => {
-      if (m.completed_at) {
-        const date = m.completed_at.slice(0, 10)
+      if (m.complete_at) {
+        const date = m.complete_at.slice(0, 10)
         mitsByDate.set(date, (mitsByDate.get(date) || 0) + 1)
       }
     })

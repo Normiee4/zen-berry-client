@@ -45,7 +45,7 @@ export const fetchLifetimeTasks = async (supabase: SupabaseClient, userId: strin
     .from('tasks')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', userId)
-    .eq('completed', true)
+    .not('complete_at', 'is', null)
 
   if (error) {
     console.error('Error fetching lifetime tasks:', error)
