@@ -11,9 +11,15 @@ import { StreakCard } from "@/components/dashboard/Streak-card"
 import { TimerCard } from "@/components/dashboard/Timer-card"
 import { Button } from "@/components/ui/button"
 import { LogOut, Loader2 } from "lucide-react"
-import { useMITApi } from "@/hooks/useTasksApi"
-import { useTasksApi } from "@/hooks/useTasksApi"
+import { useMITApi, useTasksApi } from "@/hooks/useTasksApi"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
+import { ConfirmDragDialog } from "@/components/dashboard/ConfirmDragDialog"
+
+interface PendingDrag {
+  direction: "to-mit" | "to-braindump"
+  taskTitle: string
+  sourceIndex: number
+}
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -38,6 +44,7 @@ export default function DashboardPage() {
 
   const { mits, addMIT, updateTitle, markAsDone, remainingSlots } = useMITApi()
   const { tasks, addTask, deleteTask, updateTask } = useTasksApi()
+  const [pendingDrag, setPendingDrag] = useState<PendingDrag | null>(null)
 
   const brainDumpTasks = tasks.filter((t) => t.type === "braindump")
 
@@ -50,19 +57,37 @@ export default function DashboardPage() {
     if (source.droppableId === "mit-list" && destination.droppableId === "braindump-list") {
       const mit = mits[source.index]
       if (!mit) return
-      addTask({ title: mit.title, completed: false, type: "braindump" })
-      markAsDone(mit.id)
+      setPendingDrag({ direction: "to-braindump", taskTitle: mit.title, sourceIndex: source.index })
     }
 
     if (source.droppableId === "braindump-list" && destination.droppableId === "mit-list") {
       const task = brainDumpTasks[source.index]
       if (!task) return
+      setPendingDrag({ direction: "to-mit", taskTitle: task.title, sourceIndex: source.index })
+    }
+  }
+
+  const executeDrag = () => {
+    if (!pendingDrag) return
+
+    if (pendingDrag.direction === "to-braindump") {
+      const mit = mits[pendingDrag.sourceIndex]
+      if (!mit) { setPendingDrag(null); return }
+      addTask({ title: mit.title, completed: false, type: "braindump" })
+      markAsDone(mit.id)
+    }
+
+    if (pendingDrag.direction === "to-mit") {
+      const task = brainDumpTasks[pendingDrag.sourceIndex]
+      if (!task) { setPendingDrag(null); return }
       addMIT(task.title).then((result) => {
         if (result.success) {
           deleteTask(task.id)
         }
       })
     }
+
+    setPendingDrag(null)
   }
 
   return (
@@ -134,6 +159,13 @@ export default function DashboardPage() {
           </div>
         </main>
       </div>
+      <ConfirmDragDialog
+        open={pendingDrag !== null}
+        direction={pendingDrag?.direction ?? null}
+        taskTitle={pendingDrag?.taskTitle ?? ""}
+        onConfirm={executeDrag}
+        onCancel={() => setPendingDrag(null)}
+      />
     </DragDropContext>
   )
 }
