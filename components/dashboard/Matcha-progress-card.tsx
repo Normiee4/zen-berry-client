@@ -16,36 +16,57 @@ interface SummaryResponse {
   hoursSinceBreak: number | null
 }
 
+interface MilestonesResponse {
+  lifetimeTasks: number
+  lifetimeCycles: number
+  combinedTotal: number
+}
+
 const fetchSummary = async (): Promise<SummaryResponse> => {
   const res = await fetch("/api/analytics/summary")
   if (!res.ok) throw new Error("Failed to fetch summary")
   return res.json()
 }
 
+const fetchMilestones = async (): Promise<MilestonesResponse> => {
+  const res = await fetch("/api/analytics/milestones")
+  if (!res.ok) throw new Error("Failed to fetch milestones")
+  return res.json()
+}
+
+const MILESTONE_TARGET = 50
+
 export function MatchaProgressCard() {
-  const { data: summary, isLoading, error } = useQuery({
+  const { data: summary } = useQuery({
     queryKey: ["analytics-summary"],
     queryFn: fetchSummary,
     staleTime: 5 * 60 * 1000,
   })
 
-  const tasksCompleted = summary?.today?.tasksCompleted ?? 0
-  const pomodoros = summary?.today?.pomodorosCompleted ?? 0
+  const { data: milestones, isLoading, error } = useQuery({
+    queryKey: ["analytics-milestones"],
+    queryFn: fetchMilestones,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const combinedTotal = milestones?.combinedTotal ?? 0
+  const progressWithinMilestone = combinedTotal % MILESTONE_TARGET
+  const fillPercentage = (progressWithinMilestone / MILESTONE_TARGET) * 100
+
   const totalMinutes = summary?.today?.totalFocusMinutes ?? 0
 
-  const points = tasksCompleted + pomodoros
-  const target = 50
-  const fillPercentage = Math.min((points / target) * 100, 100)
-
   const getMessage = () => {
-    if (fillPercentage >= 90) {
-      return "Amazing progress! Time to reward yourself with a matcha break."
-    } else if (fillPercentage >= 50) {
-      return "Great work! Keep the momentum going."
-    } else if (points > 0) {
-      return "You've started strong! Let's keep going."
+    if (combinedTotal > 0 && combinedTotal % MILESTONE_TARGET === 0) {
+      return `Reward yourself with a matcha! You finished ${combinedTotal} tasks and cycles!`
     }
-    return "Ready to start your productivity journey?"
+    if (fillPercentage >= 90) {
+      return "Almost there! Finish strong for your matcha reward."
+    } else if (fillPercentage >= 50) {
+      return "More than halfway! Keep the momentum going."
+    } else if (combinedTotal > 0) {
+      return `${MILESTONE_TARGET - progressWithinMilestone} tasks or cycles until your next matcha reward.`
+    }
+    return "Complete tasks and focus sessions to earn a matcha reward!"
   }
 
   if (isLoading) {
@@ -62,7 +83,7 @@ export function MatchaProgressCard() {
   if (error) {
     return (
       <div className="flex h-full items-center justify-center rounded-3xl bg-strawberry-light/30 p-6">
-        <AnimatedMatchaCup fillPercentage={0} message="Let's start fresh!" />
+        <AnimatedMatchaCup fillPercentage={0} combinedTotal={0} message="Let's start fresh!" />
       </div>
     )
   }
@@ -70,20 +91,24 @@ export function MatchaProgressCard() {
   return (
     <div className="flex h-full items-center justify-center rounded-3xl bg-strawberry-light/30 p-4">
       <div className="w-full">
-        <AnimatedMatchaCup fillPercentage={fillPercentage} message={getMessage()} />
+        <AnimatedMatchaCup
+          fillPercentage={fillPercentage}
+          combinedTotal={combinedTotal}
+          message={getMessage()}
+        />
         
         <div className="mt-2 grid grid-cols-3 gap-2 text-center text-xs text-muted-foreground">
           <div>
-            <span className="font-semibold text-matcha">{pomodoros}</span>
-            <span className="ml-1">pomodoros</span>
+            <span className="font-semibold text-matcha">{combinedTotal}</span>
+            <span className="ml-1">total</span>
           </div>
           <div>
             <span className="font-semibold text-matcha">{Math.floor(totalMinutes / 60)}h</span>
             <span className="ml-1">focus</span>
           </div>
           <div>
-            <span className="font-semibold text-matcha">{tasksCompleted}</span>
-            <span className="ml-1">tasks</span>
+            <span className="font-semibold text-matcha">{MILESTONE_TARGET - progressWithinMilestone}</span>
+            <span className="ml-1">to reward</span>
           </div>
         </div>
       </div>

@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server'
 import * as timerService from '@/app/api/timer-service/service'
 import { createSupabaseClient } from '@/app/api/timer-service/service'
+import { getUserIdFromRequest } from '@/lib/auth-helpers'
 
 export async function getTimerData(request: Request) {
   try {
-    const supabase = createSupabaseClient(request)
-    const { data: { user }, error: userError } = await timerService.getAuthenticatedUser(supabase)  
-
-    if (userError || !user) {
+    const userId = getUserIdFromRequest(request)
+    if (!userId) {
       return NextResponse.json(
         {
           presets: [],
@@ -21,9 +20,10 @@ export async function getTimerData(request: Request) {
       )
     }
 
+    const supabase = createSupabaseClient(request)
     const [presets, stats] = await Promise.all([
-      timerService.fetchPresets(supabase, user.id),
-      timerService.fetchTodayStats(supabase, user.id),
+      timerService.fetchPresets(supabase, userId),
+      timerService.fetchTodayStats(supabase, userId),
     ])
 
     if (presets.error) {
@@ -57,19 +57,18 @@ export async function getTimerData(request: Request) {
 
 export async function createTimerPreset(request: Request) {
   try {
-    const supabase = createSupabaseClient(request)
-    const { data: { user }, error: userError } = await timerService.getAuthenticatedUser(supabase)  
-
-    if (userError || !user) {
+    const userId = getUserIdFromRequest(request)
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized User' }, { status: 401 })
     }
 
+    const supabase = createSupabaseClient(request)
     const { name, focusDuration, breakDuration } = await request.json()
     if (!name || typeof focusDuration !== 'number' || typeof breakDuration !== 'number') {
       return NextResponse.json({ error: 'Invalid timer preset payload' }, { status: 400 })
     }
 
-    const { data, error } = await timerService.createPreset(supabase, user.id, {
+    const { data, error } = await timerService.createPreset(supabase, userId, {
       name,
       focusDuration,
       breakDuration,
@@ -79,7 +78,6 @@ export async function createTimerPreset(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
-    // ✅ data is already typed correctly from createPreset
     return NextResponse.json({ preset: timerService.formatPreset(data as timerService.TimerPresetRow) }, { status: 201 })
   } catch (error) {
     console.error('Timer service POST error', error)
@@ -89,14 +87,13 @@ export async function createTimerPreset(request: Request) {
 
 export async function recordPomodoroCompletion(request: Request) {
   try {
-    const supabase = createSupabaseClient(request)
-    const { data: { user }, error: userError } = await timerService.getAuthenticatedUser(supabase)
-
-    if (userError || !user) {
+    const userId = getUserIdFromRequest(request)
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const result = await timerService.recordPomodoro(supabase, user.id)
+    const supabase = createSupabaseClient(request)
+    const result = await timerService.recordPomodoro(supabase, userId)
 
     if (result.error) {
       return NextResponse.json({ error: result.error.message }, { status: 400 })
@@ -121,17 +118,16 @@ export async function recordPomodoroCompletion(request: Request) {
 
 export async function handleTimerAction(request: Request) {
   try {
-    const supabase = createSupabaseClient(request)
-    const { data: { user }, error: userError } = await timerService.getAuthenticatedUser(supabase)
-
-    if (userError || !user) {
+    const userId = getUserIdFromRequest(request)
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const supabase = createSupabaseClient(request)
     const { action, presetId, name, focusDuration, breakDuration } = await request.json()
 
     if (action === 'recordCompletion') {
-      const result = await timerService.recordPomodoro(supabase, user.id)
+      const result = await timerService.recordPomodoro(supabase, userId)
 
       if (result.error) {
         return NextResponse.json({ error: result.error.message }, { status: 400 })
