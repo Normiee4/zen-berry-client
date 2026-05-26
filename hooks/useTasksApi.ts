@@ -36,7 +36,7 @@ export function useTasksApi(options: UseTasksOptions = {}) {
 
   const [localTasks, setLocalTasks] = useLocalStorage<Task[]>("zenberry_tasks", [])
 
-  const apiEnabled = false
+  const apiEnabled = true
 
   const { data: apiData, isLoading: isApiLoading, error: apiError } = useQuery({
     queryKey,
@@ -51,7 +51,7 @@ export function useTasksApi(options: UseTasksOptions = {}) {
         id: t.id,
         title: t.title,
         completed: t.completed,
-        type: t.type,
+        type: (t as { isMIT?: boolean }).isMIT ? "mit" : "braindump",
       }))
     : localTasks.filter((t) => !type || t.type === type)
 
@@ -127,7 +127,7 @@ export function useMITApi() {
   const [localMits, setLocalMits] = useLocalStorage<{ id: string; title: string }[]>("zenberry_mit", [])
   const queryClient = useQueryClient()
 
-  const apiEnabled = false
+  const apiEnabled = true
 
   const { data: apiData, isLoading: isApiLoading, error: apiError } = useQuery({
     queryKey: ["tasks", "mit"],

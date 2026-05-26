@@ -33,15 +33,16 @@ export function MatchaProgressCard() {
   const pomodoros = summary?.today?.pomodorosCompleted ?? 0
   const totalMinutes = summary?.today?.totalFocusMinutes ?? 0
 
-  const targetPomodoros = 6
-  const fillPercentage = Math.min((pomodoros / targetPomodoros) * 100, 100)
+  const points = tasksCompleted + pomodoros
+  const target = 50
+  const fillPercentage = Math.min((points / target) * 100, 100)
 
   const getMessage = () => {
     if (fillPercentage >= 90) {
       return "Amazing progress! Time to reward yourself with a matcha break."
     } else if (fillPercentage >= 50) {
       return "Great work! Keep the momentum going."
-    } else if (pomodoros > 0) {
+    } else if (points > 0) {
       return "You've started strong! Let's keep going."
     }
     return "Ready to start your productivity journey?"
