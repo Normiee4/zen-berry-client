@@ -3,18 +3,16 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 // ---------- Types ----------
 export interface TaskRow {
-  task_id: string
+  task_id: number
   user_id: string
   title: string
-  is_mit: boolean
-  completed: boolean
+  type: 'MIT' | 'Brain_dump'
   created_at: string
-  completed_at: string | null
-  updated_at: string
+  complete_at: string | null
 }
 
 export interface FormattedTask {
-  id: string
+  id: number
   title: string
   isMIT: boolean
   completed: boolean
@@ -26,10 +24,10 @@ export interface FormattedTask {
 export const formatTask = (row: TaskRow): FormattedTask => ({
   id: row.task_id,
   title: row.title,
-  isMIT: row.is_mit,
-  completed: row.completed,
+  isMIT: row.type === 'MIT',
+  completed: row.complete_at !== null,
   createdAt: row.created_at,
-  completedAt: row.completed_at,
+  completedAt: row.complete_at,
 })
 
 // ---------- Cookie Helper ----------
@@ -84,15 +82,19 @@ export const fetchTasks = async (
 ) => {
   let query = supabase
     .from('tasks')
-    .select('task_id, title, is_mit, completed, created_at, completed_at, updated_at')
+    .select('task_id, title, type, complete_at, created_at')
     .eq('user_id', userId)
 
-  if (options.type) {
-    query = query.eq('is_mit', options.type === 'mit')
+  if (options.type === 'mit') {
+    query = query.eq('type', 'MIT')
+  } else if (options.type === 'braindump') {
+    query = query.eq('type', 'Brain_dump')
   }
 
-  if (options.completed !== undefined) {
-    query = query.eq('completed', options.completed)
+  if (options.completed === true) {
+    query = query.not('complete_at', 'is', null)
+  } else if (options.completed === false) {
+    query = query.is('complete_at', null)
   }
 
   return query.order('created_at', { ascending: true })
@@ -103,8 +105,8 @@ export const fetchMITCount = async (supabase: SupabaseClient, userId: string) =>
     .from('tasks')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', userId)
-    .eq('is_mit', true)
-    .eq('completed', false)
+    .eq('type', 'MIT')
+    .is('complete_at', null)
 
   return { count: count ?? 0, error }
 }
@@ -120,8 +122,7 @@ export const insertTask = async (
       {
         user_id: userId,
         title: task.title,
-        is_mit: task.isMIT,
-        completed: false,
+        type: task.isMIT ? 'MIT' : 'Brain_dump',
       },
     ])
     .select()
@@ -131,15 +132,23 @@ export const insertTask = async (
 export const modifyTask = async (
   supabase: SupabaseClient,
   userId: string,
-  taskId: string,
-  updates: { completed?: boolean; is_mit?: boolean; title?: string }
+  taskId: number,
+  updates: { completed?: boolean; type?: 'MIT' | 'Brain_dump'; title?: string }
 ) => {
-  const updateData: Record<string, unknown> = { ...updates }
+  const updateData: Record<string, unknown> = {}
+  
+  if (updates.title !== undefined) {
+    updateData.title = updates.title
+  }
+  
+  if (updates.type !== undefined) {
+    updateData.type = updates.type
+  }
   
   if (updates.completed === true) {
-    updateData.completed_at = new Date().toISOString()
+    updateData.complete_at = new Date().toISOString()
   } else if (updates.completed === false) {
-    updateData.completed_at = null
+    updateData.complete_at = null
   }
 
   return supabase
@@ -154,7 +163,7 @@ export const modifyTask = async (
 export const removeTask = async (
   supabase: SupabaseClient,
   userId: string,
-  taskId: string
+  taskId: number
 ) => {
   return supabase
     .from('tasks')

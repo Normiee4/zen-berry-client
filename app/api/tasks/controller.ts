@@ -109,9 +109,9 @@ export async function updateTask(request: Request) {
     const updates: Record<string, unknown> = {}
     if (title !== undefined) updates.title = title
     if (completed !== undefined) updates.completed = completed
-    if (isMIT !== undefined) updates.is_mit = isMIT
+    if (isMIT !== undefined) updates.type = isMIT ? 'MIT' : 'Brain_dump'
 
-    const result = await taskService.modifyTask(supabase, userId, id, updates)
+    const result = await taskService.modifyTask(supabase, userId, Number(id), updates)
 
     if (result.error) {
       return NextResponse.json({ error: result.error.message }, { status: 400 })
@@ -142,7 +142,7 @@ export async function deleteTask(request: Request) {
       return NextResponse.json({ error: 'Task ID is required' }, { status: 400 })
     }
 
-    const result = await taskService.removeTask(supabase, userId, id)
+    const result = await taskService.removeTask(supabase, userId, Number(id))
 
     if (result.error) {
       return NextResponse.json({ error: result.error.message }, { status: 400 })
