@@ -13,7 +13,7 @@ export async function getLatestInsight(request: Request) {
     const insight = await insightsService.fetchLatestInsight(supabase, userId)
 
     if (!insight) {
-      return NextResponse.json(null, { status: 204 })
+      return new NextResponse(null, { status: 204 })
     }
 
     return NextResponse.json(
@@ -33,7 +33,9 @@ export async function getLatestInsight(request: Request) {
       { status: 200 }
     )
   } catch (error) {
-    console.error('Latest insight error', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    console.error('Latest insight error:', error instanceof Error ? error.message : error)
+    console.error('Stack:', error instanceof Error ? error.stack : '')
+    const message = error instanceof Error ? error.message : 'Internal Server Error'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

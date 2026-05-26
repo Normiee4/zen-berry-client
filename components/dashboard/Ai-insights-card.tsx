@@ -106,12 +106,14 @@ export function AIInsightsCard() {
     queryKey: ["analytics-summary"],
     queryFn: fetchSummary,
     staleTime: 5 * 60 * 1000,
+    retry: false,
   })
 
   const { data: latestInsight } = useQuery({
     queryKey: ["ai-insights-latest"],
     queryFn: fetchLatestInsight,
     staleTime: 30 * 60 * 1000,
+    retry: false,
   })
 
   const reviewMutation = useMutation({
