@@ -21,6 +21,9 @@ export const getYesterday = (): string =>
 
 export const getCurrentHour = (): number => new Date().getHours()
 
+export const daysBetween = (date1: string, date2: string): number =>
+  Math.round((new Date(date2).getTime() - new Date(date1).getTime()) / (24 * 60 * 60 * 1000))
+
 // ---------- Cookie Helper ----------
 const getCookieValue = (request: Request, name: string): string | null => {
   const requestCookies = (request as unknown as {
@@ -106,36 +109,46 @@ export const recordPomodoroInDailyStats = async (
   userId: string
 ) => {
   const today = getToday()
-  const yesterday = getYesterday()
 
-  const { data: existingStats, error: existingError } = await supabase
+  const { data: latestStats, error: latestError } = await supabase
     .from('daily_stats')
-    .select('stat_id, daily_pomodoro, daily_task_completed, streak_maintained, date')
+    .select('date, streak_maintained, daily_task_completed')
+    .eq('user_id', userId)
+    .order('date', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (latestError) return { error: latestError }
+
+  const { data: todayStats, error: todayError } = await supabase
+    .from('daily_stats')
+    .select('daily_pomodoro, daily_task_completed')
     .eq('user_id', userId)
     .eq('date', today)
     .maybeSingle()
 
-  if (existingError) {
-    return { error: existingError }
-  }
+  if (todayError) return { error: todayError }
 
-  let currentStreak = existingStats?.streak_maintained ?? 0
-  let pomodorosToday = existingStats?.daily_pomodoro ?? 0
+  const pomodorosToday = (todayStats?.daily_pomodoro ?? 0) + 1
+  const tasksCompleted = todayStats?.daily_task_completed ?? latestStats?.daily_task_completed ?? 0
 
-  if (existingStats) {
-    if (existingStats.date === today) {
-      currentStreak = existingStats.streak_maintained
-      pomodorosToday = existingStats.daily_pomodoro + 1
-    } else if (existingStats.date === yesterday) {
-      currentStreak = existingStats.streak_maintained + 1
-      pomodorosToday = 1
+  let currentStreak: number
+
+  if (!latestStats) {
+    currentStreak = 1
+  } else {
+    const lastDate = latestStats.date.slice(0, 10)
+    const gap = daysBetween(lastDate, today)
+
+    if (gap === 0) {
+      currentStreak = latestStats.streak_maintained ?? 1
+    } else if (gap === 1) {
+      currentStreak = (latestStats.streak_maintained ?? 0) + 1
+    } else if (gap <= 4) {
+      currentStreak = latestStats.streak_maintained ?? 1
     } else {
       currentStreak = 1
-      pomodorosToday = 1
     }
-  } else {
-    currentStreak = 1
-    pomodorosToday = 1
   }
 
   const { data, error: upsertError } = await supabase
@@ -145,7 +158,7 @@ export const recordPomodoroInDailyStats = async (
         user_id: userId,
         date: today,
         daily_pomodoro: pomodorosToday,
-        daily_task_completed: existingStats?.daily_task_completed ?? 0,
+        daily_task_completed: tasksCompleted,
         streak_maintained: currentStreak,
       },
       { onConflict: 'user_id,date' }
@@ -153,10 +166,7 @@ export const recordPomodoroInDailyStats = async (
     .select()
     .single()
 
-  if (upsertError) {
-    return { error: upsertError }
-  }
-
+  if (upsertError) return { error: upsertError }
   return { data }
 }
 

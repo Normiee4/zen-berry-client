@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import * as aiService from '@/app/api/ai/review/service'
+import { NO_DATA_RESPONSE } from '@/app/api/ai/review/service'
 import { getUserIdFromRequest } from '@/lib/auth-helpers'
 
 export async function generateReview(request: Request) {
@@ -45,8 +46,8 @@ export async function generateReview(request: Request) {
     if (pomodoros === 0) {
       return NextResponse.json(
         {
-          insight: "Start a focus session to unlock your daily insights!",
-          suggestion: 'Complete your first Pomodoro to see personalized productivity tips.',
+          insight: NO_DATA_RESPONSE.insight,
+          suggestion: NO_DATA_RESPONSE.suggestion,
           stats: {
             pomodoros: 0,
             tasks: 0,
@@ -68,6 +69,11 @@ export async function generateReview(request: Request) {
     })
 
     const result = await aiService.callGeminiAPI(prompt)
+
+    if (hoursSinceBreak !== null && hoursSinceBreak > 3) {
+      const restMsg = `🌿 Rest now, apprentice. You've been going for ${Math.floor(hoursSinceBreak)} hours without a break. `
+      result.insight = restMsg + result.insight
+    }
 
     const isFirstReview = cyclesTotal === pomodoros && pomodoros <= 1
     const milestone = aiService.detectMilestone(
