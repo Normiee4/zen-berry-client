@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CircleCheck, Plus } from "lucide-react";
+import { CircleCheck, Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner"
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import { DnDWrapper } from "@/components/DnDWrapper";
@@ -81,11 +81,14 @@ export function MITCard({
 }: MITCardProps) {
   const [newMit, setNewMit] = useState("");
   const [error, setError] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
 
   const handleAdd = async () => {
-    if (!newMit.trim()) return;
+    if (!newMit.trim() || isAdding) return;
+    setIsAdding(true);
     const result = onAdd(newMit);
     const resolved = result instanceof Promise ? await result : result;
+    setIsAdding(false);
     if (resolved && !resolved.success) {
       setError(resolved.error || "Failed to add");
       toast.error(resolved.error || "Failed to add");
@@ -100,7 +103,7 @@ export function MITCard({
   };
 
   return (
-    <div className="flex h-full flex-col rounded-3xl bg-strawberry-light/30 p-6">
+    <div className="flex h-full flex-col rounded-3xl bg-strawberry-light/30 p-6 border border-matcha-dark/20">
       {/* Header */}
       <div className="mb-4 flex items-center gap-2">
         <span className="text-base">🎯</span>
@@ -124,9 +127,10 @@ export function MITCard({
           />
           <button
             onClick={handleAdd}
-            className="flex size-7 items-center justify-center rounded-full bg-matcha text-white hover:bg-matcha/90 transition-colors"
+            disabled={isAdding}
+            className="flex size-7 items-center justify-center rounded-full bg-matcha text-white hover:bg-matcha/90 disabled:opacity-50 transition-colors"
           >
-            <Plus className="size-4" />
+            {isAdding ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
           </button>
         </div>
         {error && <p className="mt-1 text-xs text-red-500">{error}</p>}

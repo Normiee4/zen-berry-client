@@ -130,6 +130,10 @@ export async function updateTask(request: Request) {
       return NextResponse.json({ error: result.error.message }, { status: 400 })
     }
 
+    if (completed === true) {
+      await taskService.incrementTaskCompletion(supabase, userId)
+    }
+
     return NextResponse.json(
       { task: taskService.formatTask(result.data as taskService.TaskRow) },
       { status: 200 }

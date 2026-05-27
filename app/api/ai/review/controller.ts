@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import * as aiService from '@/app/api/ai/review/service'
-import { NO_DATA_RESPONSE } from '@/app/api/ai/review/service'
 import { resolveUser } from '@/lib/auth-helpers'
 
 export async function generateReview(request: Request) {
@@ -44,10 +43,11 @@ export async function generateReview(request: Request) {
     const pomodoros = stats.daily_pomodoro || 0
 
     if (pomodoros === 0) {
+      const noData = aiService.getNoDataResponse()
       return NextResponse.json(
         {
-          insight: NO_DATA_RESPONSE.insight,
-          suggestion: NO_DATA_RESPONSE.suggestion,
+          insight: noData.insight,
+          suggestion: noData.suggestion,
           stats: {
             pomodoros: 0,
             tasks: 0,

@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
-import { toast } from "sonner"
+import { Plus, Trash2, Loader2 } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import { DnDWrapper } from "@/components/DnDWrapper";
@@ -102,17 +101,19 @@ export function BrainDumpCard({
   onDelete,
 }: BrainDumpCardProps) {
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
 
-  const handleAdd = () => {
-    if (!newTaskTitle.trim()) return;
-    onAdd({
+  const handleAdd = async () => {
+    if (!newTaskTitle.trim() || isAdding) return;
+    setIsAdding(true);
+    await onAdd({
       id: Date.now().toString(),
       title: newTaskTitle,
       completed: false,
       type: "braindump",
     });
+    setIsAdding(false);
     setNewTaskTitle("");
-    toast.success("Task added");
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -120,7 +121,7 @@ export function BrainDumpCard({
   };
 
   return (
-    <div className="flex h-full flex-col rounded-3xl bg-strawberry-light/30 p-6">
+    <div className="flex h-full flex-col rounded-3xl bg-strawberry-light/30 p-6 border border-matcha-dark/20">
       {/* Header */}
       <div className="mb-2 flex items-center gap-2">
         <span className="text-base">🧠</span>
@@ -143,9 +144,10 @@ export function BrainDumpCard({
         />
         <button
           onClick={handleAdd}
-          className="flex size-7 items-center justify-center rounded-full bg-matcha text-white hover:bg-matcha/90 transition-colors"
+          disabled={isAdding}
+          className="flex size-7 items-center justify-center rounded-full bg-matcha text-white hover:bg-matcha/90 disabled:opacity-50 transition-colors"
         >
-          <Plus className="size-4" />
+          {isAdding ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
         </button>
       </div>
 
