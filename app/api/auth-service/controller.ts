@@ -65,11 +65,20 @@ export async function register(request: Request) {
 
     const response = NextResponse.json({ success: true, message: 'Account created successfully' }, { status: 201 })
     const supabase = createClient(request, response)
-    const { error } = await authService.signUp(supabase, email, password, fullName)
+    const { data, error } = await authService.signUp(supabase, email, password, fullName)
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
+    if (error || !data.user) {
+      return NextResponse.json({ error: error?.message ?? 'Registration failed' }, { status: 400 })
     }
+
+    const { error: insertError } = await supabase
+      .from('users')
+      .insert({ user_id: data.user.id, email: data.user.email, username: fullName ?? email.split('@')[0] })
+
+    if (insertError) {
+      console.error('Failed to create users table entry:', insertError)
+    }
+
     return response
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

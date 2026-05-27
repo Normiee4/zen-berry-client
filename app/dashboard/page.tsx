@@ -14,6 +14,7 @@ import { LogOut, Loader2 } from "lucide-react"
 import { useMITApi, useTasksApi } from "@/hooks/useTasksApi"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { ConfirmDragDialog } from "@/components/dashboard/ConfirmDragDialog"
+import { toast } from "sonner"
 
 interface PendingDrag {
   direction: "to-mit" | "to-braindump"
@@ -63,6 +64,10 @@ export default function DashboardPage() {
     if (source.droppableId === "braindump-list" && destination.droppableId === "mit-list") {
       const task = brainDumpTasks[source.index]
       if (!task) return
+      if (remainingSlots <= 0) {
+        toast.error("You can only have 3 Most Important Tasks at a time. Complete one first.")
+        return
+      }
       setPendingDrag({ direction: "to-mit", taskTitle: task.title, sourceIndex: source.index })
     }
   }
