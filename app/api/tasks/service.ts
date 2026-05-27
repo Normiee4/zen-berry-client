@@ -6,7 +6,7 @@ export interface TaskRow {
   task_id: number
   user_id: string
   title: string
-  type: 'MIT' | 'Brain_dump'
+  type: string
   created_at: string
   complete_at: string | null
 }
@@ -133,7 +133,7 @@ export const modifyTask = async (
   supabase: SupabaseClient,
   userId: string,
   taskId: number,
-  updates: { completed?: boolean; type?: 'MIT' | 'Brain_dump'; title?: string }
+  updates: { completed?: boolean; type?: string; title?: string }
 ) => {
   const updateData: Record<string, unknown> = {}
   

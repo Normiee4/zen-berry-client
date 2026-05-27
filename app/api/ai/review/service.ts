@@ -297,13 +297,13 @@ export interface GeminiResponse {
   suggestion: string
 }
 
-const FALLBACK_RESPONSE: GeminiResponse = {
+export const FALLBACK_RESPONSE: GeminiResponse = {
   insight: 'Discipline is the bridge between goals and accomplishment. Every session brings you closer to mastery.',
   suggestion: 'Begin a 25-minute focus block. The path of the strawberry is sweet for those who persist.',
 }
 
-const NO_DATA_RESPONSE: GeminiResponse = {
-  insight: "A empty canvas holds infinite potential. The first stroke is the hardest — and the most important.",
+export const NO_DATA_RESPONSE: GeminiResponse = {
+  insight: "An empty canvas holds infinite potential. The first stroke is the hardest — and the most important.",
   suggestion: 'Complete your first Pomodoro, young sprout. Even the sweetest strawberry begins as a seed.',
 }
 
