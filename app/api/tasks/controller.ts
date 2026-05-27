@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import * as taskService from '@/app/api/tasks/service'
-import { getUserIdFromRequest } from '@/lib/auth-helpers'
+import { getUserIdFromRequest, ensureUserRow } from '@/lib/auth-helpers'
 
 const MIT_LIMIT = 3
 
@@ -66,6 +66,8 @@ export async function createTask(request: Request) {
     }
 
     const supabase = taskService.createSupabaseClient(request)
+    await ensureUserRow(userId, supabase)
+
     const body = await request.json()
     const { title, type } = body
 
@@ -112,6 +114,8 @@ export async function updateTask(request: Request) {
     }
 
     const supabase = taskService.createSupabaseClient(request)
+    await ensureUserRow(userId, supabase)
+
     const body = await request.json()
     const { id, title, completed, isMIT } = body
 
@@ -153,6 +157,8 @@ export async function deleteTask(request: Request) {
     }
 
     const supabase = taskService.createSupabaseClient(request)
+    await ensureUserRow(userId, supabase)
+
     const url = new URL(request.url)
     const id = url.searchParams.get('id')
 
