@@ -10,7 +10,7 @@ export async function generateReview(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const rateLimitCheck = await aiService.incrementAIReviewCount(supabase, user.id)
+    const rateLimitCheck = await aiService.checkHourlyRateLimit(supabase, user.id)
     if (rateLimitCheck.error) {
       return NextResponse.json(
         { error: rateLimitCheck.error.message },

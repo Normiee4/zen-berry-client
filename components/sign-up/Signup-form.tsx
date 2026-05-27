@@ -35,7 +35,7 @@ export function SignupForm() {
       return
     }
 
-    toast.success("Check your email to confirm your account!")
+    toast.success("Account created successfully!")
     router.push("/auth/login")
   }
 

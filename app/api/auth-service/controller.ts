@@ -38,7 +38,7 @@ export async function register(request: Request) {
       return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 })
     }
 
-    const response = NextResponse.json({ success: true, message: 'Check your email to confirm your account' }, { status: 201 })
+    const response = NextResponse.json({ success: true, message: 'Account created successfully' }, { status: 201 })
     const supabase = createClient(request, response)
     const { error } = await authService.signUp(supabase, email, password, fullName)
 

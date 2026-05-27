@@ -124,32 +124,24 @@ export const fetchTodaySessionDetails = async (supabase: SupabaseClient, userId:
   return { data: data || [], error }
 }
 
-export const incrementAIReviewCount = async (supabase: SupabaseClient, userId: string) => {
-  const today = getToday()
+export const checkHourlyRateLimit = async (supabase: SupabaseClient, userId: string) => {
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
 
-  const { data: existing } = await supabase
-    .from('daily_stats')
-    .select('ai_review_count')
+  const { count, error } = await supabase
+    .from('ai_insights')
+    .select('*', { count: 'exact', head: true })
     .eq('user_id', userId)
-    .eq('date', today)
-    .maybeSingle()
+    .gte('created_at', oneHourAgo)
 
-  const currentCount = existing?.ai_review_count || 0
-
-  if (currentCount >= 10) {
-    return { error: { message: 'Rate limit exceeded. Max 10 reviews per day.' } }
+  if (error) {
+    return { error }
   }
 
-  return supabase
-    .from('daily_stats')
-    .upsert(
-      {
-        user_id: userId,
-        date: today,
-        ai_review_count: currentCount + 1,
-      },
-      { onConflict: 'user_id,date' }
-    )
+  if (count && count >= 20) {
+    return { error: { message: 'Rate limit exceeded. Max 20 reviews per hour.' } }
+  }
+
+  return { error: null }
 }
 
 // ---------- Persistence Metrics ----------

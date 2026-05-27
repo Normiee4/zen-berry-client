@@ -15,8 +15,8 @@ export interface TimerPresetRow {
 interface FormattedPreset {
   id: string
   name: string
-  focusDuration: number
-  breakDuration: number
+  focusMinutes: number
+  breakMinutes: number
   isDefault: boolean
 }
 
@@ -28,8 +28,8 @@ export const getYesterday = (): string =>
 export const formatPreset = (row: TimerPresetRow): FormattedPreset => ({
   id: String(row.preset_id),
   name: row.preset_name,
-  focusDuration: row.focus_duration,
-  breakDuration: row.break_duration,
+  focusMinutes: row.focus_duration,
+  breakMinutes: row.break_duration,
   isDefault: Boolean(row.is_default ?? false),
 })
 
@@ -100,7 +100,7 @@ export const fetchTodayStats = async (supabase: SupabaseClient, userId: string) 
 export const createPreset = async (
   supabase: SupabaseClient,
   userId: string,
-  preset: { name: string; focusDuration: number; breakDuration: number }
+  preset: { name: string; focusMinutes: number; breakMinutes: number }
 ) => {
   return supabase
     .from('timer_presets')
@@ -108,8 +108,8 @@ export const createPreset = async (
       {
         user_id: userId,
         preset_name: preset.name,
-        focus_duration: preset.focusDuration,
-        break_duration: preset.breakDuration,
+        focus_duration: preset.focusMinutes,
+        break_duration: preset.breakMinutes,
         is_default: false,
       },
     ])
@@ -120,12 +120,12 @@ export const createPreset = async (
 export const updatePreset = async (
   supabase: SupabaseClient,
   presetId: string,
-  updates: { name?: string; focusDuration?: number; breakDuration?: number }
+  updates: { name?: string; focusMinutes?: number; breakMinutes?: number }
 ) => {
   const dbUpdates: Record<string, string | number> = {}
   if (updates.name !== undefined) dbUpdates.preset_name = updates.name
-  if (updates.focusDuration !== undefined) dbUpdates.focus_duration = updates.focusDuration
-  if (updates.breakDuration !== undefined) dbUpdates.break_duration = updates.breakDuration
+  if (updates.focusMinutes !== undefined) dbUpdates.focus_duration = updates.focusMinutes
+  if (updates.breakMinutes !== undefined) dbUpdates.break_duration = updates.breakMinutes
 
   return supabase
     .from('timer_presets')
