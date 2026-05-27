@@ -10,7 +10,7 @@ export async function generateReview(request: Request) {
     }
 
     const supabase = aiService.createSupabaseClient(request)
-    const rateLimitCheck = await aiService.incrementAIReviewCount(supabase, userId)
+    const rateLimitCheck = await aiService.checkHourlyRateLimit(supabase, userId)
     if (rateLimitCheck.error) {
       return NextResponse.json(
         { error: rateLimitCheck.error.message },

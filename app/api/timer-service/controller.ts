@@ -63,15 +63,15 @@ export async function createTimerPreset(request: Request) {
     }
 
     const supabase = createSupabaseClient(request)
-    const { name, focusDuration, breakDuration } = await request.json()
-    if (!name || typeof focusDuration !== 'number' || typeof breakDuration !== 'number') {
+    const { name, focusMinutes, breakMinutes } = await request.json()
+    if (!name || typeof focusMinutes !== 'number' || typeof breakMinutes !== 'number') {
       return NextResponse.json({ error: 'Invalid timer preset payload' }, { status: 400 })
     }
 
     const { data, error } = await timerService.createPreset(supabase, userId, {
       name,
-      focusDuration,
-      breakDuration,
+      focusMinutes,
+      breakMinutes,
     })
 
     if (error) {
@@ -124,7 +124,7 @@ export async function handleTimerAction(request: Request) {
     }
 
     const supabase = createSupabaseClient(request)
-    const { action, presetId, name, focusDuration, breakDuration } = await request.json()
+    const { action, presetId, name, focusMinutes, breakMinutes } = await request.json()
 
     if (action === 'recordCompletion') {
       const result = await timerService.recordPomodoro(supabase, userId)
@@ -153,8 +153,8 @@ export async function handleTimerAction(request: Request) {
 
       const { data, error } = await timerService.updatePreset(supabase, presetId, {
         name,
-        focusDuration,
-        breakDuration,
+        focusMinutes,
+        breakMinutes,
       })
 
       if (error) {

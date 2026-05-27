@@ -155,8 +155,8 @@ export function TimerCard() {
           action: 'updatePreset',
           presetId: editingPreset.id,
           name: editingPreset.name,
-          focusDuration: editingPreset.focusMinutes,
-          breakDuration: editingPreset.breakMinutes,
+          focusMinutes: editingPreset.focusMinutes,
+          breakMinutes: editingPreset.breakMinutes,
         }),
       })
       updatePreset(editingPreset.id, {

@@ -361,12 +361,19 @@ export const useTimerStore = create<TimerState>()(
     }),
 
     loadPresets: (presets) => set((state) => {
+      const normalized = presets.map((p) => ({
+        id: p.id,
+        name: p.name,
+        focusMinutes: p.focusMinutes ?? 0,
+        breakMinutes: p.breakMinutes ?? 0,
+        isDefault: p.isDefault ?? false,
+      }));
       const storedPresets = loadPresetsFromStorage();
-      const apiIds = new Set(presets.map((p) => p.id));
+      const apiIds = new Set(normalized.map((p) => p.id));
       const missingFromApi = storedPresets.filter((p) => !apiIds.has(p.id) && !p.isDefault);
-      const mergedPresets = [...defaultPresets, ...presets, ...missingFromApi];
-      savePresetsToStorage([...presets, ...missingFromApi]);
-      const selectedPreset = presets[0] ?? state.currentPreset ?? mergedPresets[0];
+      const mergedPresets = [...normalized, ...missingFromApi];
+      savePresetsToStorage([...normalized, ...missingFromApi]);
+      const selectedPreset = normalized[0] ?? state.currentPreset ?? mergedPresets[0];
 
       const newTotalSeconds = (state.mode === "focus" ? selectedPreset.focusMinutes : selectedPreset.breakMinutes) * 60;
 
