@@ -204,6 +204,8 @@ export function useMITApi() {
         })
         if (!res.ok) throw new Error("Failed to complete")
         queryClient.invalidateQueries({ queryKey: ["tasks"] })
+        queryClient.invalidateQueries({ queryKey: ["analytics-summary"] })
+        queryClient.invalidateQueries({ queryKey: ["analytics-milestones"] })
         return
       } catch (e) {
         console.warn("API failed, using localStorage:", e)

@@ -88,6 +88,7 @@ export function MITCard({
     const resolved = result instanceof Promise ? await result : result;
     if (resolved && !resolved.success) {
       setError(resolved.error || "Failed to add");
+      toast.error(resolved.error || "Failed to add");
     } else {
       setNewMit("");
       setError("");

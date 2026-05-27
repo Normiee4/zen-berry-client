@@ -119,12 +119,17 @@ export async function updateTask(request: Request) {
       return NextResponse.json({ error: 'Task ID is required' }, { status: 400 })
     }
 
+    const taskId = Number(id)
+    if (isNaN(taskId)) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+    }
+
     const updates: Record<string, unknown> = {}
     if (title !== undefined) updates.title = title
     if (completed !== undefined) updates.completed = completed
     if (isMIT !== undefined) updates.type = isMIT ? 'MIT' : 'Brain_dump'
 
-    const result = await taskService.modifyTask(supabase, userId, Number(id), updates)
+    const result = await taskService.modifyTask(supabase, userId, taskId, updates)
 
     if (result.error) {
       return NextResponse.json({ error: result.error.message }, { status: 400 })
@@ -155,7 +160,12 @@ export async function deleteTask(request: Request) {
       return NextResponse.json({ error: 'Task ID is required' }, { status: 400 })
     }
 
-    const result = await taskService.removeTask(supabase, userId, Number(id))
+    const taskId = Number(id)
+    if (isNaN(taskId)) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+    }
+
+    const result = await taskService.removeTask(supabase, userId, taskId)
 
     if (result.error) {
       return NextResponse.json({ error: result.error.message }, { status: 400 })

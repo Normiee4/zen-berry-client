@@ -21,16 +21,20 @@
 | `models_used` | `json` | Nullable |
 | `most_used_preset_timer` | `int8` | Nullable |
 
+> **Unique constraint**: `(user_id, insight_date)` — used by upsert in AI review.
+
 ### `daily_activity_log`
 
 | Name | Type | Constraints |
 |------|------|-------------|
 | `log_id` | `uuid` | Primary |
 | `user_id` | `uuid` | Nullable |
-| `date` | `date` |  |
-| `hour_slot` | `int4` |  |
+| `date` | `date` | Unique (composite) |
+| `hour_slot` | `int4` | Unique (composite) |
 | `pomodoros_completed` | `int4` | Nullable |
 | `tasks_completed` | `int4` | Nullable |
+
+> **Unique constraint**: `(user_id, date, hour_slot)` — used by upsert in session logging.
 
 ### `daily_stats`
 
@@ -44,6 +48,9 @@
 | `streak_maintained` | `int4` | Nullable |
 | `created_at` | `timestamptz` |  |
 | `ai_review_count` | `int4` | Nullable |
+
+> - **Unique constraint**: `(user_id, date)` — used by upsert in session completion.
+> - `created_at` relies on DB default `now()` (not provided in code upserts).
 
 ### `session_logs`
 
