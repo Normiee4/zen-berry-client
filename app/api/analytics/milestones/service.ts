@@ -54,16 +54,4 @@ export const fetchLifetimeTasks = async (supabase: SupabaseClient, userId: strin
   return count ?? 0
 }
 
-export const fetchLifetimeCycles = async (supabase: SupabaseClient, userId: string) => {
-  const { count, error } = await supabase
-    .from('session_logs')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .eq('was_break', false)
 
-  if (error) {
-    console.error('Error fetching lifetime cycles:', error)
-    return 0
-  }
-  return count ?? 0
-}

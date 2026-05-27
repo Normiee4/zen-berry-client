@@ -14,16 +14,11 @@ export async function getMilestones(request: Request) {
       )
     }
 
-    const [lifetimeTasks, lifetimeCycles] = await Promise.all([
-      milestonesService.fetchLifetimeTasks(supabase, user.id),
-      milestonesService.fetchLifetimeCycles(supabase, user.id),
-    ])
-
-    const combinedTotal = lifetimeTasks + lifetimeCycles
+    const lifetimeTasks = await milestonesService.fetchLifetimeTasks(supabase, user.id)
 
     return NextResponse.json(
-      { lifetimeTasks, lifetimeCycles, combinedTotal },
-      { status: 200, headers: { 'Cache-Control': 'public, max-age=604800, s-maxage=604800' } }
+      { lifetimeTasks, lifetimeCycles: 0, combinedTotal: lifetimeTasks },
+      { status: 200, headers: { 'Cache-Control': 'public, max-age=30, s-maxage=60' } }
     )
   } catch (error) {
     console.error('Milestones error', error)

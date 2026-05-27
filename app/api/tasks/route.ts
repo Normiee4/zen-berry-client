@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   return createTask(request)
 }
 
-export async function PATCH(request: NextRequest) {
+export async function PUT(request: NextRequest) {
   return updateTask(request)
 }
 
