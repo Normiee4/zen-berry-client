@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { ArrowRight, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase"
+import { PasswordInput } from "@/components/ui/Password-input"
 import { BenefitsList } from "./Benefits-list"
 
 export function SignupForm() {
@@ -15,10 +16,22 @@ export function SignupForm() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters")
+      return
+    }
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match")
+      return
+    }
+
     setLoading(true)
 
     const res = await fetch("/api/auth-service/register", {
@@ -90,15 +103,31 @@ export function SignupForm() {
         <Label htmlFor="password" className="text-sm font-medium">
           Password
         </Label>
-        <Input
+        <PasswordInput
           id="password"
-          type="password"
           placeholder="••••••••"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="border-border bg-cream/50"
           disabled={loading}
           required
+          minLength={6}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="confirmPassword" className="text-sm font-medium">
+          Confirm password
+        </Label>
+        <PasswordInput
+          id="confirmPassword"
+          placeholder="••••••••"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          className="border-border bg-cream/50"
+          disabled={loading}
+          required
+          minLength={6}
         />
       </div>
 

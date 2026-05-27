@@ -1,19 +1,19 @@
 import { NextResponse } from 'next/server'
 import * as insightsService from '@/app/api/ai/insights/latest/service'
+import { getUserIdFromRequest } from '@/lib/auth-helpers'
 
 export async function getLatestInsight(request: Request) {
   try {
-    const supabase = insightsService.createSupabaseClient(request)
-    const { data: { user }, error: userError } = await insightsService.getAuthenticatedUser(supabase)
-
-    if (userError || !user) {
+    const userId = getUserIdFromRequest(request)
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const insight = await insightsService.fetchLatestInsight(supabase, user.id)
+    const supabase = insightsService.createSupabaseClient(request)
+    const insight = await insightsService.fetchLatestInsight(supabase, userId)
 
     if (!insight) {
-      return NextResponse.json(null, { status: 204 })
+      return new NextResponse(null, { status: 204 })
     }
 
     return NextResponse.json(
@@ -33,7 +33,9 @@ export async function getLatestInsight(request: Request) {
       { status: 200 }
     )
   } catch (error) {
-    console.error('Latest insight error', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    console.error('Latest insight error:', error instanceof Error ? error.message : error)
+    console.error('Stack:', error instanceof Error ? error.stack : '')
+    const message = error instanceof Error ? error.message : 'Internal Server Error'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

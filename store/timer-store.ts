@@ -11,6 +11,27 @@ export interface TimerPreset {
   isDefault?: boolean;
 }
 
+const PRESETS_STORAGE_KEY = "zenberry_timer_presets";
+
+function loadPresetsFromStorage(): TimerPreset[] {
+  if (typeof window === "undefined") return []
+  try {
+    const stored = localStorage.getItem(PRESETS_STORAGE_KEY)
+    return stored ? JSON.parse(stored) : []
+  } catch {
+    return []
+  }
+}
+
+function savePresetsToStorage(presets: TimerPreset[]) {
+  if (typeof window === "undefined") return
+  try {
+    localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(presets))
+  } catch {
+    // ignore write failures
+  }
+}
+
 type TimerState = {
   mode: TimerMode;
   timeLeft: number;
@@ -24,6 +45,12 @@ type TimerState = {
   // Presets
   presets: TimerPreset[];
   activePresetId: string;
+
+  // Mode-preserved remaining time
+  focusTimeLeft: number;
+  breakTimeLeft: number;
+  focusWasStarted: boolean;
+  breakWasStarted: boolean;
 
   // Streak state
   currentStreak: number;
@@ -60,14 +87,24 @@ const defaultPresets: TimerPreset[] = [
 const getTodayDate = () => new Date().toISOString().slice(0, 10);
 const getYesterdayDate = () => new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
+const initialPresets = (() => {
+  const stored = loadPresetsFromStorage();
+  return stored.length > 0 ? [...defaultPresets, ...stored] : defaultPresets;
+})();
+
 export const useTimerStore = create<TimerState>()(
   subscribeWithSelector((set, get) => ({
     mode: "focus",
     timeLeft: 25 * 60,
     isRunning: false,
-    currentPreset: defaultPresets[0],
-    presets: defaultPresets,
+    currentPreset: initialPresets[0],
+    presets: initialPresets,
     activePresetId: "classic",
+    focusTimeLeft: 25 * 60,
+    breakTimeLeft: 5 * 60,
+    focusWasStarted: false,
+    breakWasStarted: false,
+
     currentStreak: 0,
     pomodorosToday: 0,
     lastPomodoroDate: null,
@@ -78,11 +115,13 @@ export const useTimerStore = create<TimerState>()(
     initialDuration: 25 * 60,
 
     start: () => {
-      const { timeLeft } = get();
+      const { timeLeft, mode } = get();
       set({ 
         isRunning: true, 
         startTimestamp: Date.now(),
-        initialDuration: timeLeft 
+        initialDuration: timeLeft,
+        focusWasStarted: mode === "focus" ? true : get().focusWasStarted,
+        breakWasStarted: mode === "break" ? true : get().breakWasStarted,
       });
     },
 
@@ -119,11 +158,19 @@ export const useTimerStore = create<TimerState>()(
     },
 
     reset: () => set((state) => {
-      const totalSeconds = state.currentPreset
-        ? (state.mode === "focus" ? state.currentPreset.focusMinutes : state.currentPreset.breakMinutes) * 60
+      const focusSeconds = state.currentPreset
+        ? state.currentPreset.focusMinutes * 60
         : 0;
+      const breakSeconds = state.currentPreset
+        ? state.currentPreset.breakMinutes * 60
+        : 0;
+      const totalSeconds = state.mode === "focus" ? focusSeconds : breakSeconds;
       return { 
-        timeLeft: totalSeconds, 
+        timeLeft: totalSeconds,
+        focusTimeLeft: focusSeconds,
+        breakTimeLeft: breakSeconds,
+        focusWasStarted: false,
+        breakWasStarted: false,
         isRunning: false, 
         completedFocusCycle: false,
         startTimestamp: null,
@@ -143,9 +190,13 @@ export const useTimerStore = create<TimerState>()(
       if (newTimeLeft <= 0) {
         const wasFocusMode = state.mode === "focus";
         const newMode = wasFocusMode ? "break" : "focus";
-        const newTotalSeconds = state.currentPreset
-          ? (newMode === "focus" ? state.currentPreset.focusMinutes : state.currentPreset.breakMinutes) * 60
+        const focusSeconds = state.currentPreset
+          ? state.currentPreset.focusMinutes * 60
           : 0;
+        const breakSeconds = state.currentPreset
+          ? state.currentPreset.breakMinutes * 60
+          : 0;
+        const newTotalSeconds = newMode === "focus" ? focusSeconds : breakSeconds;
 
         if (wasFocusMode) {
           const today = getTodayDate();
@@ -163,6 +214,10 @@ export const useTimerStore = create<TimerState>()(
           return {
             mode: newMode,
             timeLeft: newTotalSeconds,
+            focusTimeLeft: focusSeconds,
+            breakTimeLeft: breakSeconds,
+            focusWasStarted: false,
+            breakWasStarted: false,
             isRunning: false,
             currentStreak: streak,
             pomodorosToday: todayCount,
@@ -176,6 +231,10 @@ export const useTimerStore = create<TimerState>()(
         return {
           mode: newMode,
           timeLeft: newTotalSeconds,
+          focusTimeLeft: focusSeconds,
+          breakTimeLeft: breakSeconds,
+          focusWasStarted: false,
+          breakWasStarted: false,
           isRunning: false,
           completedFocusCycle: false,
           startTimestamp: null,
@@ -183,21 +242,30 @@ export const useTimerStore = create<TimerState>()(
         };
       }
 
-      return { timeLeft: newTimeLeft, completedFocusCycle: false };
+      const saveField = state.mode === "focus" ? "focusTimeLeft" : "breakTimeLeft";
+      return { timeLeft: newTimeLeft, [saveField]: newTimeLeft, completedFocusCycle: false };
     }),
 
     setMode: (mode: TimerMode) => {
-      const { currentPreset } = get();
+      const { currentPreset, mode: prevMode, timeLeft } = get();
       if (!currentPreset) return;
 
-      const newTotalSeconds = (mode === "focus" ? currentPreset.focusMinutes : currentPreset.breakMinutes) * 60;
-      set({ 
-        mode, 
-        timeLeft: newTotalSeconds, 
-        isRunning: false, 
+      const saveField = prevMode === "focus" ? "focusTimeLeft" : "breakTimeLeft";
+      const targetFull = (mode === "focus" ? currentPreset.focusMinutes : currentPreset.breakMinutes) * 60;
+      const prevWasStarted = prevMode === "focus" ? get().focusWasStarted : get().breakWasStarted;
+
+      const newTimeLeft = prevWasStarted ? targetFull : (mode === "focus" ? get().focusTimeLeft : get().breakTimeLeft);
+
+      set({
+        [saveField]: timeLeft,
+        mode,
+        timeLeft: newTimeLeft,
+        isRunning: false,
         completedFocusCycle: false,
         startTimestamp: null,
-        initialDuration: newTotalSeconds
+        initialDuration: targetFull,
+        focusWasStarted: false,
+        breakWasStarted: false,
       });
     },
 
@@ -206,11 +274,17 @@ export const useTimerStore = create<TimerState>()(
       const preset = presets.find((p) => p.id === presetId);
       if (!preset) return;
 
-      const newTotalSeconds = (mode === "focus" ? preset.focusMinutes : preset.breakMinutes) * 60;
+      const focusSeconds = preset.focusMinutes * 60;
+      const breakSeconds = preset.breakMinutes * 60;
+      const newTotalSeconds = mode === "focus" ? focusSeconds : breakSeconds;
       set({
         activePresetId: presetId,
         currentPreset: preset,
         timeLeft: newTotalSeconds,
+        focusTimeLeft: focusSeconds,
+        breakTimeLeft: breakSeconds,
+        focusWasStarted: false,
+        breakWasStarted: false,
         isRunning: false,
         completedFocusCycle: false,
         startTimestamp: null,
@@ -225,9 +299,11 @@ export const useTimerStore = create<TimerState>()(
       } as TimerPreset;
 
       const newTotalSeconds = (state.mode === "focus" ? newPreset.focusMinutes : newPreset.breakMinutes) * 60;
+      const updatedPresets = [...state.presets, newPreset];
+      savePresetsToStorage(updatedPresets);
 
       return {
-        presets: [...state.presets, newPreset],
+        presets: updatedPresets,
         activePresetId: newPreset.id,
         currentPreset: newPreset,
         timeLeft: newTotalSeconds,
@@ -242,6 +318,7 @@ export const useTimerStore = create<TimerState>()(
       const updatedPresets = state.presets.map((preset) =>
         preset.id === presetId ? { ...preset, ...updates } : preset
       );
+      savePresetsToStorage(updatedPresets);
 
       const updatedPreset = updatedPresets.find((p) => p.id === presetId);
       if (!updatedPreset) return { presets: updatedPresets };
@@ -262,6 +339,7 @@ export const useTimerStore = create<TimerState>()(
     deletePreset: (presetId: string) => set((state) => {
       const filteredPresets = state.presets.filter((p) => p.id !== presetId);
       if (filteredPresets.length === 0) return { presets: filteredPresets };
+      savePresetsToStorage(filteredPresets);
 
       const newActiveId = state.activePresetId === presetId
         ? filteredPresets[0].id
@@ -283,15 +361,13 @@ export const useTimerStore = create<TimerState>()(
     }),
 
     loadPresets: (presets) => set((state) => {
-      const normalized = presets.map((p) => ({
-        id: p.id,
-        name: p.name,
-        focusMinutes: p.focusMinutes ?? p.focusDuration ?? 0,
-        breakMinutes: p.breakMinutes ?? p.breakDuration ?? 0,
-        isDefault: p.isDefault ?? false,
-      }))
+      const storedPresets = loadPresetsFromStorage();
+      const apiIds = new Set(presets.map((p) => p.id));
+      const missingFromApi = storedPresets.filter((p) => !apiIds.has(p.id) && !p.isDefault);
+      const mergedPresets = [...defaultPresets, ...presets, ...missingFromApi];
+      savePresetsToStorage([...presets, ...missingFromApi]);
+      const selectedPreset = presets[0] ?? state.currentPreset ?? mergedPresets[0];
 
-      const selectedPreset = normalized[0] ?? state.currentPreset ?? defaultPresets[0];
       const newTotalSeconds = (state.mode === "focus" ? selectedPreset.focusMinutes : selectedPreset.breakMinutes) * 60;
 
       return {

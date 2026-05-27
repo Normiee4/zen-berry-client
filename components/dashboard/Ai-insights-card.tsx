@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { Sparkles, Loader2, Clock, TrendingUp, Target, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ZenseiMascot } from "@/components/mascot/Zensei-mascot"
 
 interface AIReviewResponse {
   insight: string
@@ -105,12 +106,14 @@ export function AIInsightsCard() {
     queryKey: ["analytics-summary"],
     queryFn: fetchSummary,
     staleTime: 5 * 60 * 1000,
+    retry: false,
   })
 
   const { data: latestInsight } = useQuery({
     queryKey: ["ai-insights-latest"],
     queryFn: fetchLatestInsight,
     staleTime: 30 * 60 * 1000,
+    retry: false,
   })
 
   const reviewMutation = useMutation({
@@ -126,6 +129,14 @@ export function AIInsightsCard() {
   const handleGenerateReview = () => {
     reviewMutation.mutate()
   }
+
+  const hasInsight = !!(reviewMutation.data?.insight || latestInsight?.insight)
+
+  const mascotState = reviewMutation.isPending
+    ? "thinking"
+    : hasInsight
+      ? "speaking"
+      : "idle" as const
 
   const displayInsight =
     reviewMutation.data?.insight ||
@@ -154,9 +165,7 @@ export function AIInsightsCard() {
 
       <div className="flex flex-1 flex-col rounded-2xl bg-white/70 p-4">
         <div className="mb-3 flex items-start gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-strawberry/30">
-            <span className="text-lg">🍓</span>
-          </div>
+          <ZenseiMascot state={mascotState} />
           <div className="flex-1">
             <p className="font-medium text-foreground leading-relaxed">
               {displayInsight}

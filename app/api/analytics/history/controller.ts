@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server'
 import * as historyService from '@/app/api/analytics/history/service'
+import { getUserIdFromRequest } from '@/lib/auth-helpers'
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 export async function getAnalyticsHistory(request: Request) {
   try {
-    const supabase = historyService.createSupabaseClient(request)
-    const { data: { user }, error: userError } = await historyService.getAuthenticatedUser(supabase)
-
-    if (userError || !user) {
+    const userId = getUserIdFromRequest(request)
+    if (!userId) {
       return NextResponse.json({ data: [], weeklyTotals: null }, { status: 200 })
     }
+
+    const supabase = historyService.createSupabaseClient(request)
 
     const url = new URL(request.url)
     const period = url.searchParams.get('period') || 'week'
@@ -21,9 +22,9 @@ export async function getAnalyticsHistory(request: Request) {
     const startDate = historyService.getDaysAgo(days)
 
     const [statsResult, sessionsResult, mitsResult] = await Promise.all([
-      historyService.fetchDailyStatsRange(supabase, user.id, startDate, endDate),
-      historyService.fetchSessionLogsRange(supabase, user.id, startDate, endDate + 'T23:59:59'),
-      historyService.fetchCompletedMITs(supabase, user.id, startDate, endDate + 'T23:59:59'),
+      historyService.fetchDailyStatsRange(supabase, userId, startDate, endDate),
+      historyService.fetchSessionLogsRange(supabase, userId, startDate, endDate + 'T23:59:59'),
+      historyService.fetchCompletedMITs(supabase, userId, startDate, endDate + 'T23:59:59'),
     ])
 
     const statsMap = new Map(
@@ -32,8 +33,8 @@ export async function getAnalyticsHistory(request: Request) {
 
     const mitsByDate = new Map<string, number>()
     ;(mitsResult.data || []).forEach(m => {
-      if (m.completed_at) {
-        const date = m.completed_at.slice(0, 10)
+      if (m.complete_at) {
+        const date = m.complete_at.slice(0, 10)
         mitsByDate.set(date, (mitsByDate.get(date) || 0) + 1)
       }
     })

@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server'
 import * as aiService from '@/app/api/ai/review/service'
+import { getUserIdFromRequest } from '@/lib/auth-helpers'
 
 export async function generateReview(request: Request) {
   try {
-    const supabase = aiService.createSupabaseClient(request)
-    const { data: { user }, error: userError } = await aiService.getAuthenticatedUser(supabase)
-
-    if (userError || !user) {
+    const userId = getUserIdFromRequest(request)
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const rateLimitCheck = await aiService.checkHourlyRateLimit(supabase, user.id)
+    const supabase = aiService.createSupabaseClient(request)
+    const rateLimitCheck = await aiService.incrementAIReviewCount(supabase, userId)
     if (rateLimitCheck.error) {
       return NextResponse.json(
         { error: rateLimitCheck.error.message },
@@ -19,14 +19,14 @@ export async function generateReview(request: Request) {
     }
 
     const [statsResult, peakHours, lastBreak, sessionDetails, cyclesTotal, consistencyRate, peakDays, mostUsedPreset] = await Promise.all([
-      aiService.fetchTodayStats(supabase, user.id),
-      aiService.fetchPeakHours(supabase, user.id),
-      aiService.getLastBreakTime(supabase, user.id),
-      aiService.fetchTodaySessionDetails(supabase, user.id),
-      aiService.fetchCyclesTotal(supabase, user.id),
-      aiService.fetchConsistencyRate(supabase, user.id),
-      aiService.fetchPeakDays(supabase, user.id),
-      aiService.fetchMostUsedPreset(supabase, user.id),
+      aiService.fetchTodayStats(supabase, userId),
+      aiService.fetchPeakHours(supabase, userId),
+      aiService.getLastBreakTime(supabase, userId),
+      aiService.fetchTodaySessionDetails(supabase, userId),
+      aiService.fetchCyclesTotal(supabase, userId),
+      aiService.fetchConsistencyRate(supabase, userId),
+      aiService.fetchPeakDays(supabase, userId),
+      aiService.fetchMostUsedPreset(supabase, userId),
     ])
 
     let hoursSinceBreak: number | null = null
@@ -93,7 +93,7 @@ export async function generateReview(request: Request) {
     }
 
     await aiService.persistInsight(supabase, {
-      user_id: user.id,
+      user_id: userId,
       insight_date: aiService.getToday(),
       productivity_level: productivityLevel ? Math.round(productivityLevel * 100) / 100 : null,
       consistency_rate: consistencyRate,

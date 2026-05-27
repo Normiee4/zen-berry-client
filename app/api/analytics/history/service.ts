@@ -94,10 +94,10 @@ export const fetchCompletedMITs = async (
 ) => {
   return supabase
     .from('tasks')
-    .select('completed_at')
+    .select('complete_at')
     .eq('user_id', userId)
-    .eq('is_mit', true)
-    .eq('completed', true)
-    .gte('completed_at', startDate)
-    .lt('completed_at', endDate)
+    .eq('type', 'MIT')
+    .not('complete_at', 'is', null)
+    .gte('complete_at', startDate)
+    .lt('complete_at', endDate)
 }

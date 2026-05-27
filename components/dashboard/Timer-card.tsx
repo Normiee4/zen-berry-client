@@ -16,7 +16,7 @@ import { useTimerLogic } from '@/lib/timer-logic';
 import { useTimerStore } from "@/store/timer-store";
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { Pause, Play, Plus, Pencil, RotateCcw, Settings, Trash2, Loader2 } from "lucide-react";
+import { Pause, Play, Plus, Pencil, RotateCcw, Settings, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -337,7 +337,7 @@ export function TimerCard() {
               <Settings className="size-4 text-foreground" />
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md bg-white p-0">
+          <DialogContent className="max-w-md bg-white p-0 max-h-[90dvh] overflow-y-auto">
             <DialogHeader className="flex flex-row items-center justify-between border-b border-border p-6 pb-4">
               <DialogTitle className="text-lg font-semibold">Timer Settings</DialogTitle>
             </DialogHeader>
@@ -346,7 +346,7 @@ export function TimerCard() {
               {/* Presets */}
               <div className="mb-6">
                 <h4 className="mb-4 text-sm font-medium text-muted-foreground">Presets</h4>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 max-h-[40vh] overflow-y-auto pr-1">
                   {presets.map((preset) => (
                     <div
                       key={preset.id}
@@ -447,7 +447,7 @@ export function TimerCard() {
 
               {/* Edit Preset Dialog */}
               <Dialog open={editingPreset !== null} onOpenChange={(open) => { if (!open) setEditingPreset(null) }}>
-                <DialogContent className="max-w-md bg-white p-0">
+                <DialogContent className="max-w-md bg-white p-0 max-h-[90dvh] overflow-y-auto">
                   <DialogHeader className="flex flex-row items-center justify-between border-b border-border p-6 pb-4">
                     <DialogTitle className="text-lg font-semibold">Edit Preset</DialogTitle>
                   </DialogHeader>
