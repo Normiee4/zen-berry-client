@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server'
 import * as sessionService from '@/app/api/sessions/service'
-import { getUserIdFromRequest } from '@/lib/auth-helpers'
+import { resolveUser } from '@/lib/auth-helpers'
 
 export async function recordSession(request: Request) {
   try {
-    const userId = getUserIdFromRequest(request)
+    const { userId, supabase } = await resolveUser(request)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = sessionService.createSupabaseClient(request)
+
     const body = await request.json()
     const { action, durationMinutes, wasBreak, presetUsed } = body
 
@@ -29,7 +29,7 @@ export async function recordSession(request: Request) {
         : sessionService.incrementHourlyActivity(supabase, userId, true),
     ])
 
-    const [sessionResult, statsResult, activityResult] = results
+    const [sessionResult, statsResult] = results
 
     if (sessionResult.error) {
       return NextResponse.json({ error: sessionResult.error.message }, { status: 400 })
@@ -55,12 +55,12 @@ export async function recordSession(request: Request) {
 
 export async function getTodayStats(request: Request) {
   try {
-    const userId = getUserIdFromRequest(request)
+    const { userId, supabase } = await resolveUser(request)
     if (!userId) {
       return NextResponse.json({ stats: null }, { status: 200 })
     }
 
-    const supabase = sessionService.createSupabaseClient(request)
+
     const statsResult = await sessionService.getTodayStats(supabase, userId)
 
     if (statsResult.error) {
