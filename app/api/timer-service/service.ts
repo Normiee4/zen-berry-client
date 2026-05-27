@@ -148,6 +148,47 @@ export const deletePreset = async (
     .eq('preset_id', presetId)
 }
 
+export const upsertDailyStats = async (
+  supabase: SupabaseClient,
+  userId: string,
+  date: string,
+  pomodorosToday: number,
+  tasksCompleted: number,
+  streak: number
+) => {
+  const { data: existing } = await supabase
+    .from('daily_stats')
+    .select('stat_id')
+    .eq('user_id', userId)
+    .eq('date', date)
+    .maybeSingle()
+
+  if (existing) {
+    return supabase
+      .from('daily_stats')
+      .update({
+        daily_pomodoro: pomodorosToday,
+        daily_task_completed: tasksCompleted,
+        streak_maintained: streak,
+      })
+      .eq('stat_id', existing.stat_id)
+      .select()
+      .single()
+  }
+
+  return supabase
+    .from('daily_stats')
+    .insert({
+      user_id: userId,
+      date,
+      daily_pomodoro: pomodorosToday,
+      daily_task_completed: tasksCompleted,
+      streak_maintained: streak,
+    })
+    .select()
+    .single()
+}
+
 export const recordPomodoro = async (
   supabase: SupabaseClient,
   userId: string,
@@ -197,20 +238,9 @@ export const recordPomodoro = async (
     }
   }
 
-  const { data, error: upsertError } = await supabase
-    .from('daily_stats')
-    .upsert(
-      {
-        user_id: userId,
-        date: today,
-        daily_pomodoro: pomodorosToday,
-        daily_task_completed: tasksCompleted,
-        streak_maintained: currentStreak,
-      },
-      { onConflict: 'user_id,date' }
-    )
-    .select()
-    .single()
+  const { data, error: upsertError } = await upsertDailyStats(
+    supabase, userId, today, pomodorosToday, tasksCompleted, currentStreak
+  )
 
   if (upsertError) return { error: upsertError }
 

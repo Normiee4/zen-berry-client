@@ -151,23 +151,53 @@ export const recordPomodoroInDailyStats = async (
     }
   }
 
-  const { data, error: upsertError } = await supabase
+  const { data, error: statsError } = await upsertDailyStatsSessions(
+    supabase, userId, today, pomodorosToday, tasksCompleted, currentStreak
+  )
+
+  if (statsError) return { error: statsError }
+  return { data }
+}
+
+const upsertDailyStatsSessions = async (
+  supabase: SupabaseClient,
+  userId: string,
+  date: string,
+  pomodorosToday: number,
+  tasksCompleted: number,
+  streak: number
+) => {
+  const { data: existing } = await supabase
     .from('daily_stats')
-    .upsert(
-      {
-        user_id: userId,
-        date: today,
+    .select('stat_id')
+    .eq('user_id', userId)
+    .eq('date', date)
+    .maybeSingle()
+
+  if (existing) {
+    return supabase
+      .from('daily_stats')
+      .update({
         daily_pomodoro: pomodorosToday,
         daily_task_completed: tasksCompleted,
-        streak_maintained: currentStreak,
-      },
-      { onConflict: 'user_id,date' }
-    )
+        streak_maintained: streak,
+      })
+      .eq('stat_id', existing.stat_id)
+      .select()
+      .single()
+  }
+
+  return supabase
+    .from('daily_stats')
+    .insert({
+      user_id: userId,
+      date,
+      daily_pomodoro: pomodorosToday,
+      daily_task_completed: tasksCompleted,
+      streak_maintained: streak,
+    })
     .select()
     .single()
-
-  if (upsertError) return { error: upsertError }
-  return { data }
 }
 
 export const incrementHourlyActivity = async (

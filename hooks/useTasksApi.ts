@@ -1,8 +1,8 @@
 "use client"
 
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { useLocalStorage } from "@/hooks/useLocalStorage"
-import { useCallback, useEffect } from "react"
+import { useCallback } from "react"
+import { toast } from "sonner"
 
 export interface Task {
   id: string
@@ -15,15 +15,11 @@ interface UseTasksOptions {
   type?: "mit" | "braindump"
 }
 
-function createId(): string {
-  return crypto.randomUUID()
-}
-
 async function fetchTasks(type?: string): Promise<{ tasks: Task[]; mitCount: number; mitLimit: number }> {
   const params = new URLSearchParams()
   if (type) params.set("type", type)
   params.set("completed", "false")
-  
+
   const res = await fetch(`/api/tasks?${params.toString()}`)
   if (!res.ok) throw new Error("Failed to fetch tasks")
   return res.json()
@@ -34,19 +30,14 @@ export function useTasksApi(options: UseTasksOptions = {}) {
   const queryClient = useQueryClient()
   const queryKey = ["tasks", type]
 
-  const [localTasks, setLocalTasks] = useLocalStorage<Task[]>("zenberry_tasks", [])
-
-  const apiEnabled = true
-
   const { data: apiData, isLoading: isApiLoading, error: apiError } = useQuery({
     queryKey,
     queryFn: () => fetchTasks(type),
-    enabled: apiEnabled,
     staleTime: 30 * 1000,
     retry: 1,
   })
 
-  const apiTasks = apiEnabled && apiData && !apiError
+  const tasks = apiData && !apiError
     ? apiData.tasks.map((t) => ({
         id: String(t.id),
         title: t.title,
@@ -56,183 +47,122 @@ export function useTasksApi(options: UseTasksOptions = {}) {
       }))
     : []
 
-  const localFiltered = localTasks.filter((t) => !type || t.type === type)
-
-  const tasks = apiTasks.length > 0
-    ? [...apiTasks, ...localFiltered.filter((lt) => !apiTasks.some((at) => at.id === lt.id))]
-    : localFiltered
-
   const addTask = useCallback(async (task: Omit<Task, "id">) => {
-    const newTask: Task = { ...task, id: createId() }
-
-    if (apiEnabled) {
-      try {
-        const res = await fetch("/api/tasks", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: task.title, type: task.type }),
-        })
-        if (!res.ok) {
-          const err = await res.json()
-          throw new Error(err.error || "Failed to add task")
-        }
-        queryClient.invalidateQueries({ queryKey: ["tasks"] })
-        return
-      } catch (e) {
-        console.warn("API failed, using localStorage:", e)
+    try {
+      const res = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: task.title, type: task.type }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || "Failed to add task")
       }
+      queryClient.invalidateQueries({ queryKey: ["tasks"] })
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to add task")
     }
-
-    setLocalTasks((prev) => [...prev, newTask])
-  }, [apiEnabled, queryClient, setLocalTasks])
+  }, [queryClient])
 
   const updateTask = useCallback(async (id: string, updates: Partial<Task>) => {
-    if (apiEnabled) {
-      try {
-        const res = await fetch("/api/tasks", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id, ...updates }),
-        })
-        if (!res.ok) throw new Error("Failed to update")
-        queryClient.invalidateQueries({ queryKey: ["tasks"] })
-        return
-      } catch (e) {
-        console.warn("API failed, using localStorage:", e)
-      }
+    try {
+      const res = await fetch("/api/tasks", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, ...updates }),
+      })
+      if (!res.ok) throw new Error("Failed to update")
+      queryClient.invalidateQueries({ queryKey: ["tasks"] })
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update task")
     }
-
-    setLocalTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...updates } : t)))
-  }, [apiEnabled, queryClient, setLocalTasks])
+  }, [queryClient])
 
   const deleteTask = useCallback(async (id: string) => {
-    if (apiEnabled) {
-      try {
-        const res = await fetch(`/api/tasks?id=${id}`, { method: "DELETE" })
-        if (!res.ok) throw new Error("Failed to delete")
-        queryClient.invalidateQueries({ queryKey: ["tasks"] })
-        return
-      } catch (e) {
-        console.warn("API failed, using localStorage:", e)
-      }
+    try {
+      const res = await fetch(`/api/tasks?id=${id}`, { method: "DELETE" })
+      if (!res.ok) throw new Error("Failed to delete")
+      queryClient.invalidateQueries({ queryKey: ["tasks"] })
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete task")
     }
-
-    setLocalTasks((prev) => prev.filter((t) => t.id !== id))
-  }, [apiEnabled, queryClient, setLocalTasks])
+  }, [queryClient])
 
   return {
     tasks,
-    isLoading: apiEnabled ? isApiLoading : false,
+    isLoading: isApiLoading,
     addTask,
     updateTask,
     deleteTask,
-    isApiEnabled: apiEnabled,
   }
 }
 
 export function useMITApi() {
-  const [localMits, setLocalMits] = useLocalStorage<{ id: string; title: string }[]>("zenberry_mit", [])
   const queryClient = useQueryClient()
-
-  const apiEnabled = true
 
   const { data: apiData, isLoading: isApiLoading, error: apiError } = useQuery({
     queryKey: ["tasks", "mit"],
     queryFn: () => fetchTasks("mit"),
-    enabled: apiEnabled,
     staleTime: 30 * 1000,
   })
 
-  useEffect(() => {
-    if (apiData && apiData.tasks && !apiError) {
-      const apiIds = new Set(apiData.tasks.map((t) => String(t.id)))
-      setLocalMits((prev) => {
-        const unsynced = prev.filter((m) => !apiIds.has(m.id))
-        return unsynced.length !== prev.length ? unsynced : prev
-      })
-    }
-  }, [apiData, apiError, setLocalMits])
-
-  const mits = apiEnabled && apiData && !apiError
-    ? [
-        ...apiData.tasks.map((t: { id: string | number; title: string }) => ({ id: String(t.id), title: t.title })),
-        ...localMits.filter((lt) => !apiData.tasks.some((at: { id: string | number }) => String(at.id) === lt.id)),
-      ]
-    : localMits
+  const mits = apiData && !apiError
+    ? apiData.tasks.map((t: { id: string | number; title: string }) => ({ id: String(t.id), title: t.title }))
+    : []
 
   const addMIT = useCallback(async (title: string): Promise<{ success: boolean; error?: string }> => {
     if (!title.trim()) return { success: false, error: "Title cannot be empty" }
 
-    const currentCount = mits.length
-    if (currentCount >= 3) return { success: false, error: "You can only have 3 Most Important Tasks at a time." }
+    if (mits.length >= 3) return { success: false, error: "You can only have 3 Most Important Tasks at a time." }
 
-    const newMIT = { id: createId(), title: title.trim() }
-
-    if (apiEnabled) {
-      try {
-        const res = await fetch("/api/tasks", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: title.trim(), type: "mit" }),
-        })
-        if (!res.ok) {
-          const err = await res.json()
-          throw new Error(err.error || "Failed to add MIT")
-        }
-        queryClient.invalidateQueries({ queryKey: ["tasks"] })
-        return { success: true }
-      } catch (e: unknown) {
-        const errorMessage = e instanceof Error ? e.message : "Failed to add"
-        if (errorMessage.includes("3 Most Important Tasks")) {
-          return { success: false, error: errorMessage }
-        }
-        console.warn("API failed, using localStorage:", e)
+    try {
+      const res = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: title.trim(), type: "mit" }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || "Failed to add MIT")
       }
+      queryClient.invalidateQueries({ queryKey: ["tasks"] })
+      return { success: true }
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to add"
+      toast.error(msg)
+      return { success: false, error: msg }
     }
-
-    setLocalMits((prev) => [...prev, newMIT])
-    return { success: true }
-  }, [apiEnabled, mits.length, queryClient, setLocalMits])
+  }, [mits.length, queryClient])
 
   const markAsDone = useCallback(async (id: string) => {
-    if (apiEnabled) {
-      try {
-        const res = await fetch("/api/tasks", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id, completed: true }),
-        })
-        if (!res.ok) throw new Error("Failed to complete")
-        queryClient.invalidateQueries({ queryKey: ["tasks"] })
-        queryClient.invalidateQueries({ queryKey: ["analytics-summary"] })
-        queryClient.invalidateQueries({ queryKey: ["analytics-milestones"] })
-        return
-      } catch (e) {
-        console.warn("API failed, using localStorage:", e)
-      }
+    try {
+      const res = await fetch("/api/tasks", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, completed: true }),
+      })
+      if (!res.ok) throw new Error("Failed to complete")
+      queryClient.invalidateQueries({ queryKey: ["tasks"] })
+      queryClient.invalidateQueries({ queryKey: ["analytics-summary"] })
+      queryClient.invalidateQueries({ queryKey: ["analytics-milestones"] })
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to complete task")
     }
-
-    setLocalMits((prev) => prev.filter((m) => m.id !== id))
-  }, [apiEnabled, queryClient, setLocalMits])
+  }, [queryClient])
 
   const updateTitle = useCallback(async (id: string, title: string) => {
-    if (apiEnabled) {
-      try {
-        const res = await fetch("/api/tasks", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id, title }),
-        })
-        if (!res.ok) throw new Error("Failed to update")
-        queryClient.invalidateQueries({ queryKey: ["tasks"] })
-        return
-      } catch (e) {
-        console.warn("API failed, using localStorage:", e)
-      }
+    try {
+      const res = await fetch("/api/tasks", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, title }),
+      })
+      if (!res.ok) throw new Error("Failed to update")
+      queryClient.invalidateQueries({ queryKey: ["tasks"] })
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update title")
     }
-
-    setLocalMits((prev) => prev.map((m) => (m.id === id ? { ...m, title } : m)))
-  }, [apiEnabled, queryClient, setLocalMits])
+  }, [queryClient])
 
   return {
     mits,
@@ -240,7 +170,6 @@ export function useMITApi() {
     markAsDone,
     updateTitle,
     remainingSlots: 3 - mits.length,
-    isLoading: apiEnabled ? isApiLoading : false,
-    isApiEnabled: apiEnabled,
+    isLoading: isApiLoading,
   }
 }
