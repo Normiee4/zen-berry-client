@@ -18,7 +18,7 @@ export async function getMilestones(request: Request) {
 
     return NextResponse.json(
       { lifetimeTasks, lifetimeCycles: 0, combinedTotal: lifetimeTasks },
-      { status: 200, headers: { 'Cache-Control': 'public, max-age=30, s-maxage=60' } }
+      { status: 200 }
     )
   } catch (error) {
     console.error('Milestones error', error)

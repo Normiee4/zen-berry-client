@@ -22,7 +22,6 @@ export async function getAnalyticsSummary(request: Request) {
       )
     }
 
-
     const [statsResult, mitsCompleted, peakHours, totalFocusMinutes, breaksTaken, lastBreak] = await Promise.all([
       analyticsService.fetchTodayStats(supabase, userId),
       analyticsService.fetchMITCount(supabase, userId),
@@ -50,7 +49,7 @@ export async function getAnalyticsSummary(request: Request) {
         peakHours,
         hoursSinceBreak,
       },
-      { status: 200, headers: { 'Cache-Control': 'public, max-age=60, s-maxage=120' } }
+      { status: 200 }
     )
   } catch (error) {
     console.error('Analytics summary error', error)

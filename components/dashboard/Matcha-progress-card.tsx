@@ -54,19 +54,22 @@ export function MatchaProgressCard() {
   const fillPercentage = (progressWithinMilestone / MILESTONE_TARGET) * 100
 
   const totalMinutes = summary?.today?.totalFocusMinutes ?? 0
+  const streak = summary?.today?.streak ?? 0
 
   const getMessage = () => {
+    if (streak >= 7) return `🔥 ${streak}-day streak! Zensei says: Your consistency is inspiring. Keep showing up!`
+    if (streak >= 3) return `✨ ${streak}-day streak! Zensei says: You're building momentum. Stay with it!`
     if (combinedTotal > 0 && combinedTotal % MILESTONE_TARGET === 0) {
-      return `Reward yourself with a matcha! You finished ${combinedTotal} tasks and cycles!`
+      return `🎉 Milestone! Zensei says: Reward yourself with a matcha! ${combinedTotal} tasks done!`
     }
     if (fillPercentage >= 90) {
-      return "Almost there! Finish strong for your matcha reward."
+      return "Almost there! Zensei says: Finish strong for your matcha reward."
     } else if (fillPercentage >= 50) {
-      return "More than halfway! Keep the momentum going."
+      return "More than halfway! Zensei says: Keep the momentum going."
     } else if (combinedTotal > 0) {
-      return `${MILESTONE_TARGET - progressWithinMilestone} tasks or cycles until your next matcha reward.`
+      return `${MILESTONE_TARGET - progressWithinMilestone} tasks until your next matcha. Zensei believes in you!`
     }
-    return "Complete tasks and focus sessions to earn a matcha reward!"
+    return "Complete tasks to earn a matcha reward. Zensei is rooting for you!"
   }
 
   if (isLoading) {
