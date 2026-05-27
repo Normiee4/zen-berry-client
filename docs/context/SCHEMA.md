@@ -1,83 +1,105 @@
 # Database Schema & API Design
 
-## Entity Relationship Diagram
+## Tables
 
-```mermaid
-erDiagram
-  users ||--o{ daily_stats : has
-  users ||--o{ insights : generates
-  users ||--o{ tasks : owns
-  timer_presets ||--o{ tasks : uses
-  tasks ||--o{ sessions : tracks
+### `ai_insights`
 
-  users {
-    uuid user_id PK
-    varchar username
-    varchar email
-    timestamp created_at
-  }
+| Name | Type | Constraints |
+|------|------|-------------|
+| `insight_id` | `int8` | Primary Identity |
+| `user_id` | `uuid` |  |
+| `insight_date` | `timestamp` | Unique |
+| `productivity_level` | `float8` | Nullable |
+| `consistency_rate` | `float8` | Nullable |
+| `cycles_total` | `numeric` |  |
+| `peak_hours` | `numeric` |  |
+| `peak_days` | `_text` |  |
+| `insight_message` | `text` | Nullable |
+| `recommendation` | `text` | Nullable |
+| `milestone` | `text` | Nullable |
+| `created_at` | `timestamptz` |  |
+| `models_used` | `json` | Nullable |
+| `most_used_preset_timer` | `int8` | Nullable |
 
-  tasks {
-    int8 task_id PK
-    uuid user_id FK
-    text title
-    text description
-    boolean is_mit DEFAULT FALSE
-    boolean completed DEFAULT FALSE
-    timestamp created_at
-    timestamp completed_at
-    timestamp updated_at
-  }
+### `daily_activity_log`
 
-  sessions {
-    uuid session_id PK
-    uuid user_id FK
-    int8 task_id FK
-    int8 preset_id FK
-    timestamp start_time
-    timestamp end_time
-    int8 duration_seconds
-    text session_type
-  }
+| Name | Type | Constraints |
+|------|------|-------------|
+| `log_id` | `uuid` | Primary |
+| `user_id` | `uuid` | Nullable |
+| `date` | `date` |  |
+| `hour_slot` | `int4` |  |
+| `pomodoros_completed` | `int4` | Nullable |
+| `tasks_completed` | `int4` | Nullable |
 
-  daily_stats {
-    int8 stat_id PK
-    uuid user_id FK
-    timestamp date
-    numeric daily_pomodoro
-    numeric daily_task_completed
-    bool streak_maintained
-  }
+### `daily_stats`
 
-  timer_presets {
-    int8 preset_id PK
-    text preset_name
-    int8 focus_duration
-    int8 break_duration
-    bool is_default
-  }
+| Name | Type | Constraints |
+|------|------|-------------|
+| `stat_id` | `uuid` | Primary |
+| `user_id` | `uuid` | Nullable |
+| `date` | `timestamp` | Nullable |
+| `daily_pomodoro` | `numeric` | Nullable |
+| `daily_task_completed` | `numeric` | Nullable |
+| `streak_maintained` | `int4` | Nullable |
+| `created_at` | `timestamptz` |  |
+| `ai_review_count` | `int4` | Nullable |
 
-  insights {
-    int8 insight_id PK
-    uuid user_id FK
-    float4 productivity_level
-    float4 consistency_rate
-    numeric cycles_total
-    numeric peak_hours
-    text[] peak_days
-    text insight_message
-    text recommendation
-    text milestone
-    json models_used
-    int8 most_used_preset_timer FK
-  }
+### `session_logs`
 
-  waitlist {
-    uuid registration_id PK
-    varchar email
-    text name
-    timestamp created_at
-  }
+| Name | Type | Constraints |
+|------|------|-------------|
+| `session_id` | `uuid` | Primary |
+| `user_id` | `uuid` | Nullable |
+| `started_at` | `timestamptz` | Nullable |
+| `completed_at` | `timestamptz` | Nullable |
+| `duration_minutes` | `int4` |  |
+| `was_break` | `bool` | Nullable |
+| `preset_used` | `text` | Nullable |
+| `created_at` | `timestamptz` | Nullable |
+
+### `tasks`
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `task_id` | `int8` | Primary Identity |
+| `user_id` | `uuid` |  |
+| `title` | `text` |  |
+| `description` | `text` | Nullable |
+| `type` | `task_types` |  |
+| `created_at` | `timestamptz` |  |
+| `complete_at` | `timestamp` | Nullable |
+
+### `timer_presets`
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `preset_id` | `int8` | Primary Identity |
+| `user_id` | `uuid` |  |
+| `preset_name` | `text` | Nullable |
+| `focus_duration` | `int8` | Nullable |
+| `break_duration` | `int8` | Nullable |
+| `is_default` | `bool` | Nullable |
+| `created_at` | `timestamptz` |  |
+
+### `users`
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `user_id` | `uuid` | Primary |
+| `username` | `varchar` |  |
+| `email` | `varchar` | Unique |
+| `created_at` | `timestamptz` |  |
+
+### `waitlist`
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `registration_id` | `uuid` | Primary |
+| `email` | `varchar` | Unique |
+| `name` | `text` | Nullable |
+| `created_at` | `timestamptz` |  |
+
 ## API Routes
 
 ### Authentication

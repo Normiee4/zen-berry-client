@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useLocalStorage } from "@/hooks/useLocalStorage"
-import { useCallback } from "react"
+import { useCallback, useEffect } from "react"
 
 export interface Task {
   id: string
@@ -48,7 +48,7 @@ export function useTasksApi(options: UseTasksOptions = {}) {
 
   const apiTasks = apiEnabled && apiData && !apiError
     ? apiData.tasks.map((t) => ({
-        id: t.id,
+        id: String(t.id),
         title: t.title,
         completed: t.completed,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -143,15 +143,28 @@ export function useMITApi() {
     staleTime: 30 * 1000,
   })
 
+  useEffect(() => {
+    if (apiData && apiData.tasks && !apiError) {
+      const apiIds = new Set(apiData.tasks.map((t) => String(t.id)))
+      setLocalMits((prev) => {
+        const unsynced = prev.filter((m) => !apiIds.has(m.id))
+        return unsynced.length !== prev.length ? unsynced : prev
+      })
+    }
+  }, [apiData, apiError, setLocalMits])
+
   const mits = apiEnabled && apiData && !apiError
-    ? apiData.tasks.map((t: { id: string; title: string }) => ({ id: t.id, title: t.title }))
+    ? [
+        ...apiData.tasks.map((t: { id: string | number; title: string }) => ({ id: String(t.id), title: t.title })),
+        ...localMits.filter((lt) => !apiData.tasks.some((at: { id: string | number }) => String(at.id) === lt.id)),
+      ]
     : localMits
 
   const addMIT = useCallback(async (title: string): Promise<{ success: boolean; error?: string }> => {
     if (!title.trim()) return { success: false, error: "Title cannot be empty" }
 
-    const currentMits = apiEnabled && !apiError && apiData ? apiData.tasks.length : localMits.length
-    if (currentMits >= 3) return { success: false, error: "You can only have 3 Most Important Tasks at a time." }
+    const currentCount = mits.length
+    if (currentCount >= 3) return { success: false, error: "You can only have 3 Most Important Tasks at a time." }
 
     const newMIT = { id: createId(), title: title.trim() }
 
@@ -179,7 +192,7 @@ export function useMITApi() {
 
     setLocalMits((prev) => [...prev, newMIT])
     return { success: true }
-  }, [apiEnabled, apiError, apiData, localMits, queryClient, setLocalMits])
+  }, [apiEnabled, mits.length, queryClient, setLocalMits])
 
   const markAsDone = useCallback(async (id: string) => {
     if (apiEnabled) {
