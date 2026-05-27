@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
 import * as analyticsService from '@/app/api/analytics/summary/service'
-import { getUserIdFromRequest } from '@/lib/auth-helpers'
 
 export async function getAnalyticsSummary(request: Request) {
   try {
-    const userId = getUserIdFromRequest(request)
+    const supabase = analyticsService.createSupabaseClient(request)
+    const { data: { user } } = await supabase.auth.getUser()
+    const userId = user?.id ?? null
     if (!userId) {
       return NextResponse.json(
         {
@@ -22,7 +23,6 @@ export async function getAnalyticsSummary(request: Request) {
       )
     }
 
-    const supabase = analyticsService.createSupabaseClient(request)
     const [statsResult, mitsCompleted, peakHours, totalFocusMinutes, breaksTaken, lastBreak] = await Promise.all([
       analyticsService.fetchTodayStats(supabase, userId),
       analyticsService.fetchMITCount(supabase, userId),
@@ -50,7 +50,7 @@ export async function getAnalyticsSummary(request: Request) {
         peakHours,
         hoursSinceBreak,
       },
-      { status: 200, headers: { 'Cache-Control': 'public, max-age=60, s-maxage=120' } }
+      { status: 200 }
     )
   } catch (error) {
     console.error('Analytics summary error', error)

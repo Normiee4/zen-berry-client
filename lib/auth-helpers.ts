@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 export function getUserIdFromRequest(request: Request): string | null {
   return request.headers.get('X-User-Id')
@@ -17,7 +18,7 @@ function createAdminClient() {
   )
 }
 
-export async function ensureUserRow(userId: string, supabase: any): Promise<void> {
+export async function ensureUserRow(userId: string, supabase: SupabaseClient): Promise<void> {
   const admin = createAdminClient()
   const client = admin ?? supabase
 
