@@ -74,7 +74,7 @@ export function MatchaProgressCard() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center rounded-3xl bg-strawberry-light/30 p-6">
+      <div className="flex h-full items-center justify-center rounded-3xl bg-strawberry-light/30 p-6 border border-matcha-dark/20">
         <div className="flex flex-col items-center gap-3">
           <div className="h-32 w-24 animate-pulse bg-matcha-light/30 rounded-lg" />
           <div className="h-4 w-24 bg-matcha-light/30 rounded animate-pulse" />
@@ -85,14 +85,14 @@ export function MatchaProgressCard() {
 
   if (error) {
     return (
-      <div className="flex h-full items-center justify-center rounded-3xl bg-strawberry-light/30 p-6">
+      <div className="flex h-full items-center justify-center rounded-3xl bg-strawberry-light/30 p-6 border border-matcha-dark/20">
         <AnimatedMatchaCup fillPercentage={0} combinedTotal={0} message="Let's start fresh!" />
       </div>
     )
   }
 
   return (
-    <div className="flex h-full items-center justify-center rounded-3xl bg-strawberry-light/30 p-4">
+    <div className="flex h-full items-center justify-center rounded-3xl bg-strawberry-light/30 p-4 border border-matcha-dark/20">
       <div className="w-full">
         <AnimatedMatchaCup
           fillPercentage={fillPercentage}
@@ -100,18 +100,24 @@ export function MatchaProgressCard() {
           message={getMessage()}
         />
         
-        <div className="mt-2 grid grid-cols-3 gap-2 text-center text-xs text-muted-foreground">
+        <div className="mt-2 grid grid-cols-3 gap-2 text-center">
           <div>
-            <span className="font-semibold text-matcha">{combinedTotal}</span>
-            <span className="ml-1">total</span>
+            <span className="text-sm font-semibold text-matcha">{combinedTotal}</span>
+            <span className="ml-1 text-xs font-medium text-muted-foreground">total</span>
           </div>
           <div>
-            <span className="font-semibold text-matcha">{Math.floor(totalMinutes / 60)}h</span>
-            <span className="ml-1">focus</span>
+            {totalMinutes > 0 ? (
+              <>
+                <span className="text-sm font-semibold text-matcha">{Math.floor(totalMinutes / 60)}h</span>
+                <span className="ml-1 text-xs font-medium text-muted-foreground">focus</span>
+              </>
+            ) : (
+              <span className="text-xs font-medium text-muted-foreground">--</span>
+            )}
           </div>
           <div>
-            <span className="font-semibold text-matcha">{MILESTONE_TARGET - progressWithinMilestone}</span>
-            <span className="ml-1">to reward</span>
+            <span className="text-sm font-semibold text-matcha">{MILESTONE_TARGET - progressWithinMilestone}</span>
+            <span className="ml-1 text-xs font-medium text-muted-foreground">to reward</span>
           </div>
         </div>
       </div>

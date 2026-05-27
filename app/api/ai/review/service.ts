@@ -297,14 +297,26 @@ export interface GeminiResponse {
   suggestion: string
 }
 
-export const FALLBACK_RESPONSE: GeminiResponse = {
-  insight: 'Discipline is the bridge between goals and accomplishment. Every session brings you closer to mastery.',
-  suggestion: 'Begin a 25-minute focus block. The path of the strawberry is sweet for those who persist.',
+const FALLBACKS: GeminiResponse[] = [
+  { insight: 'Discipline is the bridge between goals and accomplishment. Every session brings you closer to mastery.', suggestion: 'Begin a 25-minute focus block. The path of the strawberry is sweet for those who persist.' },
+  { insight: 'The ripest strawberry grows from steady sunlight. Your consistency is the sun — keep showing up.', suggestion: 'Try a deep work preset (50 min) today. Longer focus builds deeper roots.' },
+  { insight: 'Small seeds grow into strong plants. Each pomodoro is a seed you are planting for tomorrow.', suggestion: 'Review your MIT list. Clear the most important task first — the rest follows.' },
+  { insight: 'A smooth sea never made a skilled sailor. Every challenging focus block sharpens your mind.', suggestion: 'Stand up, stretch, and take three deep breaths before your next session.' },
+]
+
+export const getFallbackResponse = (): GeminiResponse => {
+  return FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)]
 }
 
-export const NO_DATA_RESPONSE: GeminiResponse = {
-  insight: "An empty canvas holds infinite potential. The first stroke is the hardest — and the most important.",
-  suggestion: 'Complete your first Pomodoro, young sprout. Even the sweetest strawberry begins as a seed.',
+const NO_DATA_FALLBACKS: GeminiResponse[] = [
+  { insight: "An empty canvas holds infinite potential. The first stroke is the hardest — and the most important.", suggestion: 'Complete your first Pomodoro, young sprout. Even the sweetest strawberry begins as a seed.' },
+  { insight: "Not a single pomodoro logged yet — and that is okay. Every journey starts with one brave step.", suggestion: 'Set a 25-minute timer and commit to just one focus block. You can do this.' },
+  { insight: "The garden is quiet today. But the soil is ready — all it needs is the first seed.", suggestion: 'Open your MIT list, pick one task, and start the timer. Action beats perfection.' },
+  { insight: "No data yet, apprentice. But Zensei sees potential in every fresh start.", suggestion: 'Your first pomodoro is the hardest. Once it is done, momentum carries you.' },
+]
+
+export const getNoDataResponse = (): GeminiResponse => {
+  return NO_DATA_FALLBACKS[Math.floor(Math.random() * NO_DATA_FALLBACKS.length)]
 }
 
 export const callGeminiAPI = async (prompt: string): Promise<GeminiResponse> => {
@@ -313,7 +325,7 @@ export const callGeminiAPI = async (prompt: string): Promise<GeminiResponse> => 
 
   if (!apiKey) {
     console.warn('GEMINI_API_KEY not configured, using fallback response')
-    return FALLBACK_RESPONSE
+    return getFallbackResponse()
   }
 
   try {
@@ -338,28 +350,29 @@ export const callGeminiAPI = async (prompt: string): Promise<GeminiResponse> => 
     if (!response.ok) {
       const errorText = await response.text()
       console.error('Gemini API error:', response.status, errorText)
-      return FALLBACK_RESPONSE
+      return getFallbackResponse()
     }
 
     const data = await response.json()
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
 
+    const fb = getFallbackResponse()
     try {
       const parsed = JSON.parse(text)
       return {
-        insight: parsed.insight || FALLBACK_RESPONSE.insight,
-        suggestion: parsed.suggestion || FALLBACK_RESPONSE.suggestion,
+        insight: parsed.insight || fb.insight,
+        suggestion: parsed.suggestion || fb.suggestion,
       }
     } catch {
       const lines = text.split('\n').filter((l: string) => l.trim())
       return {
-        insight: lines[0] || FALLBACK_RESPONSE.insight,
-        suggestion: lines[1] || FALLBACK_RESPONSE.suggestion,
+        insight: lines[0] || fb.insight,
+        suggestion: lines[1] || fb.suggestion,
       }
     }
   } catch (error) {
     console.error('Gemini API call failed:', error)
-    return FALLBACK_RESPONSE
+    return getFallbackResponse()
   }
 }
 

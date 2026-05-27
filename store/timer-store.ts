@@ -12,6 +12,7 @@ export interface TimerPreset {
 }
 
 const PRESETS_STORAGE_KEY = "zenberry_timer_presets";
+const STREAK_STORAGE_KEY = "zenberry_timer_streak";
 
 function loadPresetsFromStorage(): TimerPreset[] {
   if (typeof window === "undefined") return []
@@ -27,6 +28,20 @@ function savePresetsToStorage(presets: TimerPreset[]) {
   if (typeof window === "undefined") return
   try {
     localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(presets))
+  } catch {
+    // ignore write failures
+  }
+}
+
+function saveStreakToStorage(currentStreak: number, pomodorosToday: number, lastPomodoroDate: string | null) {
+  if (typeof window === "undefined") return
+  try {
+    localStorage.setItem(STREAK_STORAGE_KEY, JSON.stringify({
+      date: getTodayDate(),
+      currentStreak,
+      pomodorosToday,
+      lastPomodoroDate: lastPomodoroDate?.slice(0, 10) ?? null,
+    }))
   } catch {
     // ignore write failures
   }
@@ -207,12 +222,15 @@ export const useTimerStore = create<TimerState>()(
           let streak = state.currentStreak;
           let todayCount = state.pomodorosToday;
 
-          if (state.lastPomodoroDate === today) {
+          if ((state.lastPomodoroDate?.slice(0, 10) ?? null) === today) {
             todayCount += 1;
+            streak = Math.max(1, state.currentStreak);
           } else {
             todayCount = 1;
             streak = state.lastPomodoroDate === yesterday ? Math.max(1, state.currentStreak + 1) : 1;
           }
+
+          saveStreakToStorage(streak, todayCount, today)
 
           return {
             mode: newMode,
@@ -392,11 +410,15 @@ export const useTimerStore = create<TimerState>()(
       };
     }),
 
-    loadStats: (stats) => set({
-      currentStreak: stats.currentStreak,
-      pomodorosToday: stats.pomodorosToday,
-      lastPomodoroDate: stats.lastPomodoroDate,
-    }),
+    loadStats: (stats) => {
+      const normalized = {
+        currentStreak: stats.currentStreak,
+        pomodorosToday: stats.pomodorosToday,
+        lastPomodoroDate: stats.lastPomodoroDate?.slice(0, 10) ?? null,
+      }
+      saveStreakToStorage(normalized.currentStreak, normalized.pomodorosToday, normalized.lastPomodoroDate)
+      return set(normalized)
+    },
 
     clearCompletedFocusCycle: () => set({ completedFocusCycle: false }),
   }))

@@ -59,6 +59,7 @@ export function useTasksApi(options: UseTasksOptions = {}) {
         throw new Error(err.error || "Failed to add task")
       }
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
+      toast.success("Task added!")
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to add task")
     }
@@ -126,6 +127,7 @@ export function useMITApi() {
         throw new Error(err.error || "Failed to add MIT")
       }
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
+      toast.success("MIT added!")
       return { success: true }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Failed to add"
