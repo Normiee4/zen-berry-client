@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server'
 import * as insightsService from '@/app/api/ai/insights/latest/service'
-import { getUserIdFromRequest } from '@/lib/auth-helpers'
+import { resolveUser } from '@/lib/auth-helpers'
 
 export async function getLatestInsight(request: Request) {
   try {
-    const userId = getUserIdFromRequest(request)
+    const { userId, supabase } = await resolveUser(request)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = insightsService.createSupabaseClient(request)
+
     const insight = await insightsService.fetchLatestInsight(supabase, userId)
 
     if (!insight) {

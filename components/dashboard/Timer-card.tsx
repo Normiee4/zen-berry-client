@@ -95,7 +95,7 @@ export function TimerCard() {
     };
 
     recordCompletion();
-  }, [completedFocusCycle, clearCompletedFocusCycle]);
+  }, [completedFocusCycle, clearCompletedFocusCycle, queryClient]);
 
   useEffect(() => {
     const handleVisibility = () => {
