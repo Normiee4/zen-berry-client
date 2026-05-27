@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server'
 import * as analyticsService from '@/app/api/analytics/summary/service'
+import { resolveUser } from '@/lib/auth-helpers'
 
 export async function getAnalyticsSummary(request: Request) {
   try {
-    const supabase = analyticsService.createSupabaseClient(request)
-    const { data: { user } } = await supabase.auth.getUser()
-    const userId = user?.id ?? null
+    const { userId, supabase } = await resolveUser(request)
     if (!userId) {
       return NextResponse.json(
         {

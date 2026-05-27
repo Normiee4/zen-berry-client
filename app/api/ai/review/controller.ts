@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server'
 import * as aiService from '@/app/api/ai/review/service'
 import { NO_DATA_RESPONSE } from '@/app/api/ai/review/service'
-import { getUserIdFromRequest } from '@/lib/auth-helpers'
+import { resolveUser } from '@/lib/auth-helpers'
 
 export async function generateReview(request: Request) {
   try {
-    const userId = getUserIdFromRequest(request)
+    const { userId, supabase } = await resolveUser(request)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = aiService.createSupabaseClient(request)
+
     const rateLimitCheck = await aiService.checkHourlyRateLimit(supabase, userId)
     if (rateLimitCheck.error) {
       return NextResponse.json(

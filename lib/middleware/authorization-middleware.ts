@@ -10,10 +10,10 @@ export async function authorizationMiddleware(request: NextRequest) {
         get(name: string) {
           return request.cookies.get(name)?.value
         },
-        set(name: string, value: string, options: CookieOptions) {
+        set(_name: string, _value: string, _options: CookieOptions) {
           // Not needed in middleware — just pass through
         },
-        remove(name: string, options: CookieOptions) {
+        remove(_name: string, _options: CookieOptions) {
           // Not needed in middleware
         },
       },
@@ -33,11 +33,7 @@ export async function authorizationMiddleware(request: NextRequest) {
         { status: 401 }
       )
     }
-    const requestHeaders = new Headers(request.headers)
-    requestHeaders.set('X-User-Id', user.id)
-    return NextResponse.next({
-      request: { headers: requestHeaders },
-    })
+    return NextResponse.next()
   }
 
   if (!user && isProtectedRoute) {

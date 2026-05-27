@@ -1,30 +1,27 @@
 import { NextResponse } from 'next/server'
 import * as taskService from '@/app/api/tasks/service'
-import { getUserIdFromRequest, ensureUserRow } from '@/lib/auth-helpers'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 const MIT_LIMIT = 3
 
-async function resolveUserId(request: Request): Promise<string | null> {
-  const headerId = getUserIdFromRequest(request)
-  if (headerId) return headerId
-  try {
-    const supabase = taskService.createSupabaseClient(request)
-    const { data: { user }, error } = await supabase.auth.getUser()
-    if (error || !user) return null
-    return user.id
-  } catch {
-    return null
+async function resolveUser(request: Request): Promise<{ userId: string | null; supabase: SupabaseClient }> {
+  const headerId = request.headers.get('X-User-Id')
+  if (headerId) {
+    return { userId: headerId, supabase: taskService.createSupabaseClient(request) }
   }
+  const supabase = taskService.createSupabaseClient(request)
+  const { data, error } = await supabase.auth.getUser()
+  const user = data?.user ?? null
+  if (error || !user) return { userId: null, supabase }
+  return { userId: user.id, supabase }
 }
 
 export async function getTasks(request: Request) {
   try {
-    const userId = await resolveUserId(request)
+    const { userId, supabase } = await resolveUser(request)
     if (!userId) {
       return NextResponse.json({ tasks: [], mitCount: 0 }, { status: 200 })
     }
-
-    const supabase = taskService.createSupabaseClient(request)
     const url = new URL(request.url)
     const type = url.searchParams.get('type') as 'mit' | 'braindump' | null
     const completed = url.searchParams.get('completed')
@@ -60,13 +57,10 @@ export async function getTasks(request: Request) {
 
 export async function createTask(request: Request) {
   try {
-    const userId = await resolveUserId(request)
+    const { userId, supabase } = await resolveUser(request)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
-    const supabase = taskService.createSupabaseClient(request)
-    await ensureUserRow(userId, supabase)
 
     const body = await request.json()
     const { title, type } = body
@@ -108,13 +102,10 @@ export async function createTask(request: Request) {
 
 export async function updateTask(request: Request) {
   try {
-    const userId = await resolveUserId(request)
+    const { userId, supabase } = await resolveUser(request)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
-    const supabase = taskService.createSupabaseClient(request)
-    await ensureUserRow(userId, supabase)
 
     const body = await request.json()
     const { id, title, completed, isMIT } = body
@@ -151,13 +142,11 @@ export async function updateTask(request: Request) {
 
 export async function deleteTask(request: Request) {
   try {
-    const userId = await resolveUserId(request)
+    const { userId, supabase } = await resolveUser(request)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = taskService.createSupabaseClient(request)
-    await ensureUserRow(userId, supabase)
 
     const url = new URL(request.url)
     const id = url.searchParams.get('id')
