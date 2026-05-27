@@ -72,14 +72,20 @@ export function TimerCard() {
 
     const recordCompletion = async () => {
       try {
+        const state = useTimerStore.getState()
         const res = await fetch('/api/timer-service', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'recordCompletion' }),
+          body: JSON.stringify({
+            action: 'recordCompletion',
+            durationMinutes: state.currentPreset?.focusMinutes ?? 25,
+            presetUsed: state.currentPreset?.name ?? 'Classic Pomodoro',
+          }),
         })
         if (res.ok) {
           queryClient.invalidateQueries({ queryKey: ['analytics-summary'] })
           queryClient.invalidateQueries({ queryKey: ['ai-insights-latest'] })
+          queryClient.invalidateQueries({ queryKey: ['analytics-milestones'] })
         }
       } catch {
         // ignore network failures for now
@@ -212,10 +218,12 @@ export function TimerCard() {
 
   if (!loaded) {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-3xl bg-strawberry-light/30 p-6">
-        <Skeleton className="h-8 w-48 rounded-full" />
-        <Skeleton className="size-60 rounded-full" />
-        <Skeleton className="h-10 w-32 rounded-full" />
+      <div className="flex min-h-0 flex-col rounded-3xl bg-strawberry-light/30 p-6 overflow-hidden">
+        <div className="flex flex-col items-center gap-4">
+          <Skeleton className="h-8 w-48 rounded-full" />
+          <Skeleton className="size-60 rounded-full" />
+          <Skeleton className="h-10 w-32 rounded-full" />
+        </div>
       </div>
     )
   }

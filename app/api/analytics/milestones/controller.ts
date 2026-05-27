@@ -4,7 +4,8 @@ import * as milestonesService from './service'
 export async function getMilestones(request: Request) {
   try {
     const supabase = milestonesService.createSupabaseClient(request)
-    const { data: { user }, error: userError } = await milestonesService.getAuthenticatedUser(supabase)
+    const { data, error: userError } = await milestonesService.getAuthenticatedUser(supabase)
+    const user = data?.user ?? null
 
     if (userError || !user) {
       return NextResponse.json(
@@ -22,7 +23,7 @@ export async function getMilestones(request: Request) {
 
     return NextResponse.json(
       { lifetimeTasks, lifetimeCycles, combinedTotal },
-      { status: 200 }
+      { status: 200, headers: { 'Cache-Control': 'public, max-age=604800, s-maxage=604800' } }
     )
   } catch (error) {
     console.error('Milestones error', error)

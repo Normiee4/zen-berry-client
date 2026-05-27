@@ -46,7 +46,7 @@ export function useTasksApi(options: UseTasksOptions = {}) {
     retry: 1,
   })
 
-  const tasks = apiEnabled && apiData && !apiError
+  const apiTasks = apiEnabled && apiData && !apiError
     ? apiData.tasks.map((t) => ({
         id: t.id,
         title: t.title,
@@ -54,7 +54,13 @@ export function useTasksApi(options: UseTasksOptions = {}) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         type: ((t as any).isMIT ? "mit" : "braindump") as "mit" | "braindump",
       }))
-    : localTasks.filter((t) => !type || t.type === type)
+    : []
+
+  const localFiltered = localTasks.filter((t) => !type || t.type === type)
+
+  const tasks = apiTasks.length > 0
+    ? [...apiTasks, ...localFiltered.filter((lt) => !apiTasks.some((at) => at.id === lt.id))]
+    : localFiltered
 
   const addTask = useCallback(async (task: Omit<Task, "id">) => {
     const newTask: Task = { ...task, id: createId() }

@@ -4,9 +4,22 @@ import { getUserIdFromRequest } from '@/lib/auth-helpers'
 
 const MIT_LIMIT = 3
 
+async function resolveUserId(request: Request): Promise<string | null> {
+  const headerId = getUserIdFromRequest(request)
+  if (headerId) return headerId
+  try {
+    const supabase = taskService.createSupabaseClient(request)
+    const { data: { user }, error } = await supabase.auth.getUser()
+    if (error || !user) return null
+    return user.id
+  } catch {
+    return null
+  }
+}
+
 export async function getTasks(request: Request) {
   try {
-    const userId = getUserIdFromRequest(request)
+    const userId = await resolveUserId(request)
     if (!userId) {
       return NextResponse.json({ tasks: [], mitCount: 0 }, { status: 200 })
     }
@@ -47,7 +60,7 @@ export async function getTasks(request: Request) {
 
 export async function createTask(request: Request) {
   try {
-    const userId = getUserIdFromRequest(request)
+    const userId = await resolveUserId(request)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -93,7 +106,7 @@ export async function createTask(request: Request) {
 
 export async function updateTask(request: Request) {
   try {
-    const userId = getUserIdFromRequest(request)
+    const userId = await resolveUserId(request)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -129,7 +142,7 @@ export async function updateTask(request: Request) {
 
 export async function deleteTask(request: Request) {
   try {
-    const userId = getUserIdFromRequest(request)
+    const userId = await resolveUserId(request)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

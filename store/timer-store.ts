@@ -89,7 +89,10 @@ const getYesterdayDate = () => new Date(Date.now() - 24 * 60 * 60 * 1000).toISOS
 
 const initialPresets = (() => {
   const stored = loadPresetsFromStorage();
-  return stored.length > 0 ? [...defaultPresets, ...stored] : defaultPresets;
+  if (stored.length === 0) return defaultPresets;
+  const storedIds = new Set(stored.map(p => p.id));
+  const missingDefaults = defaultPresets.filter(p => !storedIds.has(p.id));
+  return [...missingDefaults, ...stored];
 })();
 
 export const useTimerStore = create<TimerState>()(

@@ -66,10 +66,10 @@ export const createSupabaseClient = (request: Request) =>
           return getCookieValue(request, name)
         },
         set() {
-          throw new Error('Server route does not support setting cookies.')
+          /* no-op */
         },
         remove() {
-          throw new Error('Server route does not support removing cookies.')
+          /* no-op */
         },
       },
     }
@@ -148,8 +148,13 @@ export const deletePreset = async (
     .eq('preset_id', presetId)
 }
 
-export const recordPomodoro = async (supabase: SupabaseClient, userId: string) => {
+export const recordPomodoro = async (
+  supabase: SupabaseClient,
+  userId: string,
+  session?: { durationMinutes: number; presetUsed?: string }
+) => {
   const today = getToday()
+  const now = new Date().toISOString()
 
   const { data: latestStats, error: latestError } = await supabase
     .from('daily_stats')
@@ -208,5 +213,23 @@ export const recordPomodoro = async (supabase: SupabaseClient, userId: string) =
     .single()
 
   if (upsertError) return { error: upsertError }
+
+  if (session) {
+    const { error: sessionError } = await supabase
+      .from('session_logs')
+      .insert([
+        {
+          user_id: userId,
+          started_at: now,
+          completed_at: now,
+          duration_minutes: session.durationMinutes,
+          was_break: false,
+          preset_used: session.presetUsed ?? null,
+        },
+      ])
+
+    if (sessionError) return { error: sessionError }
+  }
+
   return { data }
 }

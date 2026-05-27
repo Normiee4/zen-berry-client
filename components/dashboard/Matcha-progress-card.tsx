@@ -34,7 +34,7 @@ const fetchMilestones = async (): Promise<MilestonesResponse> => {
   return res.json()
 }
 
-const MILESTONE_TARGET = 50
+const MILESTONE_TARGET = 10
 
 export function MatchaProgressCard() {
   const { data: summary } = useQuery({
