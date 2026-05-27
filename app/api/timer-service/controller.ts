@@ -47,7 +47,7 @@ export async function getTimerData(request: Request) {
           lastPomodoroDate: stats.data?.date ?? null,
         },
       },
-      { status: 200 }
+      { status: 200, headers: { 'Cache-Control': 'public, max-age=30, s-maxage=60' } }
     )
   } catch (error) {
     console.error('Timer service GET error', error)
@@ -124,10 +124,10 @@ export async function handleTimerAction(request: Request) {
     }
 
     const supabase = createSupabaseClient(request)
-    const { action, presetId, name, focusMinutes, breakMinutes } = await request.json()
+    const { action, presetId, name, focusMinutes, breakMinutes, durationMinutes, presetUsed } = await request.json()
 
     if (action === 'recordCompletion') {
-      const result = await timerService.recordPomodoro(supabase, userId)
+      const result = await timerService.recordPomodoro(supabase, userId, durationMinutes ? { durationMinutes, presetUsed } : undefined)
 
       if (result.error) {
         return NextResponse.json({ error: result.error.message }, { status: 400 })

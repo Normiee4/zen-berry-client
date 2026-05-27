@@ -50,7 +50,7 @@ export async function getAnalyticsSummary(request: Request) {
         peakHours,
         hoursSinceBreak,
       },
-      { status: 200 }
+      { status: 200, headers: { 'Cache-Control': 'public, max-age=60, s-maxage=120' } }
     )
   } catch (error) {
     console.error('Analytics summary error', error)

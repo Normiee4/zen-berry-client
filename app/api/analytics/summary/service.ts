@@ -31,10 +31,10 @@ export const createSupabaseClient = (request: Request) =>
           return getCookieValue(request, name)
         },
         set() {
-          throw new Error('Server route does not support setting cookies.')
+          /* no-op */
         },
         remove() {
-          throw new Error('Server route does not support removing cookies.')
+          /* no-op */
         },
       },
     }
