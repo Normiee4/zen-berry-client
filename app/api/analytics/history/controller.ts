@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server'
 import * as historyService from '@/app/api/analytics/history/service'
-import { getUserIdFromRequest } from '@/lib/auth-helpers'
+import { resolveUser } from '@/lib/auth-helpers'
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 export async function getAnalyticsHistory(request: Request) {
   try {
-    const userId = getUserIdFromRequest(request)
+    const { userId, supabase } = await resolveUser(request)
     if (!userId) {
       return NextResponse.json({ data: [], weeklyTotals: null }, { status: 200 })
     }
 
-    const supabase = historyService.createSupabaseClient(request)
+
 
     const url = new URL(request.url)
     const period = url.searchParams.get('period') || 'week'

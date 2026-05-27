@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
 import * as analyticsService from '@/app/api/analytics/summary/service'
-import { getUserIdFromRequest } from '@/lib/auth-helpers'
+import { resolveUser } from '@/lib/auth-helpers'
 
 export async function getAnalyticsSummary(request: Request) {
   try {
-    const userId = getUserIdFromRequest(request)
+    const { userId, supabase } = await resolveUser(request)
     if (!userId) {
       return NextResponse.json(
         {
@@ -22,7 +22,7 @@ export async function getAnalyticsSummary(request: Request) {
       )
     }
 
-    const supabase = analyticsService.createSupabaseClient(request)
+
     const [statsResult, mitsCompleted, peakHours, totalFocusMinutes, breaksTaken, lastBreak] = await Promise.all([
       analyticsService.fetchTodayStats(supabase, userId),
       analyticsService.fetchMITCount(supabase, userId),

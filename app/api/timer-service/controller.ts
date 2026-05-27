@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server'
 import * as timerService from '@/app/api/timer-service/service'
-import { createSupabaseClient } from '@/app/api/timer-service/service'
-import { getUserIdFromRequest } from '@/lib/auth-helpers'
+import { resolveUser } from '@/lib/auth-helpers'
 
 export async function getTimerData(request: Request) {
   try {
-    const userId = getUserIdFromRequest(request)
+    const { userId, supabase } = await resolveUser(request)
     if (!userId) {
       return NextResponse.json(
         {
@@ -19,8 +18,6 @@ export async function getTimerData(request: Request) {
         { status: 200 }
       )
     }
-
-    const supabase = createSupabaseClient(request)
     const [presets, stats] = await Promise.all([
       timerService.fetchPresets(supabase, userId),
       timerService.fetchTodayStats(supabase, userId),
@@ -57,12 +54,11 @@ export async function getTimerData(request: Request) {
 
 export async function createTimerPreset(request: Request) {
   try {
-    const userId = getUserIdFromRequest(request)
+    const { userId, supabase } = await resolveUser(request)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized User' }, { status: 401 })
     }
 
-    const supabase = createSupabaseClient(request)
     const { name, focusMinutes, breakMinutes } = await request.json()
     if (!name || typeof focusMinutes !== 'number' || typeof breakMinutes !== 'number') {
       return NextResponse.json({ error: 'Invalid timer preset payload' }, { status: 400 })
@@ -87,12 +83,11 @@ export async function createTimerPreset(request: Request) {
 
 export async function recordPomodoroCompletion(request: Request) {
   try {
-    const userId = getUserIdFromRequest(request)
+    const { userId, supabase } = await resolveUser(request)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = createSupabaseClient(request)
     const result = await timerService.recordPomodoro(supabase, userId)
 
     if (result.error) {
@@ -118,12 +113,11 @@ export async function recordPomodoroCompletion(request: Request) {
 
 export async function handleTimerAction(request: Request) {
   try {
-    const userId = getUserIdFromRequest(request)
+    const { userId, supabase } = await resolveUser(request)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = createSupabaseClient(request)
     const { action, presetId, name, focusMinutes, breakMinutes, durationMinutes, presetUsed } = await request.json()
 
     if (action === 'recordCompletion') {
