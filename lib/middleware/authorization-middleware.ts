@@ -43,7 +43,7 @@ export async function authorizationMiddleware(request: NextRequest) {
   if (!user && isProtectedRoute) {
     return NextResponse.redirect(new URL('/auth/login', request.url))
   }
-  if (userId && isAuthPage) {
+  if (user && isAuthPage) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
