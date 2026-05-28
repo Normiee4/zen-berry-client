@@ -48,8 +48,9 @@ export function SignupForm() {
       return
     }
 
-    toast.success("Account created successfully!")
-    router.push("/auth/login")
+    toast.success("Welcome to Zen Berry!")
+    router.push("/dashboard")
+    router.refresh()
   }
 
   const handleGoogleSignup = async () => {
