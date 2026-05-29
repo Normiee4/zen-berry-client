@@ -166,7 +166,7 @@ export function AIInsightsCard() {
   const hitMilestone = combinedTotal > 0 && combinedTotal % 10 === 0
 
   const localCelebration =
-    streak >= 3 && !displayMilestone
+    streak >= 3
       ? `🔥 ${streak}-day streak! Zensei says: You're on fire! Keep showing up!`
       : hitMilestone
         ? `🎉 Milestone! ${combinedTotal} tasks completed! Reward yourself with a matcha!`
