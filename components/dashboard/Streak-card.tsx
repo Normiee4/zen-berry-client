@@ -1,47 +1,23 @@
 "use client"
 
-import { useEffect } from "react"
-import { useTimerStore } from "@/store/timer-store"
+import { useQuery } from "@tanstack/react-query"
 
-const STREAK_STORAGE_KEY = "zenberry_timer_streak"
-
-const loadFromStorage = () => {
-  if (typeof window === "undefined") return null
-  try {
-    const stored = localStorage.getItem(STREAK_STORAGE_KEY)
-    if (!stored) return null
-    const parsed = JSON.parse(stored)
-    const today = new Date().toISOString().slice(0, 10)
-    if (parsed.date === today) {
-      return {
-        currentStreak: parsed.pomodorosToday > 0 ? Math.max(1, parsed.currentStreak ?? 0) : (parsed.currentStreak ?? 0),
-        pomodorosToday: parsed.pomodorosToday ?? 0,
-        lastPomodoroDate: today,
-      }
-    }
-    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
-    if (parsed.date === yesterday) {
-      return {
-        currentStreak: parsed.currentStreak ?? 0,
-        pomodorosToday: 0,
-        lastPomodoroDate: yesterday,
-      }
-    }
-  } catch { /* ignore */ }
-  return null
+const fetchSummary = async () => {
+  const res = await fetch("/api/analytics/summary")
+  if (!res.ok) throw new Error("Failed to fetch summary")
+  return res.json()
 }
 
 export function StreakCard() {
-  const currentStreak = useTimerStore((s) => s.currentStreak)
-  const pomodorosToday = useTimerStore((s) => s.pomodorosToday)
-  const loadStats = useTimerStore((s) => s.loadStats)
+  const { data: summary } = useQuery({
+    queryKey: ["analytics-summary-streak"],
+    queryFn: fetchSummary,
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
+  })
 
-  useEffect(() => {
-    const stored = loadFromStorage()
-    if (stored) {
-      loadStats(stored)
-    }
-  }, [loadStats])
+  const currentStreak = summary?.today?.streak ?? 0
+  const pomodorosToday = summary?.today?.pomodorosCompleted ?? 0
 
   return (
     <div className="flex flex-col gap-2 rounded-3xl bg-strawberry-light/30 p-4 border border-matcha-dark/20">

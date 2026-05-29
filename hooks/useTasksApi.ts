@@ -74,6 +74,8 @@ export function useTasksApi(options: UseTasksOptions = {}) {
       })
       if (!res.ok) throw new Error("Failed to update")
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
+      queryClient.invalidateQueries({ queryKey: ["analytics-summary"] })
+      queryClient.invalidateQueries({ queryKey: ["analytics-milestones"] })
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to update task")
     }
