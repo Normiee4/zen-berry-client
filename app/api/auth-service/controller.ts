@@ -120,13 +120,11 @@ export async function getMe(request: Request) {
   try {
     const response = NextResponse.json({ user: null })
     const supabase = createClient(request, response)
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user }, error } = await supabase.auth.getUser()
 
-    if (!session?.user) {
+    if (error || !user) {
       return NextResponse.json({ user: null }, { status: 200 })
     }
-
-    const user = session.user
 
     return NextResponse.json({
       user: {

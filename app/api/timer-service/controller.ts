@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import * as timerService from '@/app/api/timer-service/service'
-import { resolveUser } from '@/lib/auth-helpers'
+import { resolveUser, ensureUserRow } from '@/lib/auth-helpers'
 
 export async function getTimerData(request: Request) {
   try {
@@ -88,6 +88,8 @@ export async function recordPomodoroCompletion(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    await ensureUserRow(userId, supabase)
+
     const result = await timerService.recordPomodoro(supabase, userId)
 
     if (result.error) {
@@ -117,6 +119,8 @@ export async function handleTimerAction(request: Request) {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    await ensureUserRow(userId, supabase)
 
     const { action, presetId, name, focusMinutes, breakMinutes, durationMinutes, presetUsed } = await request.json()
 

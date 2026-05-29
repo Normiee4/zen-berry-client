@@ -59,12 +59,14 @@ export const fetchTodayStats = async (supabase: SupabaseClient, userId: string) 
 }
 
 export const fetchMITCount = async (supabase: SupabaseClient, userId: string) => {
+  const today = getToday()
   const { count, error } = await supabase
     .from('tasks')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', userId)
     .eq('type', 'MIT')
     .not('complete_at', 'is', null)
+    .gte('complete_at', today)
 
   return { count: count ?? 0, error }
 }

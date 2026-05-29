@@ -228,11 +228,11 @@ export const recordPomodoro = async (
     const gap = daysBetween(lastDate, today)
 
     if (gap === 0) {
-      currentStreak = latestStats.streak_maintained ?? 1
+      currentStreak = latestStats.streak_maintained || 1
     } else if (gap === 1) {
       currentStreak = (latestStats.streak_maintained ?? 0) + 1
     } else if (gap <= 4) {
-      currentStreak = latestStats.streak_maintained ?? 1
+      currentStreak = latestStats.streak_maintained || 1
     } else {
       currentStreak = 1
     }
