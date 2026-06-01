@@ -41,7 +41,7 @@ export function DailyZenTip() {
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-matcha">Zensei's Daily Sip</span>
+            <span className="text-sm font-semibold text-matcha">Zensei&apos;s Daily Sip</span>
             <span className="text-base">🍵</span>
           </div>
           <p className="mt-1 text-sm leading-relaxed text-foreground/80 italic">
