@@ -101,7 +101,7 @@ export function Hero() {
             </div>
 
             {/* Social Proof */}
-            <div className="mt-10 flex items-center gap-4">
+            {/* <div className="mt-10 flex items-center gap-4">
               <div className="flex -space-x-2">
                 {[1, 2, 3, 4].map((i) => (
                   <div
@@ -115,7 +115,7 @@ export function Hero() {
               <p className="text-sm text-muted-foreground">
                 <span className="font-semibold text-foreground">2,400+</span> focused minds growing daily
               </p>
-            </div>
+            </div> */}
           </div>
 
           {/* Right Content - Combined Illustration */}
