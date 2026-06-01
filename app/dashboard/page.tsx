@@ -14,6 +14,7 @@ import { LogOut, Loader2 } from "lucide-react"
 import { useMITApi, useTasksApi } from "@/hooks/useTasksApi"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { ConfirmDragDialog } from "@/components/dashboard/ConfirmDragDialog"
+import { DailyZenTip } from "@/components/dashboard/Daily-zen-tip"
 import { toast } from "sonner"
 
 interface PendingDrag {
@@ -160,6 +161,7 @@ export default function DashboardPage() {
               <ErrorBoundary name="AI Insights" fallback={<p className="text-sm text-muted-foreground p-4">Insights unavailable</p>}>
                 <AIInsightsCard />
               </ErrorBoundary>
+              {user && <DailyZenTip />}
             </div>
           </div>
         </main>

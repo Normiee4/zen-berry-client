@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { Sparkles, Loader2, Clock, TrendingUp, Target, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { ZenseiMascot } from "@/components/mascot/Zensei-mascot"
 
 interface AIReviewResponse {
   insight: string
@@ -149,7 +148,14 @@ export function AIInsightsCard() {
     ? "thinking"
     : hasInsight
       ? "speaking"
-      : "idle" as const
+      : "idle"
+
+  const logoAnimation =
+    mascotState === "thinking"
+      ? "animate-pulse"
+      : mascotState === "speaking"
+        ? "drop-shadow-[0_0_10px_rgba(134,167,136,0.6)]"
+        : ""
 
   const displayInsight =
     reviewMutation.data?.insight ||
@@ -182,18 +188,30 @@ export function AIInsightsCard() {
   const insightStats = latestInsight?.stats
 
   return (
-    <div className="flex h-full flex-col rounded-3xl bg-strawberry-light/30 p-6 border border-matcha-dark/20">
-      <div className="mb-4 flex items-center gap-2">
-        <Sparkles className="size-5 text-matcha" />
-        <h3 className="text-lg font-semibold text-foreground">Zensei Insights</h3>
+    <div className="flex h-full flex-col rounded-3xl bg-strawberry-light/30 p-8 border border-matcha-dark/20 relative overflow-hidden">
+      <div className="absolute -right-6 -top-6 size-28 opacity-10">
+        <img src="/matcha_illustration.png" alt="" className="size-full object-contain" />
+      </div>
+      <div className="mb-5 flex items-center gap-2">
+        <Sparkles className="size-6 text-matcha" />
+        <h3 className="text-xl font-semibold text-foreground">Zensei Insights</h3>
         <span className="text-base">🍓</span>
       </div>
 
-      <div className="flex flex-1 flex-col rounded-2xl bg-white/70 p-4">
-        <div className="mb-3 flex items-start gap-3">
-          <ZenseiMascot state={mascotState} />
+      <div className="flex flex-1 flex-col rounded-2xl bg-white/70 p-6">
+        <div className="mb-4 flex items-start gap-4">
+          <div className={`relative size-14 shrink-0 ${logoAnimation}`}>
+            <img
+              src="/Zen-berry Logo.png"
+              alt="Zensei"
+              className="size-full object-contain"
+            />
+            {mascotState === "speaking" && (
+              <div className="absolute -inset-1 rounded-full border-2 border-matcha/30 animate-ping" style={{ animationDuration: "2s" }} />
+            )}
+          </div>
           <div className="flex-1">
-            <p className="font-medium text-foreground leading-relaxed">
+            <p className="text-base font-medium text-foreground leading-relaxed">
               {displayInsight}
             </p>
             {displaySuggestion && (
