@@ -1,9 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-// ---------- Helpers ----------
-const getToday = (): string => new Date().toISOString().slice(0, 10)
-
 // ---------- Types ----------
 export interface TaskRow {
   task_id: number
@@ -175,32 +172,3 @@ export const removeTask = async (
     .eq('user_id', userId)
 }
 
-export const incrementTaskCompletion = async (supabase: SupabaseClient, userId: string) => {
-  const today = getToday()
-
-  const { data: existing, error: fetchError } = await supabase
-    .from('daily_stats')
-    .select('stat_id, daily_task_completed, daily_pomodoro, streak_maintained')
-    .eq('user_id', userId)
-    .eq('date', today)
-    .maybeSingle()
-
-  if (fetchError) return { error: fetchError }
-
-  if (existing) {
-    return supabase
-      .from('daily_stats')
-      .update({ daily_task_completed: (existing.daily_task_completed ?? 0) + 1 })
-      .eq('stat_id', existing.stat_id)
-  }
-
-  return supabase
-    .from('daily_stats')
-    .insert({
-      user_id: userId,
-      date: today,
-      daily_task_completed: 1,
-      daily_pomodoro: 0,
-      streak_maintained: 0,
-    })
-}

@@ -131,13 +131,6 @@ export async function updateTask(request: Request) {
       return NextResponse.json({ error: result.error.message }, { status: 400 })
     }
 
-    if (completed === true) {
-      const incResult = await taskService.incrementTaskCompletion(supabase, userId)
-      if (incResult?.error) {
-        console.error('Failed to increment task completion', incResult.error)
-      }
-    }
-
     return NextResponse.json(
       { task: taskService.formatTask(result.data as taskService.TaskRow) },
       { status: 200 }

@@ -17,13 +17,17 @@ export async function getAnalyticsSummary(request: Request) {
             breakCount: 0,
           },
           peakHours: null,
+          lifetimeTasks: 0,
+          lifetimeCycles: 0,
         },
         { status: 200 }
       )
     }
 
-    const [statsResult, mitsCompleted, peakHours, totalFocusMinutes, breaksTaken, lastBreak] = await Promise.all([
+    const [statsResult, todayTasksCompleted, lifetimeTasksCompleted, mitsCompleted, peakHours, totalFocusMinutes, breaksTaken, lastBreak] = await Promise.all([
       analyticsService.fetchTodayStats(supabase, userId),
+      analyticsService.fetchTodayTasksCompleted(supabase, userId),
+      analyticsService.fetchLifetimeTasksCompleted(supabase, userId),
       analyticsService.fetchMITCount(supabase, userId),
       analyticsService.calculatePeakHours(supabase, userId),
       analyticsService.calculateTotalFocusMinutes(supabase, userId),
@@ -40,7 +44,7 @@ export async function getAnalyticsSummary(request: Request) {
       {
         today: {
           pomodorosCompleted: statsResult?.data?.daily_pomodoro ?? 0,
-          tasksCompleted: statsResult?.data?.daily_task_completed ?? 0,
+          tasksCompleted: todayTasksCompleted.count,
           mitsCompleted: mitsCompleted.count,
           streak: statsResult?.data?.streak_maintained ?? 0,
           totalFocusMinutes,
@@ -48,6 +52,8 @@ export async function getAnalyticsSummary(request: Request) {
         },
         peakHours,
         hoursSinceBreak,
+        lifetimeTasks: lifetimeTasksCompleted.count,
+        lifetimeCycles: 0,
       },
       { status: 200 }
     )

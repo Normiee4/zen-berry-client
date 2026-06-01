@@ -14,12 +14,8 @@ interface SummaryResponse {
   }
   peakHours: { start: number; end: number; avgPomodoros: number } | null
   hoursSinceBreak: number | null
-}
-
-interface MilestonesResponse {
   lifetimeTasks: number
   lifetimeCycles: number
-  combinedTotal: number
 }
 
 const fetchSummary = async (): Promise<SummaryResponse> => {
@@ -28,28 +24,16 @@ const fetchSummary = async (): Promise<SummaryResponse> => {
   return res.json()
 }
 
-const fetchMilestones = async (): Promise<MilestonesResponse> => {
-  const res = await fetch("/api/analytics/milestones")
-  if (!res.ok) throw new Error("Failed to fetch milestones")
-  return res.json()
-}
-
 const MILESTONE_TARGET = 10
 
 export function MatchaProgressCard() {
-  const { data: summary } = useQuery({
+  const { data: summary, isLoading, error } = useQuery({
     queryKey: ["analytics-summary"],
     queryFn: fetchSummary,
     staleTime: 5 * 60 * 1000,
   })
 
-  const { data: milestones, isLoading, error } = useQuery({
-    queryKey: ["analytics-milestones"],
-    queryFn: fetchMilestones,
-    staleTime: 5 * 60 * 1000,
-  })
-
-  const combinedTotal = milestones?.combinedTotal ?? 0
+  const combinedTotal = (summary?.lifetimeTasks ?? 0) + (summary?.lifetimeCycles ?? 0)
   const progressWithinMilestone = combinedTotal % MILESTONE_TARGET
   const fillPercentage = (progressWithinMilestone / MILESTONE_TARGET) * 100
 

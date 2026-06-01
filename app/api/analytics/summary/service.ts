@@ -58,6 +58,28 @@ export const fetchTodayStats = async (supabase: SupabaseClient, userId: string) 
     .maybeSingle()
 }
 
+export const fetchTodayTasksCompleted = async (supabase: SupabaseClient, userId: string) => {
+  const today = getToday()
+  const { count, error } = await supabase
+    .from('tasks')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .not('complete_at', 'is', null)
+    .gte('complete_at', today)
+
+  return { count: count ?? 0, error }
+}
+
+export const fetchLifetimeTasksCompleted = async (supabase: SupabaseClient, userId: string) => {
+  const { count, error } = await supabase
+    .from('tasks')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .not('complete_at', 'is', null)
+
+  return { count: count ?? 0, error }
+}
+
 export const fetchMITCount = async (supabase: SupabaseClient, userId: string) => {
   const today = getToday()
   const { count, error } = await supabase
