@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import * as sessionService from '@/app/api/sessions/service'
-import { resolveUser, ensureUserRow } from '@/lib/auth-helpers'
+import { resolveUser } from '@/lib/auth-helpers'
 
 export async function recordSession(request: Request) {
   try {
@@ -8,8 +8,6 @@ export async function recordSession(request: Request) {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
-    await ensureUserRow(userId, supabase)
 
     const body = await request.json()
     const { action, durationMinutes, wasBreak, presetUsed } = body
@@ -60,8 +58,6 @@ export async function getTodayStats(request: Request) {
     if (!userId) {
       return NextResponse.json({ stats: null }, { status: 200 })
     }
-
-    await ensureUserRow(userId, supabase)
 
     const statsResult = await sessionService.getTodayStats(supabase, userId)
 

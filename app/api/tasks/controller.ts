@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import * as taskService from '@/app/api/tasks/service'
-import { ensureUserRow } from '@/lib/auth-helpers'
+
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 const MIT_LIMIT = 3
@@ -63,8 +63,6 @@ export async function createTask(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    await ensureUserRow(userId, supabase)
-
     const body = await request.json()
     const { title, type } = body
 
@@ -110,8 +108,6 @@ export async function updateTask(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    await ensureUserRow(userId, supabase)
-
     const body = await request.json()
     const { id, title, completed, isMIT } = body
 
@@ -136,7 +132,10 @@ export async function updateTask(request: Request) {
     }
 
     if (completed === true) {
-      await taskService.incrementTaskCompletion(supabase, userId)
+      const incResult = await taskService.incrementTaskCompletion(supabase, userId)
+      if (incResult?.error) {
+        console.error('Failed to increment task completion', incResult.error)
+      }
     }
 
     return NextResponse.json(
@@ -155,8 +154,6 @@ export async function deleteTask(request: Request) {
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
-    await ensureUserRow(userId, supabase)
 
     const url = new URL(request.url)
     const id = url.searchParams.get('id')

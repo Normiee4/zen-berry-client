@@ -178,12 +178,14 @@ export const removeTask = async (
 export const incrementTaskCompletion = async (supabase: SupabaseClient, userId: string) => {
   const today = getToday()
 
-  const { data: existing } = await supabase
+  const { data: existing, error: fetchError } = await supabase
     .from('daily_stats')
     .select('stat_id, daily_task_completed, daily_pomodoro, streak_maintained')
     .eq('user_id', userId)
     .eq('date', today)
     .maybeSingle()
+
+  if (fetchError) return { error: fetchError }
 
   if (existing) {
     return supabase

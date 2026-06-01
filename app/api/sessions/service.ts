@@ -130,7 +130,7 @@ export const recordPomodoroInDailyStats = async (
   if (todayError) return { error: todayError }
 
   const pomodorosToday = (todayStats?.daily_pomodoro ?? 0) + 1
-  const tasksCompleted = todayStats?.daily_task_completed ?? latestStats?.daily_task_completed ?? 0
+  const tasksCompleted = todayStats?.daily_task_completed ?? 0
 
   let currentStreak: number
 
