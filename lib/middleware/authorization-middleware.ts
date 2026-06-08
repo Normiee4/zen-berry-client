@@ -2,6 +2,8 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function authorizationMiddleware(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({ request })
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -10,11 +12,15 @@ export async function authorizationMiddleware(request: NextRequest) {
         get(name: string) {
           return request.cookies.get(name)?.value
         },
-        set(_name: string, _value: string, _options: CookieOptions) {
-          // Not needed in middleware — just pass through
+        set(name: string, value: string, options: CookieOptions) {
+          request.cookies.set({ name, value, ...options })
+          supabaseResponse = NextResponse.next({ request })
+          supabaseResponse.cookies.set({ name, value, ...options })
         },
-        remove(_name: string, _options: CookieOptions) {
-          // Not needed in middleware
+        remove(name: string, options: CookieOptions) {
+          request.cookies.set({ name, value: '', ...options })
+          supabaseResponse = NextResponse.next({ request })
+          supabaseResponse.cookies.set({ name, value: '', ...options })
         },
       },
     }
@@ -33,7 +39,9 @@ export async function authorizationMiddleware(request: NextRequest) {
         { status: 401 }
       )
     }
-    return NextResponse.next()
+    const requestHeaders = new Headers(request.headers)
+    requestHeaders.set('X-User-Id', user.id)
+    return NextResponse.next({ request: { headers: requestHeaders } })
   }
 
   if (!user && isProtectedRoute) {
@@ -43,7 +51,5 @@ export async function authorizationMiddleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  return NextResponse.next({
-    request: { headers: request.headers },
-  })
+  return supabaseResponse
 }

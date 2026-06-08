@@ -51,12 +51,6 @@ const fetchSummary = async (): Promise<SummaryResponse> => {
   return res.json()
 }
 
-const fetchMilestones = async () => {
-  const res = await fetch("/api/analytics/milestones")
-  if (!res.ok) throw new Error("Failed to fetch milestones")
-  return res.json()
-}
-
 const fetchLatestInsight = async (): Promise<LatestInsightResponse | null> => {
   const res = await fetch("/api/ai/insights/latest")
   if (res.status === 204) return null
@@ -114,13 +108,6 @@ export function AIInsightsCard() {
     retry: false,
   })
 
-  const { data: milestones } = useQuery({
-    queryKey: ["analytics-milestones"],
-    queryFn: fetchMilestones,
-    staleTime: 5 * 60 * 1000,
-    retry: false,
-  })
-
   const { data: latestInsight } = useQuery({
     queryKey: ["ai-insights-latest"],
     queryFn: fetchLatestInsight,
@@ -168,15 +155,11 @@ export function AIInsightsCard() {
     "Complete your first Pomodoro to see personalized tips."
 
   const streak = summary?.today?.streak ?? 0
-  const combinedTotal = milestones?.combinedTotal ?? 0
-  const hitMilestone = combinedTotal > 0 && combinedTotal % 10 === 0
 
   const localCelebration =
     streak >= 3
       ? `🔥 ${streak}-day streak! Zensei says: You're on fire! Keep showing up!`
-      : hitMilestone
-        ? `🎉 Milestone! ${combinedTotal} tasks completed! Reward yourself with a matcha!`
-        : null
+      : null
 
   const displayMilestone =
     localCelebration ||

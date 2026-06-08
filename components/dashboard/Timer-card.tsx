@@ -41,6 +41,7 @@ export function TimerCard() {
     deletePreset,
     loadPresets,
     loadStats,
+    restoreSession,
     completedFocusCycle,
     clearCompletedFocusCycle,
   } = useTimer();
@@ -60,12 +61,13 @@ export function TimerCard() {
       } catch {
         // ignore load failures
       } finally {
+        restoreSession();
         setLoaded(true);
       }
     };
 
     loadTimerState();
-  }, [loadPresets, loadStats]);
+  }, [loadPresets, loadStats, restoreSession]);
 
   useEffect(() => {
     if (!completedFocusCycle) return;
@@ -85,7 +87,6 @@ export function TimerCard() {
         if (res.ok) {
           queryClient.invalidateQueries({ queryKey: ['analytics-summary'] })
           queryClient.invalidateQueries({ queryKey: ['ai-insights-latest'] })
-          queryClient.invalidateQueries({ queryKey: ['analytics-milestones'] })
         } else {
           console.error('Failed to record session:', await res.text())
           toast.error('Session not recorded — check your connection')

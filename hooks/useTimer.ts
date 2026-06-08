@@ -18,6 +18,7 @@ export function useTimer() {
     loadStats,
     completedFocusCycle,
     clearCompletedFocusCycle,
+    restoreSession,
     currentStreak,
     pomodorosToday,
   } = useTimerStore()
@@ -44,6 +45,7 @@ export function useTimer() {
     deletePreset,
     loadPresets,
     loadStats,
+    restoreSession,
     clearCompletedFocusCycle,
   }
 }
