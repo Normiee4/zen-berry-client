@@ -13,6 +13,17 @@ export interface TimerPreset {
 
 const PRESETS_STORAGE_KEY = "zenberry_timer_presets";
 const STREAK_STORAGE_KEY = "zenberry_timer_streak";
+const ACTIVE_SESSION_KEY = "zenberry_active_session";
+
+interface ActiveSession {
+  startTimestamp: number;
+  initialDuration: number;
+  mode: TimerMode;
+  isRunning: boolean;
+  activePresetId: string;
+  focusTimeLeft: number;
+  breakTimeLeft: number;
+}
 
 function loadPresetsFromStorage(): TimerPreset[] {
   if (typeof window === "undefined") return []
@@ -46,6 +57,36 @@ function saveStreakToStorage(currentStreak: number, pomodorosToday: number, last
     // ignore write failures
   }
 }
+
+function saveActiveSession(session: ActiveSession) {
+  if (typeof window === "undefined") return
+  try {
+    localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(session))
+  } catch {
+    // ignore write failures
+  }
+}
+
+function loadActiveSession(): ActiveSession | null {
+  if (typeof window === "undefined") return null
+  try {
+    const stored = localStorage.getItem(ACTIVE_SESSION_KEY)
+    return stored ? JSON.parse(stored) : null
+  } catch {
+    return null
+  }
+}
+
+function clearActiveSession() {
+  if (typeof window === "undefined") return
+  try {
+    localStorage.removeItem(ACTIVE_SESSION_KEY)
+  } catch {
+    // ignore write failures
+  }
+}
+
+const sanitizeMode = (m: string): TimerMode => m === "focus" || m === "break" ? m : "focus";
 
 type TimerState = {
   mode: TimerMode;
@@ -91,6 +132,7 @@ type TimerState = {
     lastPomodoroDate: string | null;
   }) => void;
   clearCompletedFocusCycle: () => void;
+  restoreSession: () => void;
 };
 
 const defaultPresets: TimerPreset[] = [
@@ -134,12 +176,23 @@ export const useTimerStore = create<TimerState>()(
 
     start: () => {
       const { timeLeft, mode } = get();
-      set({ 
-        isRunning: true, 
-        startTimestamp: Date.now(),
+      const now = Date.now();
+      set({
+        isRunning: true,
+        startTimestamp: now,
         initialDuration: timeLeft,
         focusWasStarted: mode === "focus" ? true : get().focusWasStarted,
         breakWasStarted: mode === "break" ? true : get().breakWasStarted,
+      });
+      const s = { ...get(), isRunning: true, startTimestamp: now, initialDuration: timeLeft };
+      saveActiveSession({
+        startTimestamp: now,
+        initialDuration: timeLeft,
+        mode: s.mode,
+        isRunning: true,
+        activePresetId: s.activePresetId,
+        focusTimeLeft: s.focusTimeLeft,
+        breakTimeLeft: s.breakTimeLeft,
       });
     },
 
@@ -149,10 +202,11 @@ export const useTimerStore = create<TimerState>()(
       }
       const elapsed = Math.floor((Date.now() - state.startTimestamp) / 1000);
       const remaining = Math.max(0, state.initialDuration - elapsed);
-      return { 
-        isRunning: false, 
+      clearActiveSession();
+      return {
+        isRunning: false,
         timeLeft: remaining,
-        startTimestamp: null 
+        startTimestamp: null
       };
     }),
 
@@ -161,16 +215,28 @@ export const useTimerStore = create<TimerState>()(
       if (state.isRunning) {
         const elapsed = Math.floor((Date.now() - state.startTimestamp!) / 1000);
         const remaining = Math.max(0, state.initialDuration - elapsed);
-        set({ 
-          isRunning: false, 
+        clearActiveSession();
+        set({
+          isRunning: false,
           timeLeft: remaining,
-          startTimestamp: null 
+          startTimestamp: null
         });
       } else {
-        set({ 
-          isRunning: true, 
-          startTimestamp: Date.now(),
-          initialDuration: state.timeLeft 
+        const now = Date.now();
+        set({
+          isRunning: true,
+          startTimestamp: now,
+          initialDuration: state.timeLeft
+        });
+        const updated = { ...get(), isRunning: true, startTimestamp: now, initialDuration: state.timeLeft };
+        saveActiveSession({
+          startTimestamp: now,
+          initialDuration: state.timeLeft,
+          mode: updated.mode,
+          isRunning: true,
+          activePresetId: updated.activePresetId,
+          focusTimeLeft: updated.focusTimeLeft,
+          breakTimeLeft: updated.breakTimeLeft,
         });
       }
     },
@@ -183,13 +249,14 @@ export const useTimerStore = create<TimerState>()(
         ? state.currentPreset.breakMinutes * 60
         : 0;
       const totalSeconds = state.mode === "focus" ? focusSeconds : breakSeconds;
-      return { 
+      clearActiveSession();
+      return {
         timeLeft: totalSeconds,
         focusTimeLeft: focusSeconds,
         breakTimeLeft: breakSeconds,
         focusWasStarted: false,
         breakWasStarted: false,
-        isRunning: false, 
+        isRunning: false,
         completedFocusCycle: false,
         startTimestamp: null,
         initialDuration: totalSeconds
@@ -206,6 +273,7 @@ export const useTimerStore = create<TimerState>()(
       const newTimeLeft = Math.max(0, state.initialDuration - elapsed);
 
       if (newTimeLeft <= 0) {
+        clearActiveSession();
         const wasFocusMode = state.mode === "focus";
         const newMode = wasFocusMode ? "break" : "focus";
         const focusSeconds = state.currentPreset
@@ -314,10 +382,8 @@ export const useTimerStore = create<TimerState>()(
     },
 
     addPreset: (presetData) => set((state) => {
-      const newPreset: TimerPreset = {
-        ...presetData,
-        id: "id" in presetData && presetData.id ? presetData.id : `custom-${Date.now()}`,
-      } as TimerPreset;
+      const id = "id" in presetData && presetData.id ? presetData.id : "custom-" + Date.now();
+      const newPreset: TimerPreset = { ...presetData, id } as TimerPreset;
 
       const newTotalSeconds = (state.mode === "focus" ? newPreset.focusMinutes : newPreset.breakMinutes) * 60;
       const updatedPresets = [...state.presets, newPreset];
@@ -421,5 +487,35 @@ export const useTimerStore = create<TimerState>()(
     },
 
     clearCompletedFocusCycle: () => set({ completedFocusCycle: false }),
+
+    restoreSession: () => {
+      const saved = loadActiveSession()
+      if (!saved) return
+
+      const elapsed = Math.floor((Date.now() - saved.startTimestamp) / 1000)
+      const remaining = saved.initialDuration - elapsed
+
+      if (remaining <= 0) {
+        clearActiveSession()
+        return
+      }
+
+      const preset = get().presets.find(p => p.id === saved.activePresetId)
+        ?? get().currentPreset
+
+      set({
+        mode: sanitizeMode(saved.mode),
+        timeLeft: Math.max(0, remaining),
+        isRunning: saved.isRunning,
+        startTimestamp: saved.isRunning ? saved.startTimestamp : null,
+        initialDuration: saved.initialDuration,
+        activePresetId: saved.activePresetId,
+        currentPreset: preset,
+        focusTimeLeft: saved.focusTimeLeft,
+        breakTimeLeft: saved.breakTimeLeft,
+        focusWasStarted: saved.focusTimeLeft > 0,
+        breakWasStarted: saved.breakTimeLeft > 0,
+      })
+    },
   }))
 );

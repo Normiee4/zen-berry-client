@@ -5,23 +5,33 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 const MIT_LIMIT = 3
 
-async function resolveUser(request: Request): Promise<{ userId: string | null; supabase: SupabaseClient }> {
+async function resolveUser(request: Request, response?: NextResponse): Promise<{ userId: string | null; supabase: SupabaseClient }> {
   const headerId = request.headers.get('X-User-Id')
   if (headerId) {
-    return { userId: headerId, supabase: taskService.createSupabaseClient(request) }
+    return { userId: headerId, supabase: taskService.createSupabaseClient(request, response) }
   }
-  const supabase = taskService.createSupabaseClient(request)
+  const supabase = taskService.createSupabaseClient(request, response)
   const { data, error } = await supabase.auth.getUser()
   const user = data?.user ?? null
   if (error || !user) return { userId: null, supabase }
   return { userId: user.id, supabase }
 }
 
+function copyAuthCookies(source: NextResponse | null, target: NextResponse) {
+  if (!source) return
+  for (const cookie of source.cookies.getAll()) {
+    target.cookies.set(cookie)
+  }
+}
+
 export async function getTasks(request: Request) {
   try {
-    const { userId, supabase } = await resolveUser(request)
+    const cookieHolder = NextResponse.next()
+    const { userId, supabase } = await resolveUser(request, cookieHolder)
     if (!userId) {
-      return NextResponse.json({ tasks: [], mitCount: 0 }, { status: 200 })
+      const res = NextResponse.json({ tasks: [], mitCount: 0 }, { status: 200 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
     const url = new URL(request.url)
     const type = url.searchParams.get('type') as 'mit' | 'braindump' | null
@@ -37,12 +47,14 @@ export async function getTasks(request: Request) {
     ])
 
     if (tasksResult.error) {
-      return NextResponse.json({ error: tasksResult.error.message }, { status: 400 })
+      const res = NextResponse.json({ error: tasksResult.error.message }, { status: 400 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
     const taskRows = (tasksResult.data ?? []) as taskService.TaskRow[]
 
-    return NextResponse.json(
+    const res = NextResponse.json(
       {
         tasks: taskRows.map(taskService.formatTask),
         mitCount: mitCountResult.count,
@@ -50,6 +62,8 @@ export async function getTasks(request: Request) {
       },
       { status: 200 }
     )
+    copyAuthCookies(cookieHolder, res)
+    return res
   } catch (error) {
     console.error('Tasks GET error', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
@@ -58,16 +72,21 @@ export async function getTasks(request: Request) {
 
 export async function createTask(request: Request) {
   try {
-    const { userId, supabase } = await resolveUser(request)
+    const cookieHolder = NextResponse.next()
+    const { userId, supabase } = await resolveUser(request, cookieHolder)
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      const res = NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
     const body = await request.json()
     const { title, type } = body
 
     if (!title || typeof title !== 'string') {
-      return NextResponse.json({ error: 'Title is required' }, { status: 400 })
+      const res = NextResponse.json({ error: 'Title is required' }, { status: 400 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
     const isMIT = type === 'mit'
@@ -75,10 +94,12 @@ export async function createTask(request: Request) {
     if (isMIT) {
       const mitCountResult = await taskService.fetchMITCount(supabase, userId)
       if (mitCountResult.count >= MIT_LIMIT) {
-        return NextResponse.json(
+        const res = NextResponse.json(
           { error: `You can only have ${MIT_LIMIT} Most Important Tasks at a time.` },
           { status: 400 }
         )
+        copyAuthCookies(cookieHolder, res)
+        return res
       }
     }
 
@@ -88,13 +109,17 @@ export async function createTask(request: Request) {
     })
 
     if (result.error) {
-      return NextResponse.json({ error: result.error.message }, { status: 400 })
+      const res = NextResponse.json({ error: result.error.message }, { status: 400 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
-    return NextResponse.json(
+    const res = NextResponse.json(
       { task: taskService.formatTask(result.data as taskService.TaskRow) },
       { status: 201 }
     )
+    copyAuthCookies(cookieHolder, res)
+    return res
   } catch (error) {
     console.error('Tasks POST error', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
@@ -103,21 +128,28 @@ export async function createTask(request: Request) {
 
 export async function updateTask(request: Request) {
   try {
-    const { userId, supabase } = await resolveUser(request)
+    const cookieHolder = NextResponse.next()
+    const { userId, supabase } = await resolveUser(request, cookieHolder)
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      const res = NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
     const body = await request.json()
     const { id, title, completed, isMIT } = body
 
     if (!id) {
-      return NextResponse.json({ error: 'Task ID is required' }, { status: 400 })
+      const res = NextResponse.json({ error: 'Task ID is required' }, { status: 400 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
     const taskId = Number(id)
     if (isNaN(taskId)) {
-      return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+      const res = NextResponse.json({ error: 'Task not found' }, { status: 404 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
     const updates: Record<string, unknown> = {}
@@ -128,13 +160,17 @@ export async function updateTask(request: Request) {
     const result = await taskService.modifyTask(supabase, userId, taskId, updates)
 
     if (result.error) {
-      return NextResponse.json({ error: result.error.message }, { status: 400 })
+      const res = NextResponse.json({ error: result.error.message }, { status: 400 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
-    return NextResponse.json(
+    const res = NextResponse.json(
       { task: taskService.formatTask(result.data as taskService.TaskRow) },
       { status: 200 }
     )
+    copyAuthCookies(cookieHolder, res)
+    return res
   } catch (error) {
     console.error('Tasks PATCH error', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
@@ -143,30 +179,41 @@ export async function updateTask(request: Request) {
 
 export async function deleteTask(request: Request) {
   try {
-    const { userId, supabase } = await resolveUser(request)
+    const cookieHolder = NextResponse.next()
+    const { userId, supabase } = await resolveUser(request, cookieHolder)
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      const res = NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
     const url = new URL(request.url)
     const id = url.searchParams.get('id')
 
     if (!id) {
-      return NextResponse.json({ error: 'Task ID is required' }, { status: 400 })
+      const res = NextResponse.json({ error: 'Task ID is required' }, { status: 400 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
     const taskId = Number(id)
     if (isNaN(taskId)) {
-      return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+      const res = NextResponse.json({ error: 'Task not found' }, { status: 404 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
     const result = await taskService.removeTask(supabase, userId, taskId)
 
     if (result.error) {
-      return NextResponse.json({ error: result.error.message }, { status: 400 })
+      const res = NextResponse.json({ error: result.error.message }, { status: 400 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
-    return NextResponse.json({ success: true }, { status: 200 })
+    const res = NextResponse.json({ success: true }, { status: 200 })
+    copyAuthCookies(cookieHolder, res)
+    return res
   } catch (error) {
     console.error('Tasks DELETE error', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })

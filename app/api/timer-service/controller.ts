@@ -2,11 +2,19 @@ import { NextResponse } from 'next/server'
 import * as timerService from '@/app/api/timer-service/service'
 import { resolveUser } from '@/lib/auth-helpers'
 
+function copyAuthCookies(source: NextResponse | null, target: NextResponse) {
+  if (!source) return
+  for (const cookie of source.cookies.getAll()) {
+    target.cookies.set(cookie)
+  }
+}
+
 export async function getTimerData(request: Request) {
   try {
-    const { userId, supabase } = await resolveUser(request)
+    const cookieHolder = NextResponse.next()
+    const { userId, supabase } = await resolveUser(request, cookieHolder)
     if (!userId) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         {
           presets: [],
           streak: {
@@ -17,6 +25,8 @@ export async function getTimerData(request: Request) {
         },
         { status: 200 }
       )
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
     const [presets, stats] = await Promise.all([
       timerService.fetchPresets(supabase, userId),
@@ -24,17 +34,20 @@ export async function getTimerData(request: Request) {
     ])
 
     if (presets.error) {
-      return NextResponse.json({ error: presets.error.message }, { status: 400 })
+      const res = NextResponse.json({ error: presets.error.message }, { status: 400 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
     if (stats.error) {
-      return NextResponse.json({ error: stats.error.message }, { status: 400 })
+      const res = NextResponse.json({ error: stats.error.message }, { status: 400 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
-    // ✅ Type assertion to satisfy formatPreset (or update service to handle unknown)
     const presetRows = (presets.data ?? []) as timerService.TimerPresetRow[]
 
-    return NextResponse.json(
+    const res = NextResponse.json(
       {
         presets: presetRows.map(timerService.formatPreset),
         streak: {
@@ -46,6 +59,8 @@ export async function getTimerData(request: Request) {
       },
       { status: 200, headers: { 'Cache-Control': 'public, max-age=30, s-maxage=60' } }
     )
+    copyAuthCookies(cookieHolder, res)
+    return res
   } catch (error) {
     console.error('Timer service GET error', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
@@ -54,14 +69,19 @@ export async function getTimerData(request: Request) {
 
 export async function createTimerPreset(request: Request) {
   try {
-    const { userId, supabase } = await resolveUser(request)
+    const cookieHolder = NextResponse.next()
+    const { userId, supabase } = await resolveUser(request, cookieHolder)
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized User' }, { status: 401 })
+      const res = NextResponse.json({ error: 'Unauthorized User' }, { status: 401 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
     const { name, focusMinutes, breakMinutes } = await request.json()
     if (!name || typeof focusMinutes !== 'number' || typeof breakMinutes !== 'number') {
-      return NextResponse.json({ error: 'Invalid timer preset payload' }, { status: 400 })
+      const res = NextResponse.json({ error: 'Invalid timer preset payload' }, { status: 400 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
     const { data, error } = await timerService.createPreset(supabase, userId, {
@@ -71,51 +91,28 @@ export async function createTimerPreset(request: Request) {
     })
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
+      const res = NextResponse.json({ error: error.message }, { status: 400 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
-    return NextResponse.json({ preset: timerService.formatPreset(data as timerService.TimerPresetRow) }, { status: 201 })
+    const res = NextResponse.json({ preset: timerService.formatPreset(data as timerService.TimerPresetRow) }, { status: 201 })
+    copyAuthCookies(cookieHolder, res)
+    return res
   } catch (error) {
     console.error('Timer service POST error', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
 
-export async function recordPomodoroCompletion(request: Request) {
-  try {
-    const { userId, supabase } = await resolveUser(request)
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const result = await timerService.recordPomodoro(supabase, userId)
-
-    if (result.error) {
-      return NextResponse.json({ error: result.error.message }, { status: 400 })
-    }
-
-    return NextResponse.json(
-      {
-        streak: {
-          currentStreak: result.data.streak_maintained,
-          pomodorosToday: result.data.daily_pomodoro,
-          dailyTasksCompleted: result.data.daily_task_completed,
-          lastPomodoroDate: result.data.date,
-        },
-      },
-      { status: 200 }
-    )
-  } catch (error) {
-    console.error('Timer service PATCH error', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-  }
-}
-
 export async function handleTimerAction(request: Request) {
   try {
-    const { userId, supabase } = await resolveUser(request)
+    const cookieHolder = NextResponse.next()
+    const { userId, supabase } = await resolveUser(request, cookieHolder)
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      const res = NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
     const { action, presetId, name, focusMinutes, breakMinutes, durationMinutes, presetUsed } = await request.json()
@@ -124,10 +121,12 @@ export async function handleTimerAction(request: Request) {
       const result = await timerService.recordPomodoro(supabase, userId, durationMinutes ? { durationMinutes, presetUsed } : undefined)
 
       if (result.error) {
-        return NextResponse.json({ error: result.error.message }, { status: 400 })
+        const res = NextResponse.json({ error: result.error.message }, { status: 400 })
+        copyAuthCookies(cookieHolder, res)
+        return res
       }
 
-      return NextResponse.json(
+      const res = NextResponse.json(
         {
           streak: {
             currentStreak: result.data.streak_maintained,
@@ -138,11 +137,15 @@ export async function handleTimerAction(request: Request) {
         },
         { status: 200 }
       )
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
     if (action === 'updatePreset') {
       if (!presetId) {
-        return NextResponse.json({ error: 'presetId is required' }, { status: 400 })
+        const res = NextResponse.json({ error: 'presetId is required' }, { status: 400 })
+        copyAuthCookies(cookieHolder, res)
+        return res
       }
 
       const { data, error } = await timerService.updatePreset(supabase, presetId, {
@@ -152,27 +155,39 @@ export async function handleTimerAction(request: Request) {
       })
 
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 400 })
+        const res = NextResponse.json({ error: error.message }, { status: 400 })
+        copyAuthCookies(cookieHolder, res)
+        return res
       }
 
-      return NextResponse.json({ preset: timerService.formatPreset(data as timerService.TimerPresetRow) }, { status: 200 })
+      const res = NextResponse.json({ preset: timerService.formatPreset(data as timerService.TimerPresetRow) }, { status: 200 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
     if (action === 'deletePreset') {
       if (!presetId) {
-        return NextResponse.json({ error: 'presetId is required' }, { status: 400 })
+        const res = NextResponse.json({ error: 'presetId is required' }, { status: 400 })
+        copyAuthCookies(cookieHolder, res)
+        return res
       }
 
       const { error } = await timerService.deletePreset(supabase, presetId)
 
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 400 })
+        const res = NextResponse.json({ error: error.message }, { status: 400 })
+        copyAuthCookies(cookieHolder, res)
+        return res
       }
 
-      return NextResponse.json({ success: true }, { status: 200 })
+      const res = NextResponse.json({ success: true }, { status: 200 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
-    return NextResponse.json({ error: 'Unsupported action' }, { status: 400 })
+    const res = NextResponse.json({ error: 'Unsupported action' }, { status: 400 })
+    copyAuthCookies(cookieHolder, res)
+    return res
   } catch (error) {
     console.error('Timer service action error', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })

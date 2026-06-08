@@ -1,5 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
+import type { CookieOptions } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { type NextResponse } from 'next/server'
 
 // ---------- Types ----------
 export interface TaskRow {
@@ -50,7 +52,7 @@ const getCookieValue = (request: Request, name: string): string | null => {
   return cookiePair ? cookiePair[1] : null
 }
 
-export const createSupabaseClient = (request: Request) =>
+export const createSupabaseClient = (request: Request, response?: NextResponse) =>
   createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -59,11 +61,11 @@ export const createSupabaseClient = (request: Request) =>
         get(name: string) {
           return getCookieValue(request, name)
         },
-        set() {
-          /* no-op */
+        set(name: string, value: string, options: CookieOptions) {
+          if (response) response.cookies.set({ name, value, ...options })
         },
-        remove() {
-          /* no-op */
+        remove(name: string, options: CookieOptions) {
+          if (response) response.cookies.set({ name, value: '', ...options })
         },
       },
     }
@@ -171,4 +173,3 @@ export const removeTask = async (
     .eq('task_id', taskId)
     .eq('user_id', userId)
 }
-
