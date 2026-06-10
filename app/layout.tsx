@@ -14,9 +14,7 @@ export const metadata: Metadata = {
   title: "Zen Berry",
   description: "A mindful productivity app with Pomodoro timer, task management, and AI-powered insights",
   icons: {
-    icon: [
-      { url: "/favicon.svg", type: "image/svg+xml" },
-    ],
+    icon: "/favicon.ico",
     apple: [
       { url: "/apple-touch-icon.svg", sizes: "180x180", type: "image/svg+xml" },
     ],

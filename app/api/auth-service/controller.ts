@@ -73,7 +73,11 @@ export async function register(request: Request) {
 
     const { error: insertError } = await supabase
       .from('users')
-      .insert({ user_id: data.user.id, email: data.user.email, username: fullName ?? email.split('@')[0] })
+      .insert({
+        user_id: data.user.id,
+        email: data.user.email,
+        username: fullName ?? email.split('@')[0],
+      })
 
     if (insertError) {
       console.error('Failed to create users table entry:', insertError)
@@ -131,8 +135,32 @@ export async function getMe(request: Request) {
         id: user.id,
         email: user.email,
         name: user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'User',
+        has_onboarded: user.user_metadata?.has_onboarded ?? false,
       },
     })
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function updateMe(request: Request) {
+  try {
+    const { has_onboarded } = await request.json()
+    const response = NextResponse.json({ success: true })
+    const supabase = createClient(request, response)
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { error } = await supabase.auth.updateUser({
+      data: { has_onboarded },
+    })
+
+    if (error) throw error
+
+    return response
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

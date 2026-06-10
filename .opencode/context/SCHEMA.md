@@ -98,6 +98,21 @@
 | `email` | `varchar` | Unique |
 | `created_at` | `timestamptz` |  |
 
+### `pins`
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `pin_id` | `uuid` | Primary |
+| `user_id` | `uuid` | FK → auth.users.id |
+| `heading` | `text` | NOT NULL |
+| `content` | `text` | Nullable (plain text; URLs auto-link on display) |
+| `color` | `text` | NOT NULL DEFAULT '#FFD1D1' |
+| `position` | `int4` | NOT NULL DEFAULT 0 |
+| `created_at` | `timestamptz` | |
+| `updated_at` | `timestamptz` | |
+
+> **Indexes**: `(user_id)`, `(user_id, position)`.
+
 ### `waitlist`
 
 | Name | Type | Constraints |
@@ -188,6 +203,16 @@ POST   /ai/analyze
 GET    /ai/suggestions
 GET    /ai/predictions/:userId
 POST   /ai/insights/generate
+```
+
+### Pins
+
+```
+GET    /pins                  List user's pins (ordered by position)
+POST   /pins                  Create a pin
+PATCH  /pins                  Update a pin (body: id, heading?, content?, color?)
+DELETE /pins                  Delete a pin (query: ?id=xxx)
+POST   /pins/reorder          Batch reorder pins (body: { items: [{ pin_id, position }] })
 ```
 
 ### Waitlist

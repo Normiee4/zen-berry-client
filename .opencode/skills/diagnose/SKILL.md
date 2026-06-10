@@ -17,3 +17,11 @@ You must strictly step through these 6 distinct phases in sequential order. Do n
 4. **INSTRUMENT:** Add temporary telemetry, logs, or assertions to the code to validate or invalidate your hypothesis. Run the reproduction step again.
 5. **FIX:** Only after the hypothesis is proven by data, apply the narrowest possible code modification to resolve the root cause.
 6. **REGRESSION-TEST:** Run the original reproduction script and the wider test suite to verify the bug is gone and no new issues were introduced.
+
+## How to Invoke
+Say any of these to trigger this skill:
+- "This broke" / "Something is broken"
+- "Diagnose/fix/debug this [bug/issue/error]"
+- "There's a bug in [feature]"
+- "This isn't working correctly"
+- "Help me debug this"

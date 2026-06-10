@@ -38,7 +38,7 @@ export const signUp = async (supabase: SupabaseClient, email: string, password: 
   return supabase.auth.signUp({
     email,
     password,
-    options: { data: { full_name: fullName } },
+    options: { data: { full_name: fullName, has_onboarded: false } },
   })
 }
 

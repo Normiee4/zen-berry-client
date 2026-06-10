@@ -64,6 +64,9 @@ Currently implemented as Next.js Route Handlers under `/api/`:
 - **Auth**: Supabase Auth with JWT in httpOnly cookies. No RBAC — only user and dev/admin tiers
 - **Security**: Rate limiting, Zod input validation, owner-check authorization pattern. See `docs/security/SKILL.md`
 
+## Enforced Conventions
+- **RULES.md**: `.opencode/context/RULES.md` defines strict naming conventions (kebab-case files, PascalCase components), SOLID architecture rules, DRY thresholds (extract at 3+ occurrences), and coding standards. All new code must conform.
+
 ## Required Env Vars
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`

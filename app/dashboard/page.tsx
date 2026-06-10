@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import { DragDropContext, DropResult } from "@hello-pangea/dnd"
 import { AIInsightsCard } from "@/components/dashboard/Ai-insights-card"
 import { BrainDumpCard } from "@/components/dashboard/Brain-dump-card"
@@ -9,12 +8,12 @@ import { MatchaProgressCard } from "@/components/dashboard/Matcha-progress-card"
 import { MITCard } from "@/components/dashboard/Mit-card"
 import { StreakCard } from "@/components/dashboard/Streak-card"
 import { TimerCard } from "@/components/dashboard/Timer-card"
-import { Button } from "@/components/ui/button"
-import { LogOut, Loader2 } from "lucide-react"
+
 import { useMITApi, useTasksApi } from "@/hooks/useTasksApi"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { ConfirmDragDialog } from "@/components/dashboard/ConfirmDragDialog"
 import { DailyZenTip } from "@/components/dashboard/Daily-zen-tip"
+import { OnboardingOverlay } from "@/components/onboarding/onboarding-overlay"
 import { toast } from "sonner"
 
 interface PendingDrag {
@@ -24,24 +23,26 @@ interface PendingDrag {
 }
 
 export default function DashboardPage() {
-  const router = useRouter()
-  const [user, setUser] = useState<{ email: string; name: string } | null>(null)
-  const [loadingUser, setLoadingUser] = useState(true)
+  const [showOnboarding, setShowOnboarding] = useState(false)
 
   useEffect(() => {
     fetch("/api/auth-service/me")
       .then((res) => res.json())
       .then((data) => {
-        if (data.user) setUser(data.user)
-        setLoadingUser(false)
+        if (data.user && data.user.has_onboarded === false) {
+          setShowOnboarding(true)
+        }
       })
-      .catch(() => setLoadingUser(false))
+      .catch(() => {})
   }, [])
 
-  const handleLogout = async () => {
-    await fetch("/api/auth-service/logout", { method: "POST" })
-    router.push("/auth/login")
-    router.refresh()
+  const handleOnboardingComplete = async () => {
+    await fetch("/api/auth-service/me", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ has_onboarded: true }),
+    })
+    setShowOnboarding(false)
   }
 
   const { mits, addMIT, updateTitle, markAsDone, remainingSlots } = useMITApi()
@@ -98,31 +99,7 @@ export default function DashboardPage() {
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="min-h-screen bg-cream">
-        <header className="border-b border-border/30 bg-white/50">
-          <div className="mx-auto flex items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-matcha text-cream font-bold">
-                ZB
-              </div>
-              <h1 className="text-xl font-bold text-foreground">Zen Berry</h1>
-            </div>
-            <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-              <div className="text-right sm:text-left">
-                <p className="text-sm font-medium text-foreground">Welcome back!</p>
-                <p className="text-xs text-muted-foreground">
-                  {loadingUser ? "Loading..." : user?.name}
-                </p>
-              </div>
-              <Button size="sm" variant="outline" className="border-border" onClick={handleLogout} disabled={loadingUser}>
-                {loadingUser ? <Loader2 className="mr-2 size-4 animate-spin" /> : <LogOut className="mr-2 size-4" />}
-                Log out
-              </Button>
-            </div>
-          </div>
-        </header>
-
-        <main className="mx-auto max-w-8xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-8xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-6 items-start lg:grid-cols-3">
             <div className="flex flex-col gap-6">
               <ErrorBoundary name="Timer" fallback={<p className="text-sm text-muted-foreground p-4">Timer unavailable</p>}>
@@ -161,11 +138,10 @@ export default function DashboardPage() {
               <ErrorBoundary name="AI Insights" fallback={<p className="text-sm text-muted-foreground p-4">Insights unavailable</p>}>
                 <AIInsightsCard />
               </ErrorBoundary>
-              {user && <DailyZenTip />}
+              <DailyZenTip />
             </div>
           </div>
-        </main>
-      </div>
+        </div>
       <ConfirmDragDialog
         open={pendingDrag !== null}
         direction={pendingDrag?.direction ?? null}
@@ -173,6 +149,8 @@ export default function DashboardPage() {
         onConfirm={executeDrag}
         onCancel={() => setPendingDrag(null)}
       />
+
+      {showOnboarding && <OnboardingOverlay onComplete={handleOnboardingComplete} />}
     </DragDropContext>
   )
 }
