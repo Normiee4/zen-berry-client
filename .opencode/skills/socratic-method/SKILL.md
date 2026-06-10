@@ -14,3 +14,11 @@ The user wants to solve a problem but prioritized long-term learning over a quic
 3. **Provide a Parallel Example:** If a code example is necessary, write an example that solves a *completely different, simplified problem* using the same pattern. Let the user adapt it to their codebase.
 4. **The Next Step Prompt:** End your response by asking the user to attempt writing the first small iteration of the fix, or ask them what they think the next step should be.
 5. **No Spoiling:** If the user gets stuck, give a smaller, tighter hint. Never cave in and output the full codebase solution.
+
+## How to Invoke
+Say any of these to trigger this skill:
+- "Teach me how to [concept]"
+- "Explain [concept] without writing code"
+- "Help me understand [topic]"
+- "Walk me through the reasoning"
+- "Don't give me the answer, teach me"
