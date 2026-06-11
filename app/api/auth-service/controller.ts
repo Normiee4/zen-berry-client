@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createRouteHandlerClient } from "@/lib/supabase-server"
 import * as authService from '@/app/api/auth-service/service'
 import { checkRateLimit } from '@/lib/middleware/rate-limit'
 
@@ -25,29 +25,7 @@ function rateLimitAuth(request: Request): { allowed: boolean } | NextResponse {
 }
 
 function createClient(request: Request, response: NextResponse) {
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          const cookieHeader = request.headers.get('cookie')
-          if (!cookieHeader) return null
-          const match = cookieHeader
-            .split(';')
-            .map(c => c.trim())
-            .find(c => c.startsWith(`${name}=`))
-          return match ? decodeURIComponent(match.split('=')[1]) : null
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          response.cookies.set({ name, value, ...options })
-        },
-        remove(name: string, options: CookieOptions) {
-          response.cookies.set({ name, value: '', ...options })
-        },
-      },
-    }
-  )
+  return createRouteHandlerClient(request, response)
 }
 
 export async function register(request: Request) {

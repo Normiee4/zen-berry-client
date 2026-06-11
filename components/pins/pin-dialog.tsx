@@ -21,6 +21,7 @@ interface PinDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSave: (data: { heading: string; content: string; color: string }) => void
+  onDelete?: (id: string) => void
   editPin?: {
     id: string
     heading: string
@@ -29,7 +30,7 @@ interface PinDialogProps {
   } | null
 }
 
-export function PinDialog({ open, onOpenChange, onSave, editPin }: PinDialogProps) {
+export function PinDialog({ open, onOpenChange, onSave, onDelete, editPin }: PinDialogProps) {
   const [heading, setHeading] = useState(editPin?.heading ?? "")
   const [content, setContent] = useState(editPin?.content ?? "")
   const [color, setColor] = useState(editPin?.color ?? PASTEL_COLORS[0].hex)
@@ -110,6 +111,17 @@ export function PinDialog({ open, onOpenChange, onSave, editPin }: PinDialogProp
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
+            {editPin && (
+              <button
+                onClick={() => {
+                  onDelete?.(editPin.id)
+                  onOpenChange(false)
+                }}
+                className="mr-auto rounded-xl px-4 py-2 text-sm font-medium text-red-500 transition-colors hover:bg-red-50"
+              >
+                Delete
+              </button>
+            )}
             <button
               onClick={() => onOpenChange(false)}
               className="rounded-xl px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-strawberry/10"

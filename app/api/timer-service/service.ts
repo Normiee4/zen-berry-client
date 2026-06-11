@@ -1,5 +1,5 @@
 // app/api/timer-service/service.ts
-import { createServerClient } from '@supabase/ssr'
+import { createRouteHandlerClient } from "@/lib/supabase-server"
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // ---------- Types ----------
@@ -37,48 +37,8 @@ export const formatPreset = (row: TimerPresetRow): FormattedPreset => ({
 })
 
 // ---------- Cookie & Client ----------
-const getCookieValue = (request: Request, name: string): string | null => {
-  const requestCookies = (request as unknown as {
-    cookies?: { get(name: string): { value: string } | undefined }
-  }).cookies
-  if (requestCookies?.get) {
-    return requestCookies.get(name)?.value ?? null
-  }
-
-  const cookieHeader = request.headers.get('cookie')
-  if (!cookieHeader) return null
-
-  const cookiePair = cookieHeader
-    .split(';')
-    .map(cookie => cookie.trim().split('='))
-    .find(([cookieName]) => cookieName === name)
-
-  return cookiePair ? cookiePair[1] : null
-}
-
 export const createSupabaseClient = (request: Request) =>
-  createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return getCookieValue(request, name)
-        },
-        set() {
-          /* no-op */
-        },
-        remove() {
-          /* no-op */
-        },
-      },
-    }
-  )
-
-// ---------- Auth ----------
-export const getAuthenticatedUser = async (supabase: SupabaseClient) => {
-  return supabase.auth.getUser()
-}
+  createRouteHandlerClient(request)
 
 // ---------- Data Operations ----------
 // supabaseClient is used here as param as supabase

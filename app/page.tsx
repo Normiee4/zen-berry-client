@@ -1,4 +1,4 @@
-import { createServerClient } from '@supabase/ssr'
+import { createServerSupabaseClient } from "@/lib/supabase-server"
 import { Header } from "@/components/landing/Header"
 import { Hero } from "@/components/landing/Hero"
 import { Features } from "@/components/landing/Features"
@@ -16,17 +16,7 @@ export default async function Home() {
     redirect('/dashboard')
   }
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
+  const supabase = await createServerSupabaseClient()
   const { data: { session } } = await supabase.auth.getSession()
   if (session) {
     redirect('/dashboard')
