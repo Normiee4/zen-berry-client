@@ -34,19 +34,23 @@ function renderContent(text: string) {
 export function PinCard({ id, heading, content, color, onEdit, onDelete }: PinCardProps) {
   return (
     <div
-      className="group relative flex flex-col gap-3 rounded-2xl border border-black/5 p-5 shadow-sm transition-shadow hover:shadow-md"
+      className="group relative flex cursor-pointer flex-col gap-3 rounded-2xl border border-black/5 p-5 shadow-sm transition-shadow hover:shadow-md"
       style={{ backgroundColor: color }}
+      onClick={() => onEdit(id)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onEdit(id) }}
     >
       <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
         <button
-          onClick={() => onEdit(id)}
+          onClick={(e) => { e.stopPropagation(); onEdit(id) }}
           className="flex items-center justify-center rounded-lg bg-white/60 p-1.5 text-muted-foreground transition-colors hover:bg-white hover:text-foreground"
           aria-label="Edit pin"
         >
           <Pencil className="size-3.5" strokeWidth={1.5} />
         </button>
         <button
-          onClick={() => onDelete(id)}
+          onClick={(e) => { e.stopPropagation(); onDelete(id) }}
           className="flex items-center justify-center rounded-lg bg-white/60 p-1.5 text-muted-foreground transition-colors hover:bg-white hover:text-red-500"
           aria-label="Delete pin"
         >

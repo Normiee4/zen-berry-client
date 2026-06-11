@@ -150,6 +150,7 @@ export function PinBoard() {
           if (!open) setEditPin(null)
         }}
         onSave={handleSave}
+        onDelete={handleDelete}
         editPin={editPin ? { id: editPin.id, heading: editPin.heading, content: editPin.content, color: editPin.color } : null}
       />
     </>

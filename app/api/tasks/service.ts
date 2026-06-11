@@ -1,5 +1,4 @@
-import { createServerClient } from '@supabase/ssr'
-import type { CookieOptions } from '@supabase/ssr'
+import { createRouteHandlerClient } from "@/lib/supabase-server"
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { type NextResponse } from 'next/server'
 
@@ -33,43 +32,8 @@ export const formatTask = (row: TaskRow): FormattedTask => ({
 })
 
 // ---------- Cookie Helper ----------
-const getCookieValue = (request: Request, name: string): string | null => {
-  const requestCookies = (request as unknown as {
-    cookies?: { get(name: string): { value: string } | undefined }
-  }).cookies
-  if (requestCookies?.get) {
-    return requestCookies.get(name)?.value ?? null
-  }
-
-  const cookieHeader = request.headers.get('cookie')
-  if (!cookieHeader) return null
-
-  const cookiePair = cookieHeader
-    .split(';')
-    .map(cookie => cookie.trim().split('='))
-    .find(([cookieName]) => cookieName === name)
-
-  return cookiePair ? cookiePair[1] : null
-}
-
 export const createSupabaseClient = (request: Request, response?: NextResponse) =>
-  createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return getCookieValue(request, name)
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          if (response) response.cookies.set({ name, value, ...options })
-        },
-        remove(name: string, options: CookieOptions) {
-          if (response) response.cookies.set({ name, value: '', ...options })
-        },
-      },
-    }
-  )
+  createRouteHandlerClient(request, response)
 
 // ---------- Auth ----------
 export const getAuthenticatedUser = async (supabase: SupabaseClient) => {
