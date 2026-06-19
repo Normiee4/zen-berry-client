@@ -1,7 +1,7 @@
 "use client"
 
 import { usePathname, useRouter } from "next/navigation"
-import { Timer, Pin, LogOut } from "lucide-react"
+import { Timer, Pin, BarChart3, LogOut } from "lucide-react"
 
 interface SidebarProps {
   isOpen: boolean
@@ -13,6 +13,7 @@ interface SidebarProps {
 const navItems = [
   { href: "/dashboard", label: "Focus", icon: Timer },
   { href: "/dashboard/pins", label: "Pins", icon: Pin },
+  { href: "/dashboard/productivity", label: "Productivity", icon: BarChart3 },
 ] as const
 
 export function Sidebar({ isOpen, onClose, userName, onLogout }: SidebarProps) {

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  "instructions": [
+    "AGENTS.md",
+    ".opencode/context/SHIPPING.md",
+    ".opencode/context/RULES.md"
+  ],
+
+  "agent": {
+    "planner": {
+      "description": "Creates/updates feature specs in docs/features/<name>/SPEC.md",
+      "mode": "subagent"
+    },
+    "builder": {
+      "description": "Implements code from the feature spec, follows RULES.md",
+      "mode": "subagent"
+    },
+    "tester": {
+      "description": "Writes test specs and test code for features",
+      "mode": "subagent"
+    },
+    "reviewer": {
+      "description": "Read-only audit: checks code matches spec and tests cover acceptance criteria",
+      "mode": "subagent",
+      "permission": { "edit": "deny" }
+    }
+  },
+
+  "command": {
+    "ship": {
+      "description": "Full dev cycle: plan → build → test → review",
+      "template": "Run the full ship cycle for: '{{input}}'. Parse the feature name before the colon and description after it. Follow SHIPPING.md protocol. Use the task tool to spawn each subagent in order: planner → builder → reviewer (code) → tester → reviewer (tests). Pass the full input context between agents. If the reviewer report is a pass, summarize what was shipped. If it fails, explain the issues found.",
+      "agent": "build"
+    }
+  }
+}

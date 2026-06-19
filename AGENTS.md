@@ -1,74 +1,70 @@
 # Zen Berry Client
 
-## Commands
-- `npm run dev` - Start dev server (http://localhost:3000)
-- `npm run build` - Production build
-- `npm run lint` - ESLint (flat config in `eslint.config.mjs`)
+## Commands (run order: `lint` → `typecheck` → `build`)
+- `npm run dev` — Dev server at http://localhost:3000
+- `npm run build` — Production build (requires env vars)
+- `npm run lint` — ESLint (flat config in `eslint.config.mjs`)
+- `npm run typecheck` — `tsc --noEmit`
+- No test command exists — Playwright (`@playwright/test`) is in devDeps but not configured
 
-## Tech Stack
-- Next.js 16.2.1 (canary) with App Router
-- React 19.2.4
-- Tailwind CSS v4 (`@tailwindcss/postcss` in postcss.config.mjs)
-- shadcn/ui (radix-nova style, rsc: true, components in `components/ui/`)
-- Supabase (`@supabase/ssr`)
-- Zustand (client state), TanStack React Query (server data)
-- TypeScript (strict mode, `@/*` path alias → `./*`)
+## Core Architecture
 
-## Project Structure
+### 3-Layer API Pattern
+Every API endpoint under `app/api/<name>/` follows:
+- `route.ts` — Named HTTP handlers (GET/POST/etc), ≤3 lines, delegates to controller
+- `controller.ts` — Request parsing, auth resolution, response formatting
+- `service.ts` — Supabase queries/mutations only, returns plain data
+
+### Auth Flow
+1. `middleware.ts` runs on all `/api/*` (except waitlist, auth-service), `/dashboard/*`, `/auth/*`
+2. `authorizationMiddleware` sets `X-User-Id` header from Supabase session
+3. Controllers read `X-User-Id` or call `supabase.auth.getUser()` as fallback
+4. Beta bypass: ?beta_secret=<secret> cookie, uses `BETA_BYPASS_SECRETS` env var
+
+### Middleware Matcher
+```ts
+matcher: ['/dashboard/:path*', '/api/((?!waitlist|auth-service).*)', '/auth/:path*']
 ```
-app/          - Next.js App Router pages & API route handlers
-components/   - React components (dashboard/, ui/)
-lib/          - Utilities, helpers
-hooks/        - Custom React hooks
-```
+Auth-service routes (`/api/auth-service/*`) handle their own auth.
 
-## Database Tables (see [SCHEMA.md](../SCHEMA.md) for ER diagram, [DESIGN.md](../DESIGN.md) for SQL DDL)
-| Table | Purpose |
-|-------|---------|
-| `tasks` | MIT (is_mit=true, max 3) and Brain Dump tasks |
-| `sessions` | Individual Pomodoro records |
-| `daily_activity_log` | Hourly activity for AI peak hours analysis |
-| `daily_stats` | Aggregated daily metrics |
-| `timer_presets` | Configurable focus/break durations |
-| `insights` | AI-generated productivity insights & milestones |
-| `waitlist` | Pre-launch waitlist registrations |
+### State Management
+- **Server data** → TanStack React Query (queries + mutations)
+- **Client persistence** → Zustand (`store/timer-store.ts` with localStorage)
+- **Ephemeral UI** → `useState`
+- Do not store server data in Zustand
 
-## API Routes (see [SCHEMA.md](../SCHEMA.md) for full listing with priority tiers and response examples)
+### Supabase Clients (3 contexts)
+- `lib/supabase.ts` — `createBrowserClient` (browser)
+- `lib/supabase-server.ts` — `createServerSupabaseClient()` (server components), `createMiddlewareClient()` (middleware), `createRouteHandlerClient()` (route handlers)
+- `lib/auth-helpers.ts` — `resolveUser()` helper for controllers
 
-Currently implemented as Next.js Route Handlers under `/api/`:
+### Env Files
+- `.env` (gitignored) — Production keys, do not commit
+- `.env.dev.local` (checked in) — Dev Supabase placeholders + tester bypass secrets
 
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| GET/POST/PATCH/DELETE | `/api/tasks` | Task CRUD (MIT limit enforced: 3) |
-| POST | `/api/sessions` | Log completed Pomodoro |
-| GET | `/api/analytics/summary` | Today's stats + peak hours |
-| GET | `/api/analytics/history` | Weekly/monthly chart data |
-| POST | `/api/ai/review` | AI insight via Gemini (10/day rate limit) |
+## CI Pipelines (3 workflow files)
+- `frontend-ci.yml` — `lint` (continue-on-error) → `typecheck` → `build` on PR/push to main/develop
+- `backend-ci.yml` — Validates API route structure + typecheck + lint on `app/api/**` paths
+- `deploy.yml` — `lint` → `typecheck` → `build` → Vercel deploy (requires VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID)
 
-## Route Priority (from [SCHEMA.md](../SCHEMA.md))
-- **🔴 MVP (Required):** Auth (register/login/logout), Tasks (today/create/update/delete), Sessions (create), Stats (streak)
-- **🟡 Phase 2:** User profile, task detail, session history, presets, insights
-- **🟢 Phase 3:** AI review, summary stats, suggestions, waitlist
-
-## Reference Docs
-- `docs/PRD.md` — Product requirements and MVP feature scope
-- `docs/DESIGN.md` — Architecture, analytics flow, AI feature spec, implementation phases
-- `docs/SCHEMA.md` — ER diagram, full API route listing with priority tiers and response examples
-- `docs/security/SKILL.md` — Security guidelines (auth, validation, rate limiting, session management)
-- `docs/frontend-design/SKILLS.md` — UI/design guidelines
-
-## Critical Notes
-- **CI broken**: `.github/workflows/ci.yml` runs `npm test` but no test script in package.json — needs fixing
-- **ESLint**: Uses flat config (`eslint.config.mjs`), NOT `.eslintrc.json`
-- **Env**: `.env` = production keys (do not commit), `.env.dev.local` = dev Supabase placeholders
-- **Auth**: Supabase Auth with JWT in httpOnly cookies. No RBAC — only user and dev/admin tiers
-- **Security**: Rate limiting, Zod input validation, owner-check authorization pattern. See `docs/security/SKILL.md`
-
-## Enforced Conventions
-- **RULES.md**: `.opencode/context/RULES.md` defines strict naming conventions (kebab-case files, PascalCase components), SOLID architecture rules, DRY thresholds (extract at 3+ occurrences), and coding standards. All new code must conform.
+## Enforced Conventions (see `.opencode/context/RULES.md`)
+- **kebab-case** file names (exception: `page.tsx`, `layout.tsx`, `route.ts`, etc.)
+- **Named exports only** (exception: Next.js page/layout files)
+- **No `any`** — use `unknown` + narrowing
+- **Zod validation** in controllers (`lib/input-validator.ts`)
+- **`@/` path alias** maps to root (`./*`), not `./src/*`
 
 ## Required Env Vars
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `GEMINI_API_KEY`
-- `GEMINI_MODEL` (optional, defaults to `gemini-2.0-flash`)
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `GEMINI_API_KEY`
+- Optional: `GEMINI_MODEL` (defaults to `gemini-2.0-flash`), `BETA_BYPASS_SECRETS`
+
+## Reference Docs
+- `docs/PRD.md` — Product requirements
+- `docs/DESIGN.md` — Architecture, analytics flow, AI feature spec
+- `docs/SCHEMA.md` — ER diagram, full API routes with priority tiers
+- `docs/security/SKILL.md` — Auth, validation, rate limiting patterns
+
+## `/ship <feature>: <description>` Protocol
+Full dev cycle via `opencode.json` agents: planner → builder → reviewer → tester → reviewer.
+Two-stage review: code audit after Builder, test audit after Tester. Max 3 loops per stage.
+Feature specs in `docs/features/<name>/SPEC.md`. See `.opencode/context/SHIPPING.md`.
