@@ -12,8 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useTimer } from "@/hooks/useTimer";
+import { useTimerAlarm } from "@/hooks/use-timer-alarm";
 import { useTimerLogic } from '@/lib/timer-logic';
 import { useTimerStore } from "@/store/timer-store";
+import { TimerAlarmPicker } from "@/components/dashboard/timer-alarm-picker";
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { Pause, Play, Plus, Pencil, RotateCcw, Settings, Trash2 } from "lucide-react";
@@ -24,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function TimerCard() {
   useTimerLogic();
+  useTimerAlarm();
   const queryClient = useQueryClient()
   const [loaded, setLoaded] = useState(false)
   const {
@@ -44,6 +47,8 @@ export function TimerCard() {
     restoreSession,
     completedFocusCycle,
     clearCompletedFocusCycle,
+    alarmSound,
+    setAlarmSound,
   } = useTimer();
 
   useEffect(() => {
@@ -407,6 +412,12 @@ export function TimerCard() {
                   ))}
                 </div>
               </div>
+
+              {/* Timer Alarm */}
+              <TimerAlarmPicker
+                alarmSound={alarmSound}
+                onAlarmSoundChange={setAlarmSound}
+              />
 
               {/* Create New Preset */}
               <div className="rounded-lg border border-border p-4">

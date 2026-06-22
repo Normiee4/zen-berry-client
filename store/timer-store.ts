@@ -3,6 +3,8 @@ import { subscribeWithSelector } from "zustand/middleware";
 
 export type TimerMode = "focus" | "break";
 
+export type AlarmSound = "none" | "bell" | "chime" | "digital" | "lofi";
+
 export interface TimerPreset {
   id: string;
   name: string;
@@ -14,6 +16,7 @@ export interface TimerPreset {
 const PRESETS_STORAGE_KEY = "zenberry_timer_presets";
 const STREAK_STORAGE_KEY = "zenberry_timer_streak";
 const ACTIVE_SESSION_KEY = "zenberry_active_session";
+const ALARM_SOUND_KEY = "zenberry_timer_alarm_sound";
 
 interface ActiveSession {
   startTimestamp: number;
@@ -23,6 +26,7 @@ interface ActiveSession {
   activePresetId: string;
   focusTimeLeft: number;
   breakTimeLeft: number;
+  alarmSound: AlarmSound;
 }
 
 function loadPresetsFromStorage(): TimerPreset[] {
@@ -86,6 +90,26 @@ function clearActiveSession() {
   }
 }
 
+function loadAlarmSound(): AlarmSound {
+  if (typeof window === "undefined") return "none";
+  try {
+    const stored = localStorage.getItem(ALARM_SOUND_KEY);
+    const valid = ["none", "bell", "chime", "digital", "lofi"];
+    return stored && valid.includes(stored) ? (stored as AlarmSound) : "none";
+  } catch {
+    return "none";
+  }
+}
+
+function saveAlarmSound(sound: AlarmSound) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(ALARM_SOUND_KEY, sound);
+  } catch {
+    // ignore write failures
+  }
+}
+
 const sanitizeMode = (m: string): TimerMode => m === "focus" || m === "break" ? m : "focus";
 
 type TimerState = {
@@ -113,6 +137,8 @@ type TimerState = {
   pomodorosToday: number;
   lastPomodoroDate: string | null;
   completedFocusCycle: boolean;
+  alarmSound: AlarmSound;
+  timerJustCompleted: boolean;
 
   // Actions
   start: () => void;
@@ -132,6 +158,7 @@ type TimerState = {
     lastPomodoroDate: string | null;
   }) => void;
   clearCompletedFocusCycle: () => void;
+  setAlarmSound: (sound: AlarmSound) => void;
   restoreSession: () => void;
 };
 
@@ -169,6 +196,8 @@ export const useTimerStore = create<TimerState>()(
     pomodorosToday: 0,
     lastPomodoroDate: null,
     completedFocusCycle: false,
+    alarmSound: loadAlarmSound(),
+    timerJustCompleted: false,
 
     // Timestamp-based tracking
     startTimestamp: null,
@@ -183,6 +212,7 @@ export const useTimerStore = create<TimerState>()(
         initialDuration: timeLeft,
         focusWasStarted: mode === "focus" ? true : get().focusWasStarted,
         breakWasStarted: mode === "break" ? true : get().breakWasStarted,
+        timerJustCompleted: false,
       });
       const s = { ...get(), isRunning: true, startTimestamp: now, initialDuration: timeLeft };
       saveActiveSession({
@@ -193,6 +223,7 @@ export const useTimerStore = create<TimerState>()(
         activePresetId: s.activePresetId,
         focusTimeLeft: s.focusTimeLeft,
         breakTimeLeft: s.breakTimeLeft,
+        alarmSound: get().alarmSound,
       });
     },
 
@@ -206,7 +237,8 @@ export const useTimerStore = create<TimerState>()(
       return {
         isRunning: false,
         timeLeft: remaining,
-        startTimestamp: null
+        startTimestamp: null,
+        timerJustCompleted: false,
       };
     }),
 
@@ -219,14 +251,16 @@ export const useTimerStore = create<TimerState>()(
         set({
           isRunning: false,
           timeLeft: remaining,
-          startTimestamp: null
+          startTimestamp: null,
+          timerJustCompleted: false,
         });
       } else {
         const now = Date.now();
         set({
           isRunning: true,
           startTimestamp: now,
-          initialDuration: state.timeLeft
+          initialDuration: state.timeLeft,
+          timerJustCompleted: false,
         });
         const updated = { ...get(), isRunning: true, startTimestamp: now, initialDuration: state.timeLeft };
         saveActiveSession({
@@ -237,6 +271,7 @@ export const useTimerStore = create<TimerState>()(
           activePresetId: updated.activePresetId,
           focusTimeLeft: updated.focusTimeLeft,
           breakTimeLeft: updated.breakTimeLeft,
+          alarmSound: get().alarmSound,
         });
       }
     },
@@ -259,7 +294,8 @@ export const useTimerStore = create<TimerState>()(
         isRunning: false,
         completedFocusCycle: false,
         startTimestamp: null,
-        initialDuration: totalSeconds
+        initialDuration: totalSeconds,
+        timerJustCompleted: false,
       };
     }),
 
@@ -314,6 +350,7 @@ export const useTimerStore = create<TimerState>()(
             completedFocusCycle: true,
             startTimestamp: null,
             initialDuration: newTotalSeconds,
+            timerJustCompleted: true,
           };
         }
 
@@ -328,11 +365,12 @@ export const useTimerStore = create<TimerState>()(
           completedFocusCycle: false,
           startTimestamp: null,
           initialDuration: newTotalSeconds,
+          timerJustCompleted: true,
         };
       }
 
       const saveField = state.mode === "focus" ? "focusTimeLeft" : "breakTimeLeft";
-      return { timeLeft: newTimeLeft, [saveField]: newTimeLeft, completedFocusCycle: false };
+      return { timeLeft: newTimeLeft, [saveField]: newTimeLeft, completedFocusCycle: false, timerJustCompleted: false };
     }),
 
     setMode: (mode: TimerMode) => {
@@ -355,6 +393,7 @@ export const useTimerStore = create<TimerState>()(
         initialDuration: targetFull,
         focusWasStarted: false,
         breakWasStarted: false,
+        timerJustCompleted: false,
       });
     },
 
@@ -378,6 +417,7 @@ export const useTimerStore = create<TimerState>()(
         completedFocusCycle: false,
         startTimestamp: null,
         initialDuration: newTotalSeconds,
+        timerJustCompleted: false,
       });
     },
 
@@ -398,6 +438,7 @@ export const useTimerStore = create<TimerState>()(
         completedFocusCycle: false,
         startTimestamp: null,
         initialDuration: newTotalSeconds,
+        timerJustCompleted: false,
       };
     }),
 
@@ -420,6 +461,7 @@ export const useTimerStore = create<TimerState>()(
         completedFocusCycle: false,
         startTimestamp: null,
         initialDuration: newTotalSeconds,
+        timerJustCompleted: false,
       };
     }),
 
@@ -444,6 +486,7 @@ export const useTimerStore = create<TimerState>()(
         completedFocusCycle: false,
         startTimestamp: null,
         initialDuration: newTotalSeconds,
+        timerJustCompleted: false,
       };
     }),
 
@@ -473,6 +516,7 @@ export const useTimerStore = create<TimerState>()(
         completedFocusCycle: false,
         startTimestamp: null,
         initialDuration: newTotalSeconds,
+        timerJustCompleted: false,
       };
     }),
 
@@ -486,7 +530,12 @@ export const useTimerStore = create<TimerState>()(
       return set(normalized)
     },
 
-    clearCompletedFocusCycle: () => set({ completedFocusCycle: false }),
+    clearCompletedFocusCycle: () => set({ completedFocusCycle: false, timerJustCompleted: false }),
+
+    setAlarmSound: (sound: AlarmSound) => {
+      saveAlarmSound(sound);
+      return set({ alarmSound: sound });
+    },
 
     restoreSession: () => {
       const saved = loadActiveSession()
@@ -515,7 +564,13 @@ export const useTimerStore = create<TimerState>()(
         breakTimeLeft: saved.breakTimeLeft,
         focusWasStarted: saved.focusTimeLeft > 0,
         breakWasStarted: saved.breakTimeLeft > 0,
+        timerJustCompleted: false,
       })
+
+      // If the saved session has alarmSound, reapply it
+      if (saved.alarmSound) {
+        set({ alarmSound: saved.alarmSound })
+      }
     },
   }))
 );
