@@ -21,6 +21,8 @@ export function useTimer() {
     restoreSession,
     currentStreak,
     pomodorosToday,
+    alarmSound,
+    setAlarmSound,
   } = useTimerStore()
 
   return {
@@ -47,5 +49,7 @@ export function useTimer() {
     loadStats,
     restoreSession,
     clearCompletedFocusCycle,
+    alarmSound,
+    setAlarmSound,
   }
 }
