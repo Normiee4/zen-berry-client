@@ -1,9 +1,9 @@
 # Feature: Timer Alarms
 
 - Type: new
-- Status: new
+- Status: updated
 - Created: 2026-06-22
-- Updated: 2026-06-22
+- Updated: 2026-06-25
 
 ## Problem Statement
 
@@ -35,7 +35,9 @@ When a focus or rest timer cycle completes, there is no audible feedback. Users 
 - [ ] Selecting a sound immediately updates the store and persists to `localStorage`
 - [ ] After a page refresh, the previously selected alarm sound is restored from `localStorage`
 - [ ] After a crash/page-reload with an active session (restore flow), the saved `alarmSound` from `ActiveSession` is restored
-- [ ] Audio playback uses the `HTMLAudioElement` API; no new external audio libraries are added
+- [ ] Audio playback uses the **Web Audio API** (`AudioContext` + `AudioBufferSourceNode`); no new external audio libraries are added
+- [ ] Audio context is lazily initialized on component mount and resumed on first user gesture (`pointerdown`/`keydown`) to comply with iOS Safari autoplay policy
+- [ ] Audio files are pre-fetched and decoded into `AudioBuffer` objects on init for instant playback
 - [ ] Audio files are served from `/audio/<name>_alarm.mp3` via Next.js public directory
 - [ ] All new/modified files follow kebab-case naming and use named exports (except `page.tsx`)
 - [ ] No new dependencies beyond existing ones
@@ -133,59 +135,70 @@ saveActiveSession({
 
 Also update `loadActiveSession` and `saveActiveSession` in `start()`, `pause()`, `toggle()`, `reset()` paths that call them.
 
-### 3. New Hook: `hooks/use-timer-alarm.ts`
+### 3. Shared Audio Manager: `lib/audio-manager.ts`
 
-Purpose: React-free subscription to the timer store for alarm playback. Uses store's `subscribe` method directly (not inside a React component render cycle, to avoid state-flush timing issues).
+A singleton class that wraps the Web Audio API. Responsible for:
+- Lazily creating an `AudioContext` on first init
+- Pre-fetching and decoding all 4 MP3 files into `AudioBuffer` objects
+- Resuming the `AudioContext` on first user gesture (iOS Safari requirement)
+- Playing alarm sounds and previews via `AudioBufferSourceNode`
 
 ```typescript
-import { useTimerStore, type AlarmSound } from "@/store/timer-store";
+import type { AlarmSound } from "@/store/timer-store";
 
-const AUDIO_FILES: Record<Exclude<AlarmSound, "none">, string> = {
-  bell: "/audio/bell_alarm.mp3",
-  chime: "/audio/chime_alarm.mp3",
-  digital: "/audio/digital_alarm.mp3",
-  lofi: "/audio/lofi_alarm.mp3",
-};
+class AudioManager {
+  private ctx: AudioContext | null = null;
+  private buffers = new Map<string, AudioBuffer>();
+  // ...
 
-const ALARM_DURATION_MS = 4000; // 4 seconds
-let isPlaying = false;
-let currentAudio: HTMLAudioElement | null = null;
+  async init(): Promise<void> {
+    // Creates AudioContext, fetches + decodes all MP3s
+    // Registers pointerdown/keydown listeners to resume suspended context
+  }
 
-function playAlarm(sound: AlarmSound) {
-  if (sound === "none" || isPlaying) return;
+  play(sound: AlarmSound): void {
+    // Plays alarm at 0.5 volume, auto-stops after per-sound duration
+    // Guards: returns early if "none", already playing, or buffer not ready
+  }
 
-  const src = AUDIO_FILES[sound];
-  if (!src) return;
+  preview(sound: AlarmSound, durationMs = 3000): void {
+    // Stops current playback, plays sound at 0.3 volume for duration
+  }
 
-  isPlaying = true;
-  const audio = new Audio(src);
-  currentAudio = audio;
-  audio.volume = 0.5;
-  audio.play().catch(() => {
-    // Auto-play may fail (browser policy) — fail silently
-    isPlaying = false;
-    currentAudio = null;
-  });
+  stop(): void {
+    // Stops any current playback immediately
+  }
 
-  setTimeout(() => {
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio.currentTime = 0;
-      currentAudio = null;
-    }
-    isPlaying = false;
-  }, ALARM_DURATION_MS);
+  getIsPlaying(): boolean {
+    return this._isPlaying;
+  }
 }
 
+export const audioManager = new AudioManager();
+```
+
+### 4. Updated Hook: `hooks/use-timer-alarm.ts`
+
+Purpose: React-free subscription to the timer store for alarm playback. Delegates audio to the shared `AudioManager`.
+
+```typescript
+import { useEffect } from "react";
+import { useTimerStore } from "@/store/timer-store";
+import { audioManager } from "@/lib/audio-manager";
+
 export function useTimerAlarm() {
-  // Subscribe to store changes — fires when timer completes
-  React.useEffect(() => {
+  useEffect(() => {
+    audioManager.init();
+  }, []);
+
+  useEffect(() => {
     const unsub = useTimerStore.subscribe(
-      (state) => ({ timeLeft: state.timeLeft, isRunning: state.isRunning, alarmSound: state.alarmSound }),
-      ({ timeLeft, isRunning, alarmSound }) => {
-        if (timeLeft <= 0 && !isRunning && alarmSound !== "none") {
-          playAlarm(alarmSound);
-        }
+      (state) => state.timerJustCompleted,
+      (justCompleted) => {
+        if (!justCompleted || audioManager.getIsPlaying()) return;
+
+        audioManager.play(useTimerStore.getState().alarmSound);
+        useTimerStore.setState({ timerJustCompleted: false });
       },
     );
     return () => unsub();
@@ -203,9 +216,9 @@ useTimerLogic();
 useTimerAlarm(); // <-- new line
 ```
 
-### 4. Component Changes — Sound Picker
+### 5. Component Changes — Sound Picker
 
-#### 4.1 New component: `components/dashboard/timer-alarm-picker.tsx`
+#### 5.1 New component: `components/dashboard/timer-alarm-picker.tsx`
 
 A sound picker section rendered inside the Timer Settings dialog. Contains:
 
@@ -225,13 +238,13 @@ interface TimerAlarmPickerProps {
 }
 ```
 
-#### 4.2 Timer-card.tsx modifications
+#### 5.2 Timer-card.tsx modifications
 
 - Import `useTimerStore` directly for `alarmSound` and `setAlarmSound` (or add them to `useTimer` hook)
 - Add `<TimerAlarmPicker>` inside the settings dialog, below the presets section and above the "Create New Preset" section
 - Mount `useTimerAlarm()` alongside `useTimerLogic()`
 
-#### 4.3 `useTimer` hook update
+#### 5.3 `useTimer` hook update
 
 Expose `alarmSound` and `setAlarmSound` from the hook so the component can access them:
 
@@ -241,43 +254,27 @@ alarmSound: useTimerStore((s) => s.alarmSound),
 setAlarmSound: useTimerStore((s) => s.setAlarmSound),
 ```
 
-### 5. Audio Preview Functionality
+### 6. Audio Preview Functionality
 
-The preview button in the picker creates a temporary `HTMLAudioElement`, plays the file for 3 seconds, then stops. If the user presses play on a different sound while one is previewing, stop the current preview first.
+The preview button in the picker delegates to the shared `AudioManager`. Preview plays the sound for 3 seconds at 0.3 volume. Clicking the same button toggles preview off. Clicking a different button stops the current preview and starts the new one.
 
 Implementation lives inside `components/dashboard/timer-alarm-picker.tsx`:
 
 ```typescript
 const [previewing, setPreviewing] = useState<AlarmSound | null>(null);
-const previewRef = useRef<HTMLAudioElement | null>(null);
 
 const handlePreview = (sound: Exclude<AlarmSound, "none">) => {
-  // Stop any current preview
-  if (previewRef.current) {
-    previewRef.current.pause();
-    previewRef.current.currentTime = 0;
-  }
   if (previewing === sound) {
+    audioManager.stop();
     setPreviewing(null);
     return;
   }
-  const audio = new Audio(AUDIO_FILES[sound]);
-  audio.volume = 0.3;
-  previewRef.current = audio;
-  audio.play();
+  audioManager.preview(sound, 3000);
   setPreviewing(sound);
-  setTimeout(() => {
-    audio.pause();
-    audio.currentTime = 0;
-    if (previewRef.current === audio) {
-      previewRef.current = null;
-      setPreviewing(null);
-    }
-  }, 3000);
 };
 ```
 
-### 6. File Structure
+### 7. File Structure
 
 #### Modified files:
 | File | Change |
@@ -285,27 +282,45 @@ const handlePreview = (sound: Exclude<AlarmSound, "none">) => {
 | `store/timer-store.ts` | Add `AlarmSound` type, `alarmSound` state field, `setAlarmSound` action, localStorage helpers; update `ActiveSession`; update `saveActiveSession`/`restoreSession` calls |
 | `hooks/useTimer.ts` | Re-export `alarmSound` and `setAlarmSound` |
 | `components/dashboard/Timer-card.tsx` | Import and mount `useTimerAlarm()`, import `<TimerAlarmPicker>`, render it in settings dialog |
+| `hooks/use-timer-alarm.ts` | Subscribe to store for timer completion → delegates to `AudioManager` |
+| `components/dashboard/timer-alarm-picker.tsx` | Sound picker UI with preview → delegates to `AudioManager` |
 
 #### New files:
 | File | Purpose |
 |------|---------|
-| `hooks/use-timer-alarm.ts` | Subscribe to store for timer completion → playback logic |
-| `components/dashboard/timer-alarm-picker.tsx` | Sound picker UI with preview buttons |
+| `lib/audio-manager.ts` | Shared `AudioContext` singleton, gesture unlock, buffer cache, playback/preview methods |
 
-### 7. Data Flow
+### 8. Data Flow
 
 ```
+Page load:
+  → useTimerAlarm / TimerAlarmPicker mount
+    → audioManager.init()
+      → new AudioContext() created (suspended on iOS)
+      → fetch + decodeAudioData for all 4 MP3s → cached as AudioBuffers
+      → pointerdown/keydown listener registered
+        → first user gesture → ctx.resume() → audio system unlocked
+
 User selects "Chime" in settings dialog
   → setAlarmSound("chime")
     → set({ alarmSound: "chime" })
     → saveAlarmSound("chime")  // localStorage
 
 Timer counts down (via useTimerLogic → tick())
-  → timeLeft reaches 0, isRunning flips to false
+  → timeLeft reaches 0, timerJustCompleted = true
   → use-timer-alarm.ts subscription fires
-    → alarmSound !== "none" → playAlarm("chime")
-      → new Audio("/audio/chime_alarm.mp3").play()
-      → setTimeout(4000ms) → audio.pause()
+    → audioManager.play("chime")
+      → AudioBufferSourceNode created from cached buffer
+      → source.connect(gain).connect(ctx.destination)
+      → source.start()
+      → setTimeout(6000ms) → source.stop()
+
+User taps preview button for "Bell"
+  → audioManager.preview("bell", 3000)
+    → audioManager.stop()  // stop any current playback
+    → AudioBufferSourceNode created, gain = 0.3
+    → source.start()
+    → setTimeout(3000ms) → source.stop()
 
 Page refresh:
   → store initialization calls loadAlarmSound()
@@ -322,28 +337,35 @@ Page refresh with active session:
 
 ### Tab is backgrounded
 - The timer uses timestamp-based tracking (`startTimestamp` + `Date.now()`), so `tick()` recovers accurate elapsed time even if the `setInterval` is throttled
-- `HTMLAudioElement.play()` returns a promise that rejects if the browser blocks autoplay for background tabs. The `catch()` handler swallows this silently — no error surface
+- Audio playback via `AudioContext` is not affected by background-tab autoplay policies that block `HTMLAudioElement` — the `AudioContext` is already resumed by user gesture and remains valid
 - **Notification API fallback is deliberately out of scope** per user decision
 
 ### Multiple alarm fires
-- Guarded by the `isPlaying` module-level flag in `use-timer-alarm.ts`
-- If a second timer completes while an alarm is still playing, `playAlarm` returns early
-- The subscription fires once because the transition (`isRunning` → `false`, `timeLeft` → `0`) is a single event — rapid toggling could re-trigger but the flag prevents overlap
+- Guarded by `audioManager.getIsPlaying()` in `use-timer-alarm.ts`
+- If a second timer completes while an alarm is still playing, `audioManager.play()` returns early
+- The subscription fires once because `timerJustCompleted` is a single boolean toggle; the subscription handler immediately resets it to `false`
 
 ### "None" selected
-- `playAlarm("none")` returns early at the first guard clause
-- No audio object is created, no timeout is set
+- `audioManager.play("none")` returns early at the first guard clause
+- No `AudioBufferSourceNode` is created, no playback occurs
 - This is the default state for all users
+
+### iOS / iPad autoplay restrictions
+- `new AudioContext()` on iOS Safari starts in `"suspended"` state
+- A `pointerdown`/`keydown` listener is registered once during `init()`; the first user gesture calls `ctx.resume()`, unlocking the audio system for the session
+- Both alarm playback and preview work because they go through the already-resumed `AudioContext`
+- If the audio context cannot be created (unsupported browser), `ctx` is set to `null` and all `play()`/`preview()` calls return early — no audio, no errors
+
+### Audio buffer fetch or decode fails
+- `Promise.allSettled` ensures one failed sound doesn't block others
+- If a specific sound's buffer is missing, `play()`/`preview()` return early for that sound
+- No error toasts, no console noise beyond browser logs
 
 ### Crash recovery
 - `ActiveSession` interface now includes `alarmSound`
 - `saveActiveSession()` serializes the current `alarmSound` value
 - `restoreSession()` reads and applies `alarmSound` from the saved session
 - If the saved session has no `alarmSound` field (migration from old format), it defaults to `"none"` via the fallback in `loadActiveSession()` or a type guard in `restoreSession()`
-
-### Audio file missing or fails to load
-- `audio.play()` returns a rejected promise if the file fails to load (404, network error). The `.catch()` handler swallows this — no error toast, no console noise beyond what the browser logs
-- The `isPlaying` flag is reset inside the `.catch()` to avoid getting stuck
 
 ## Open Questions
 

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 import type { AlarmSound } from "@/store/timer-store";
+import { audioManager } from "@/lib/audio-manager";
 
 const SOUND_OPTIONS: { value: AlarmSound; label: string }[] = [
   { value: "none", label: "None" },
@@ -12,13 +13,6 @@ const SOUND_OPTIONS: { value: AlarmSound; label: string }[] = [
   { value: "lofi", label: "Lo-fi" },
 ];
 
-const AUDIO_FILES: Record<Exclude<AlarmSound, "none">, string> = {
-  bell: "/audio/bell_alarm.mp3",
-  chime: "/audio/chime_alarm.mp3",
-  digital: "/audio/digital_alarm.mp3",
-  lofi: "/audio/lofi_alarm.mp3",
-};
-
 interface TimerAlarmPickerProps {
   alarmSound: AlarmSound;
   onAlarmSoundChange: (sound: AlarmSound) => void;
@@ -26,40 +20,22 @@ interface TimerAlarmPickerProps {
 
 export function TimerAlarmPicker({ alarmSound, onAlarmSoundChange }: TimerAlarmPickerProps) {
   const [previewing, setPreviewing] = useState<AlarmSound | null>(null);
-  const previewRef = useRef<HTMLAudioElement | null>(null);
-  const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    audioManager.init();
+    return () => {
+      audioManager.stop();
+    };
+  }, []);
 
   const handlePreview = (sound: Exclude<AlarmSound, "none">) => {
-    if (previewTimerRef.current) {
-      clearTimeout(previewTimerRef.current);
-      previewTimerRef.current = null;
-    }
-    if (previewRef.current) {
-      previewRef.current.pause();
-      previewRef.current.currentTime = 0;
-      previewRef.current = null;
-    }
     if (previewing === sound) {
+      audioManager.stop();
       setPreviewing(null);
       return;
     }
-    const src = AUDIO_FILES[sound];
-    if (!src) return;
-    const audio = new Audio(src);
-    audio.volume = 0.3;
-    previewRef.current = audio;
-    audio.play().catch(() => {
-      setPreviewing(null);
-    });
+    audioManager.preview(sound, 3000);
     setPreviewing(sound);
-    previewTimerRef.current = setTimeout(() => {
-      if (previewRef.current) {
-        previewRef.current.pause();
-        previewRef.current.currentTime = 0;
-        previewRef.current = null;
-      }
-      setPreviewing(null);
-    }, 3000);
   };
 
   return (
