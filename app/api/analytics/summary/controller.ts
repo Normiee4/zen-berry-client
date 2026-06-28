@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import * as analyticsService from '@/app/api/analytics/summary/service'
+import * as analyticsService from '@/app/api/analytics/service'
 import { resolveUser } from '@/lib/auth-helpers'
 
 export async function getAnalyticsSummary(request: Request) {
@@ -29,9 +29,9 @@ export async function getAnalyticsSummary(request: Request) {
       analyticsService.fetchTodayTasksCompleted(supabase, userId),
       analyticsService.fetchLifetimeTasksCompleted(supabase, userId),
       analyticsService.fetchMITCount(supabase, userId),
-      analyticsService.calculatePeakHours(supabase, userId),
-      analyticsService.calculateTotalFocusMinutes(supabase, userId),
-      analyticsService.calculateBreaksTaken(supabase, userId),
+      analyticsService.fetchPeakHours(supabase, userId),
+      analyticsService.fetchTodayFocusMinutes(supabase, userId),
+      analyticsService.fetchTodayBreaks(supabase, userId),
       analyticsService.getLastBreakTime(supabase, userId),
     ])
 

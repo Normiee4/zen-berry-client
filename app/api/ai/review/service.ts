@@ -1,32 +1,6 @@
-import { getToday } from '@/lib/date-utils'
-export { getToday }
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-// ---------- Data Fetching ----------
-export const fetchTodayStats = async (supabase: SupabaseClient, userId: string) => {
-  return supabase
-    .from('daily_stats')
-    .select('daily_pomodoro, daily_task_completed, streak_maintained, ai_review_count')
-    .eq('user_id', userId)
-    .eq('date', getToday())
-    .maybeSingle()
-}
-
-export const getLastBreakTime = async (supabase: SupabaseClient, userId: string) => {
-  const { data, error } = await supabase
-    .from('session_logs')
-    .select('completed_at')
-    .eq('user_id', userId)
-    .eq('was_break', true)
-    .not('completed_at', 'is', null)
-    .order('completed_at', { ascending: false })
-    .limit(1)
-    .single()
-
-  if (error || !data) return null
-  return data.completed_at
-}
-
+// ---------- Rate Limiting ----------
 export const checkHourlyRateLimit = async (supabase: SupabaseClient, userId: string) => {
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
 
@@ -47,64 +21,7 @@ export const checkHourlyRateLimit = async (supabase: SupabaseClient, userId: str
   return { error: null }
 }
 
-// ---------- Persistence Metrics ----------
-
-export const fetchPeakDays = async (supabase: SupabaseClient, userId: string): Promise<string[]> => {
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
-
-  const { data, error } = await supabase
-    .from('daily_activity_log')
-    .select('date, pomodoros_completed')
-    .eq('user_id', userId)
-    .gte('date', sevenDaysAgo)
-
-  if (error || !data) return []
-
-  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-  const dayTotals = new Map<string, number>()
-
-  data.forEach((row) => {
-    const dayName = dayNames[new Date(row.date + 'T00:00:00').getDay()]
-    const current = dayTotals.get(dayName) || 0
-    dayTotals.set(dayName, current + row.pomodoros_completed)
-  })
-
-  const sorted = [...dayTotals.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
-    .map(([day]) => day)
-
-  return sorted
-}
-
-export const fetchMostUsedPreset = async (supabase: SupabaseClient, userId: string): Promise<number | null> => {
-  const { data, error } = await supabase
-    .from('session_logs')
-    .select('preset_used')
-    .eq('user_id', userId)
-    .not('preset_used', 'is', null)
-    .order('completed_at', { ascending: false })
-
-  if (error || !data || data.length === 0) return null
-
-  const freq = new Map<string, number>()
-  data.forEach((row) => {
-    const key = String(row.preset_used)
-    freq.set(key, (freq.get(key) || 0) + 1)
-  })
-
-  const mostUsed = [...freq.entries()].sort((a, b) => b[1] - a[1])[0][0]
-
-  const { data: preset } = await supabase
-    .from('timer_presets')
-    .select('preset_id')
-    .eq('user_id', userId)
-    .eq('preset_name', mostUsed)
-    .maybeSingle()
-
-  return preset?.preset_id ?? null
-}
-
+// ---------- Milestone Detection ----------
 export const detectMilestone = (
   cyclesTotal: number,
   streak: number,
@@ -127,7 +44,6 @@ export const detectMilestone = (
 }
 
 // ---------- Persistence ----------
-
 export interface AIInsightRow {
   user_id: string
   insight_date: string
@@ -320,7 +236,6 @@ export const generatePrompt = (data: {
   const bestDay = [...weeklyHistory].sort((a, b) => b.pomodoros - a.pomodoros)[0]
 
   const needsBreak = hoursSinceBreak !== null && hoursSinceBreak > 3
-  const highDay = pomodoros >= 4 || comparison.pomodorosChange > 15
   const lowDay = pomodoros === 0 && (lifetime.totalSessions > 0 || weeklyTotals.pomodoros > 0)
   const declining = comparison.pomodorosChange < -15
   const improving = comparison.pomodorosChange > 15

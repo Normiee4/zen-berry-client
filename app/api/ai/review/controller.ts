@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import * as aiService from '@/app/api/ai/review/service'
-import * as productivityService from '@/app/api/productivity/service'
+import * as analyticsService from '@/app/api/analytics/service'
 import { resolveUser } from '@/lib/auth-helpers'
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
@@ -20,14 +20,14 @@ export async function generateReview(request: Request) {
       )
     }
 
-    const today = productivityService.getToday()
-    const sevenDaysAgo = productivityService.getDaysAgo(7)
-    const daysAgo6 = productivityService.getDaysAgo(6)
-    const daysAgo13 = productivityService.getDaysAgo(13)
+    const today = analyticsService.getToday()
+    const sevenDaysAgo = analyticsService.getDaysAgo(7)
+    const daysAgo6 = analyticsService.getDaysAgo(6)
+    const daysAgo13 = analyticsService.getDaysAgo(13)
     const currStart = daysAgo6
     const currEnd = today
     const prevStart = daysAgo13
-    const prevEnd = productivityService.getDaysAgo(7)
+    const prevEnd = analyticsService.getDaysAgo(7)
 
     const [
       statsResult,
@@ -47,22 +47,22 @@ export async function generateReview(request: Request) {
       peakDays,
       mostUsedPreset,
     ] = await Promise.all([
-      productivityService.fetchTodayStats(supabase, userId),
-      productivityService.fetchTodayFocusMinutes(supabase, userId),
-      productivityService.fetchTodayBreaks(supabase, userId),
-      productivityService.fetchLifetimeTaskCount(supabase, userId),
-      productivityService.fetchLifetimePomodoroCount(supabase, userId),
-      productivityService.fetchLifetimeFocusMinutes(supabase, userId),
-      productivityService.fetchLifetimeSessionCount(supabase, userId),
-      productivityService.fetchDailyStatsRange(supabase, userId, sevenDaysAgo, today),
-      productivityService.fetchSessionLogsRange(supabase, userId, sevenDaysAgo, today + "T23:59:59"),
-      productivityService.fetchActiveDaysInRange(supabase, userId, daysAgo6, today),
-      productivityService.fetchPeakHours(supabase, userId),
-      productivityService.fetchWeekTotalStats(supabase, userId, currStart, currEnd),
-      productivityService.fetchWeekTotalStats(supabase, userId, prevStart, prevEnd),
-      aiService.getLastBreakTime(supabase, userId),
-      aiService.fetchPeakDays(supabase, userId),
-      aiService.fetchMostUsedPreset(supabase, userId),
+      analyticsService.fetchTodayStats(supabase, userId),
+      analyticsService.fetchTodayFocusMinutes(supabase, userId),
+      analyticsService.fetchTodayBreaks(supabase, userId),
+      analyticsService.fetchLifetimeTaskCount(supabase, userId),
+      analyticsService.fetchLifetimePomodoroCount(supabase, userId),
+      analyticsService.fetchLifetimeFocusMinutes(supabase, userId),
+      analyticsService.fetchLifetimeSessionCount(supabase, userId),
+      analyticsService.fetchDailyStatsRange(supabase, userId, sevenDaysAgo, today),
+      analyticsService.fetchSessionLogsRange(supabase, userId, sevenDaysAgo, today + "T23:59:59"),
+      analyticsService.fetchActiveDaysInRange(supabase, userId, daysAgo6, today),
+      analyticsService.fetchPeakHours(supabase, userId),
+      analyticsService.fetchWeekTotalStats(supabase, userId, currStart, currEnd),
+      analyticsService.fetchWeekTotalStats(supabase, userId, prevStart, prevEnd),
+      analyticsService.getLastBreakTime(supabase, userId),
+      analyticsService.fetchPeakDays(supabase, userId),
+      analyticsService.fetchMostUsedPreset(supabase, userId),
     ])
 
     let hoursSinceBreak: number | null = null
@@ -191,7 +191,7 @@ export async function generateReview(request: Request) {
 
     await aiService.persistInsight(supabase, {
       user_id: userId,
-      insight_date: aiService.getToday(),
+      insight_date: analyticsService.getToday(),
       productivity_level: productivityLevel ? Math.round(productivityLevel * 100) / 100 : null,
       consistency_rate: consistencyRate,
       cycles_total: cyclesTotal,

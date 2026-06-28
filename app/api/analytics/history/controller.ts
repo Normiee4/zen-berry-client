@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import * as historyService from '@/app/api/analytics/history/service'
+import * as analyticsService from '@/app/api/analytics/service'
 import { resolveUser } from '@/lib/auth-helpers'
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -19,12 +19,12 @@ export async function getAnalyticsHistory(request: Request) {
 
     const days = period === 'month' ? 30 : 7
     const endDate = new Date().toISOString().slice(0, 10)
-    const startDate = historyService.getDaysAgo(days)
+    const startDate = analyticsService.getDaysAgo(days)
 
     const [statsResult, sessionsResult, mitsResult] = await Promise.all([
-      historyService.fetchDailyStatsRange(supabase, userId, startDate, endDate),
-      historyService.fetchSessionLogsRange(supabase, userId, startDate, endDate + 'T23:59:59'),
-      historyService.fetchCompletedMITs(supabase, userId, startDate, endDate + 'T23:59:59'),
+      analyticsService.fetchDailyStatsRange(supabase, userId, startDate, endDate),
+      analyticsService.fetchSessionLogsRange(supabase, userId, startDate, endDate + 'T23:59:59'),
+      analyticsService.fetchCompletedMITs(supabase, userId, startDate, endDate + 'T23:59:59'),
     ])
 
     const statsMap = new Map(
