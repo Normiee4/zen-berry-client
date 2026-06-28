@@ -17,45 +17,6 @@ export const fetchTodayStats = async (supabase: SupabaseClient, userId: string) 
     .maybeSingle()
 }
 
-export const fetchPeakHours = async (supabase: SupabaseClient, userId: string) => {
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
-
-  const { data, error } = await supabase
-    .from('daily_activity_log')
-    .select('hour_slot, pomodoros_completed')
-    .eq('user_id', userId)
-    .gte('date', sevenDaysAgo)
-
-  if (error || !data || data.length === 0) {
-    return null
-  }
-
-  const hourlyMap = new Map<number, number>()
-  data.forEach((row) => {
-    const current = hourlyMap.get(row.hour_slot) || 0
-    hourlyMap.set(row.hour_slot, current + row.pomodoros_completed)
-  })
-
-  let bestHour = 0
-  let maxPomodoros = 0
-  hourlyMap.forEach((count, hour) => {
-    if (count > maxPomodoros) {
-      maxPomodoros = count
-      bestHour = hour
-    }
-  })
-
-  if (maxPomodoros === 0) return null
-
-  const formatHour = (h: number) => {
-    const suffix = h >= 12 ? 'PM' : 'AM'
-    const hour12 = h % 12 || 12
-    return `${hour12}${suffix}`
-  }
-
-  return `${formatHour(bestHour)}-${formatHour(bestHour + 2)}`
-}
-
 export const getLastBreakTime = async (supabase: SupabaseClient, userId: string) => {
   const { data, error } = await supabase
     .from('session_logs')
@@ -69,18 +30,6 @@ export const getLastBreakTime = async (supabase: SupabaseClient, userId: string)
 
   if (error || !data) return null
   return data.completed_at
-}
-
-export const fetchTodaySessionDetails = async (supabase: SupabaseClient, userId: string) => {
-  const today = getToday()
-
-  const { data, error } = await supabase
-    .from('session_logs')
-    .select('completed_at, was_break, duration_minutes')
-    .eq('user_id', userId)
-    .gte('completed_at', today)
-
-  return { data: data || [], error }
 }
 
 export const checkHourlyRateLimit = async (supabase: SupabaseClient, userId: string) => {
@@ -104,32 +53,6 @@ export const checkHourlyRateLimit = async (supabase: SupabaseClient, userId: str
 }
 
 // ---------- Persistence Metrics ----------
-
-export const fetchCyclesTotal = async (supabase: SupabaseClient, userId: string): Promise<number> => {
-  const { count, error } = await supabase
-    .from('session_logs')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .eq('was_break', false)
-
-  if (error || count === null) return 0
-  return count
-}
-
-export const fetchConsistencyRate = async (supabase: SupabaseClient, userId: string): Promise<number> => {
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
-
-  const { data, error } = await supabase
-    .from('daily_stats')
-    .select('date')
-    .eq('user_id', userId)
-    .gte('date', sevenDaysAgo)
-    .gt('daily_pomodoro', 0)
-
-  if (error || !data) return 0
-
-  return Math.round((data.length / 7) * 100) / 100
-}
 
 export const fetchPeakDays = async (supabase: SupabaseClient, userId: string): Promise<string[]> => {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
@@ -256,6 +179,15 @@ export interface GeminiResponse {
   suggestion: string
 }
 
+export interface GeminiFallbackData {
+  pomodoros: number
+  tasksCompleted: number
+  totalFocusMinutes: number
+  streak: number
+  consistencyRate: number
+  comparison: { pomodorosChange: number; tasksChange: number; focusChange: number }
+}
+
 const FALLBACKS: GeminiResponse[] = [
   { insight: 'Discipline is the bridge between goals and accomplishment. Every session brings you closer to mastery.', suggestion: 'Begin a 25-minute focus block. The path of the strawberry is sweet for those who persist.' },
   { insight: 'The ripest strawberry grows from steady sunlight. Your consistency is the sun — keep showing up.', suggestion: 'Try a deep work preset (50 min) today. Longer focus builds deeper roots.' },
@@ -278,13 +210,37 @@ export const getNoDataResponse = (): GeminiResponse => {
   return NO_DATA_FALLBACKS[Math.floor(Math.random() * NO_DATA_FALLBACKS.length)]
 }
 
-export const callGeminiAPI = async (prompt: string): Promise<GeminiResponse> => {
+export const generateDataAwareFallback = (data: GeminiFallbackData): GeminiResponse => {
+  const { pomodoros, tasksCompleted, totalFocusMinutes, streak, consistencyRate, comparison } = data
+
+  let insight = `You completed ${pomodoros} focus session${pomodoros !== 1 ? 's' : ''} today`
+  if (totalFocusMinutes > 0) insight += ` (${Math.round(totalFocusMinutes)} minutes of focus)`
+  if (tasksCompleted > 0) insight += ` and knocked out ${tasksCompleted} task${tasksCompleted !== 1 ? 's' : ''}`
+  insight += '.'
+
+  if (streak >= 3) insight += ` Your ${streak}-day streak is alive. Keep showing up.`
+  if (consistencyRate > 0) insight += ` Active ${Math.round(consistencyRate * 100)}% of days this week.`
+  if (comparison.pomodorosChange > 0) insight += ` That's ${comparison.pomodorosChange}% more pomodoros than last week.`
+  if (comparison.pomodorosChange < 0) insight += ` You're down ${Math.abs(comparison.pomodorosChange)}% on pomodoros vs last week.`
+
+  let suggestion = 'Start your next focus block to build momentum.'
+  if (totalFocusMinutes >= 120) suggestion = 'Great focus today. Review what worked and replicate it tomorrow.'
+  if (comparison.pomodorosChange < -20) suggestion = 'Try scheduling your most important task during your peak hours tomorrow.'
+  if (streak === 0) suggestion = 'One pomodoro is all it takes to start a new streak.'
+
+  return { insight: insight.trim(), suggestion }
+}
+
+export const callGeminiAPI = async (
+  prompt: string,
+  fallbackData?: GeminiFallbackData
+): Promise<GeminiResponse> => {
   const apiKey = process.env.GEMINI_API_KEY
   const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash'
 
   if (!apiKey) {
     console.warn('GEMINI_API_KEY not configured, using fallback response')
-    return getFallbackResponse()
+    return fallbackData ? generateDataAwareFallback(fallbackData) : getFallbackResponse()
   }
 
   try {
@@ -299,7 +255,7 @@ export const callGeminiAPI = async (prompt: string): Promise<GeminiResponse> => 
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 200,
+            maxOutputTokens: 500,
             topP: 0.9,
           },
         }),
@@ -309,21 +265,23 @@ export const callGeminiAPI = async (prompt: string): Promise<GeminiResponse> => 
     if (!response.ok) {
       const errorText = await response.text()
       console.error('Gemini API error:', response.status, errorText)
-      return getFallbackResponse()
+      return fallbackData ? generateDataAwareFallback(fallbackData) : getFallbackResponse()
     }
 
     const data = await response.json()
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
 
-    const fb = getFallbackResponse()
+    const cleaned = text.replace(/```(?:json)?\s*/g, '').trim()
+
+    const fb = fallbackData ? generateDataAwareFallback(fallbackData) : getFallbackResponse()
     try {
-      const parsed = JSON.parse(text)
+      const parsed = JSON.parse(cleaned)
       return {
         insight: parsed.insight || fb.insight,
         suggestion: parsed.suggestion || fb.suggestion,
       }
     } catch {
-      const lines = text.split('\n').filter((l: string) => l.trim())
+      const lines = cleaned.split('\n').filter((l: string) => l.trim())
       return {
         insight: lines[0] || fb.insight,
         suggestion: lines[1] || fb.suggestion,
@@ -331,7 +289,7 @@ export const callGeminiAPI = async (prompt: string): Promise<GeminiResponse> => 
     }
   } catch (error) {
     console.error('Gemini API call failed:', error)
-    return getFallbackResponse()
+    return fallbackData ? generateDataAwareFallback(fallbackData) : getFallbackResponse()
   }
 }
 
@@ -340,35 +298,91 @@ export const generatePrompt = (data: {
   totalFocusMinutes: number
   tasksCompleted: number
   breaksTaken: number
-  peakHours: string | null
+  streak: number
+  peakHours: { start: number; end: number; avgPomodoros: number } | null
   hoursSinceBreak: number | null
+  weeklyHistory: Array<{ date: string; day: string; pomodoros: number; tasks: number; focusMinutes: number }>
+  weeklyTotals: { pomodoros: number; tasks: number; focusMinutes: number }
+  comparison: { pomodorosChange: number; tasksChange: number; focusChange: number }
+  consistencyRate: number
+  lifetime: {
+    totalTasks: number
+    totalPomodoros: number
+    totalFocusMinutes: number
+    totalSessions: number
+  }
 }): string => {
-  const { pomodoros, totalFocusMinutes, tasksCompleted, breaksTaken, peakHours, hoursSinceBreak } = data
+  const {
+    pomodoros, totalFocusMinutes, tasksCompleted, breaksTaken, streak,
+    peakHours, hoursSinceBreak, weeklyHistory, weeklyTotals,
+    comparison, consistencyRate, lifetime,
+  } = data
 
-  const restWarning = hoursSinceBreak !== null && hoursSinceBreak > 3
-    ? `\n⚠️ The young sprout has not taken a single break in over ${Math.floor(hoursSinceBreak)} hours. This is not sustainable. A withering plant cannot bear fruit.`
-    : hoursSinceBreak !== null && hoursSinceBreak > 2
-      ? `\n⚠️ Note: ${Math.floor(hoursSinceBreak)} hours since last break.`
-      : ''
+  const weeklyRows = weeklyHistory.map(d =>
+    `  ${d.day}: ${d.pomodoros} pomodoros, ${d.tasks} tasks, ${d.focusMinutes}min focus`
+  ).join('\n')
+
+  const bestDay = [...weeklyHistory].sort((a, b) => b.pomodoros - a.pomodoros)[0]
+
   const needsBreak = hoursSinceBreak !== null && hoursSinceBreak > 3
+  const highDay = pomodoros >= 4 || comparison.pomodorosChange > 15
+  const lowDay = pomodoros === 0 && (lifetime.totalSessions > 0 || weeklyTotals.pomodoros > 0)
+  const declining = comparison.pomodorosChange < -15
+  const improving = comparison.pomodorosChange > 15
 
-  return `You are Zensei, a strawberry-themed AI productivity master — part wise teacher, part gentle drill instructor. Your voice is warm yet commanding, like a sensei who has cultivated focus for centuries. You refer to the user as "young sprout" or "apprentice". You occasionally weave in strawberry metaphors (ripeness, sweetness, seeds, harvest). You are direct but never harsh — you push because you believe in their potential.
+  return `You are Zensei, a strawberry-themed AI productivity master — part wise teacher, part gentle drill instructor.
 
-Analyze the user's productivity data and deliver a short, punchy insight like a master addressing their student.
+VOICE RULES (follow based on the data):
+- **On high performance**: Warm pride. Celebrate genuinely — sound like a sensei watching their student have a breakthrough. "Look at what you've grown." Let the praise feel earned.
+- **On low or quiet days**: Zero shame. No disappointment. Speak like a gardener who understands that fallow seasons strengthen the soil. "Even the strongest roots rest." Calm, reassuring, patient.
+- **On declining trend**: No scolding. Acknowledge the dip with the wisdom of someone who knows plateaus are part of mastery. "The bamboo bends before it grows taller." Then guide, don't push.
+- **On improving trend**: Light encouragement. Notice the effort. "The sun stayed out a little longer today. Keep tending the garden."
+- **On skipped breaks (3+ hours)**: Gentle concern, not an order. Sound like a caretaker who notices. "The fields have been worked since dawn. The soil needs rest before the next planting." The insight should lead with care for their wellbeing, not productivity guilt.
 
-Today's Stats:
+CRITICAL: Never sound disappointed in them. Never use shame as motivation. Zensei believes in the user unconditionally — the data is just weather, not their worth.
+
+TODAY'S STATS:
 - Focus sessions completed: ${pomodoros}
 - Total focus time: ${totalFocusMinutes} minutes
 - Tasks completed: ${tasksCompleted}
 - Breaks taken: ${breaksTaken}
-- Peak productivity hours: ${peakHours || 'Not enough data'}
-- Hours since last break: ${hoursSinceBreak !== null ? Math.floor(hoursSinceBreak) + ' hours' : 'N/A'}${restWarning}
+- Current streak: ${streak} days
+- Peak productivity hours: ${peakHours ? `${peakHours.start}:00-${peakHours.end}:00` : 'Not enough data'}
+- Hours since last break: ${hoursSinceBreak !== null ? Math.floor(hoursSinceBreak) + ' hours' : 'N/A'}
+${needsBreak ? '- NOTE: No break taken in over ' + Math.floor(hoursSinceBreak) + ' hours. The user needs rest, not motivation.' : ''}
+${lowDay ? '- NOTE: Quiet day today. But they have history — treat this as natural rest, not absence.' : ''}
+${declining ? '- NOTE: Performance has dipped vs last week. Respond with wisdom, not alarm.' : ''}
+${improving ? '- NOTE: Upward trend this week. Acknowledge the growth.' : ''}
 
-${needsBreak ? 'IMPORTANT: The user badly needs a break. Make your first sentence a kind but firm order to rest before continuing. The insight should lead with rest, not productivity.' : ''}
+WEEKLY HISTORY (last 7 days):
+${weeklyRows}
+
+WEEKLY TOTALS:
+- Total pomodoros: ${weeklyTotals.pomodoros}
+- Total tasks: ${weeklyTotals.tasks}
+- Total focus minutes: ${weeklyTotals.focusMinutes}
+
+TREND vs LAST WEEK:
+- Pomodoros: ${comparison.pomodorosChange >= 0 ? '+' : ''}${comparison.pomodorosChange}% ${comparison.pomodorosChange > 0 ? 'ahead' : comparison.pomodorosChange < 0 ? 'behind' : 'even'}
+- Tasks: ${comparison.tasksChange >= 0 ? '+' : ''}${comparison.tasksChange}%
+- Focus time: ${comparison.focusChange >= 0 ? '+' : ''}${comparison.focusChange}%
+
+CONSISTENCY:
+- Active days this week: ${Math.round(consistencyRate * 7)}/7 (${Math.round(consistencyRate * 100)}%)
+
+LIFETIME TOTALS:
+- Total tasks completed: ${lifetime.totalTasks}
+- Total pomodoros: ${lifetime.totalPomodoros}
+- Total focus time: ${Math.round(lifetime.totalFocusMinutes / 60)} hours
+- Total sessions: ${lifetime.totalSessions}
+
+${bestDay && bestDay.pomodoros > 0 ? `BEST DAY: ${bestDay.day} (${bestDay.pomodoros} pomodoros).` : ''}
+
+${needsBreak ? `-- PRIORITY: Rest before anything else. The user hasn't taken a break in ${Math.floor(hoursSinceBreak)} hours. The insight MUST open with a kind, firm call to rest — no productivity talk until that's addressed.` : ''}
 
 Response format (JSON):
 {
-  "insight": "2 sentences max. Calm, warm, master-to-student tone. Can use one strawberry metaphor. Keep the user relaxed — motivation should feel like a deep breath, not a sprint.",
-  "suggestion": "1 specific, actionable recommendation in Zensei's teaching voice."
+  "insight": "2 sentences max. Reference at least one specific stat from TODAY or WEEKLY HISTORY to prove you saw the data. Match the VOICE RULES above. One strawberry metaphor optional. End with a feeling of clarity, not pressure.",
+  "suggestion": "1 specific, actionable next step in Zensei's voice. If improving → reinforce the habit. If declining → suggest a tiny shift, not a overhaul. If no breaks → rest recommendation. If rest day → a gentle nudge for tomorrow, not guilt about today."
 }`
 }

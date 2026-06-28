@@ -154,7 +154,7 @@ export function BrainDumpCard({
       {/* Task List */}
       <DnDWrapper
         fallback={
-          <div className="flex h-96 flex-col overflow-y-auto">
+          <div className="flex flex-1 flex-col overflow-y-auto">
             <ScrollArea className="flex-1">
               <StaticTaskList
                 tasks={tasks}
@@ -171,7 +171,7 @@ export function BrainDumpCard({
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className="flex flex-col overflow-y-auto h-96"
+              className="flex flex-1 flex-col overflow-y-auto"
             >
               <ScrollArea className="flex-1">
                 {tasks.length === 0 ? (

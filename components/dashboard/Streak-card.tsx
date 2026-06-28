@@ -20,7 +20,7 @@ export function StreakCard() {
   const pomodorosToday = summary?.today?.pomodorosCompleted ?? 0
 
   return (
-    <div className="flex flex-col gap-2 rounded-3xl bg-strawberry-light/30 p-4 border border-matcha-dark/20">
+    <div className="flex flex-col gap-2 rounded-3xl bg-strawberry-light/30 p-6 border border-matcha-dark/20">
       <div className="flex items-center gap-4">
         <div className="flex size-10 items-center justify-center">
           <svg width="32" height="32" viewBox="0 0 40 40" fill="none">

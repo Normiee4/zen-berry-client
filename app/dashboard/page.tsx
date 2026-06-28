@@ -13,6 +13,7 @@ import { useMITApi, useTasksApi } from "@/hooks/useTasksApi"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { ConfirmDragDialog } from "@/components/dashboard/ConfirmDragDialog"
 import { DailyZenTip } from "@/components/dashboard/Daily-zen-tip"
+import { TodayRecap } from "@/components/dashboard/Today-recap"
 import { OnboardingOverlay } from "@/components/onboarding/onboarding-overlay"
 import { toast } from "sonner"
 
@@ -100,11 +101,13 @@ export default function DashboardPage() {
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="mx-auto max-w-8xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 gap-6 items-start lg:grid-cols-3">
-            <div className="flex flex-col gap-6">
-              <ErrorBoundary name="Timer" fallback={<p className="text-sm text-muted-foreground p-4">Timer unavailable</p>}>
-                <TimerCard />
-              </ErrorBoundary>
+          <div className="grid grid-cols-1 gap-6 items-stretch lg:grid-cols-3">
+            <div className="flex h-full flex-col gap-6">
+              <div className="flex-1">
+                <ErrorBoundary name="Timer" fallback={<p className="text-sm text-muted-foreground p-4">Timer unavailable</p>}>
+                  <TimerCard />
+                </ErrorBoundary>
+              </div>
               <ErrorBoundary name="Streak" fallback={<p className="text-sm text-muted-foreground p-4">Streak unavailable</p>}>
                 <StreakCard />
               </ErrorBoundary>
@@ -113,32 +116,43 @@ export default function DashboardPage() {
               </ErrorBoundary>
             </div>
 
-            <div className="flex flex-col gap-6">
-              <MITCard
-                mits={mits}
-                droppableId="mit-list"
-                onAdd={addMIT}
-                onUpdateTitle={updateTitle}
-                onMarkDone={markAsDone}
-                remainingSlots={remainingSlots}
-              />
-              <BrainDumpCard
-                tasks={brainDumpTasks}
-                droppableId="braindump-list"
-                onAdd={(task) => addTask({ ...task, type: "braindump", completed: false })}
-                onToggleComplete={(id) => {
-                  const task = tasks.find((t) => t.id === id)
-                  if (task) updateTask(id, { completed: !task.completed })
-                }}
-                onDelete={deleteTask}
-              />
+            <div className="flex h-full flex-col gap-6">
+              <div className="flex-1">
+                <MITCard
+                  mits={mits}
+                  droppableId="mit-list"
+                  onAdd={addMIT}
+                  onUpdateTitle={updateTitle}
+                  onMarkDone={markAsDone}
+                  remainingSlots={remainingSlots}
+                />
+              </div>
+              <div className="flex-1">
+                <BrainDumpCard
+                  tasks={brainDumpTasks}
+                  droppableId="braindump-list"
+                  onAdd={(task) => addTask({ ...task, type: "braindump", completed: false })}
+                  onToggleComplete={(id) => {
+                    const task = tasks.find((t) => t.id === id)
+                    if (task) updateTask(id, { completed: !task.completed })
+                  }}
+                  onDelete={deleteTask}
+                />
+              </div>
             </div>
 
-            <div className="flex flex-col gap-6">
-              <ErrorBoundary name="AI Insights" fallback={<p className="text-sm text-muted-foreground p-4">Insights unavailable</p>}>
-                <AIInsightsCard />
-              </ErrorBoundary>
-              <DailyZenTip />
+            <div className="flex h-full flex-col gap-6">
+              <div className="flex-[2]">
+                <ErrorBoundary name="AI Insights" fallback={<p className="text-sm text-muted-foreground p-4">Insights unavailable</p>}>
+                  <AIInsightsCard />
+                </ErrorBoundary>
+              </div>
+              <div className="flex-1">
+                <DailyZenTip />
+              </div>
+              <div className="flex-1">
+                <TodayRecap />
+              </div>
             </div>
           </div>
         </div>

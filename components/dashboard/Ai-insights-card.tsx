@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { Sparkles, Loader2, Clock, TrendingUp, Target, Zap } from "lucide-react"
+import { Sparkles, Loader2, Clock, TrendingUp, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface AIReviewResponse {
@@ -83,12 +83,6 @@ function formatPeakHours(peak: { start: number; end: number }): string {
     return `${hour12}${suffix}`
   }
   return `${formatHour(peak.start)}-${formatHour(peak.end)}`
-}
-
-function formatProductivity(value: number): string {
-  if (value >= 0.8) return "High"
-  if (value >= 0.5) return "Moderate"
-  return "Needs Focus"
 }
 
 function formatConsistency(value: number): string {
@@ -181,8 +175,8 @@ export function AIInsightsCard() {
         <span className="text-base">🍓</span>
       </div>
 
-      <div className="flex flex-1 flex-col rounded-2xl bg-white/70 p-6">
-        <div className="mb-4 flex items-start gap-4">
+      <div className="flex flex-col rounded-2xl bg-white/70 p-6">
+        <div className="flex items-start gap-4">
           <div className={`relative size-14 shrink-0 ${logoAnimation}`}>
             <img
               src="/Zen-berry Logo.png"
@@ -221,38 +215,6 @@ export function AIInsightsCard() {
           </div>
         )}
 
-        {insightStats && (
-          <div className="mb-3 grid grid-cols-3 gap-2">
-            {insightStats.productivityLevel != null && (
-              <div className="rounded-lg bg-matcha-light/20 px-2 py-1.5 text-center">
-                <Target className="mx-auto mb-0.5 size-3.5 text-matcha" />
-                <p className="text-xs font-semibold text-matcha">
-                  {formatProductivity(insightStats.productivityLevel)}
-                </p>
-                <p className="text-[10px] text-muted-foreground">productivity</p>
-              </div>
-            )}
-            {insightStats.consistencyRate != null && (
-              <div className="rounded-lg bg-matcha-light/20 px-2 py-1.5 text-center">
-                <Zap className="mx-auto mb-0.5 size-3.5 text-matcha" />
-                <p className="text-xs font-semibold text-matcha">
-                  {formatConsistency(insightStats.consistencyRate)}
-                </p>
-                <p className="text-[10px] text-muted-foreground">consistency</p>
-              </div>
-            )}
-            {insightStats.cyclesTotal > 0 && (
-              <div className="rounded-lg bg-matcha-light/20 px-2 py-1.5 text-center">
-                <span className="mx-auto mb-0.5 block text-center text-xs">🍅</span>
-                <p className="text-xs font-semibold text-matcha">
-                  {insightStats.cyclesTotal}
-                </p>
-                <p className="text-[10px] text-muted-foreground">total</p>
-              </div>
-            )}
-          </div>
-        )}
-
         <div className="mt-auto flex flex-wrap gap-3 border-t border-border/30 pt-3">
           {summary?.peakHours && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -260,10 +222,12 @@ export function AIInsightsCard() {
               <span>Peak: {formatPeakHours(summary.peakHours)}</span>
             </div>
           )}
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span>🍅</span>
-            <span>{summary?.today?.pomodorosCompleted || 0} sessions</span>
-          </div>
+          {insightStats?.consistencyRate != null && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Zap className="size-3.5 text-matcha" />
+              <span>{formatConsistency(insightStats.consistencyRate)} ({Math.round(insightStats.consistencyRate * 100)}%)</span>
+            </div>
+          )}
           {summary?.today?.streak ? (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <span>🔥</span>

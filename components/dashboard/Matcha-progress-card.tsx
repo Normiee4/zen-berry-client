@@ -76,7 +76,7 @@ export function MatchaProgressCard() {
   }
 
   return (
-    <div className="flex h-full items-center justify-center rounded-3xl bg-strawberry-light/30 p-4 border border-matcha-dark/20">
+    <div className="flex h-full items-center justify-center rounded-3xl bg-strawberry-light/30 p-6 border border-matcha-dark/20">
       <div className="w-full">
         <AnimatedMatchaCup
           fillPercentage={fillPercentage}

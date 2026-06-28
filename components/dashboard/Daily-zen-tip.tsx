@@ -30,30 +30,32 @@ export function DailyZenTip() {
   }, [])
 
   return (
-    <div className="rounded-3xl border border-matcha-dark/20 bg-white/60 p-5 backdrop-blur-sm">
-      <div className="flex items-start gap-4">
-        <div className="relative size-16 shrink-0">
-          <img
-            src="/matcha_illustration.png"
-            alt=""
-            className="size-full object-contain opacity-80"
-          />
-        </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-matcha">Zensei&apos;s Daily Sip</span>
-            <span className="text-base">🍵</span>
+    <div className="flex h-full flex-col rounded-3xl border border-matcha-dark/20 bg-white/60 p-6 backdrop-blur-sm">
+      <div className="flex flex-1 items-center justify-center">
+        <div className="flex items-start gap-4">
+          <div className="relative size-16 shrink-0">
+            <img
+              src="/matcha_illustration.png"
+              alt=""
+              className="size-full object-contain opacity-80"
+            />
           </div>
-          <p className="mt-1 text-sm leading-relaxed text-foreground/80 italic">
-            &ldquo;{todayTip}&rdquo;
-          </p>
-        </div>
-        <div className="relative mt-1 size-10 shrink-0 self-start">
-          <img
-            src="/strawberry_illustration.png"
-            alt=""
-            className="size-full object-contain opacity-60"
-          />
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-matcha">Zensei&apos;s Daily Sip</span>
+              <span className="text-base">🍵</span>
+            </div>
+            <p className="mt-1 text-sm leading-relaxed text-foreground/80 italic">
+              &ldquo;{todayTip}&rdquo;
+            </p>
+          </div>
+          <div className="relative mt-1 size-10 shrink-0 self-start">
+            <img
+              src="/strawberry_illustration.png"
+              alt=""
+              className="size-full object-contain opacity-60"
+            />
+          </div>
         </div>
       </div>
     </div>
