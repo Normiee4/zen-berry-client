@@ -1,13 +1,6 @@
 import { NextResponse } from 'next/server'
 import * as timerService from '@/app/api/timer-service/service'
-import { resolveUser } from '@/lib/auth-helpers'
-
-function copyAuthCookies(source: NextResponse | null, target: NextResponse) {
-  if (!source) return
-  for (const cookie of source.cookies.getAll()) {
-    target.cookies.set(cookie)
-  }
-}
+import { resolveUser, copyAuthCookies } from '@/lib/auth-helpers'
 
 export async function getTimerData(request: Request) {
   try {

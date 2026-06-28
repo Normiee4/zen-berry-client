@@ -9,6 +9,13 @@ export function getUserIdFromRequest(request: Request): string | null {
 export const createSupabaseClient = (request: Request, response?: NextResponse) =>
   createRouteHandlerClient(request, response)
 
+export function copyAuthCookies(source: NextResponse | null, target: NextResponse) {
+  if (!source) return
+  for (const cookie of source.cookies.getAll()) {
+    target.cookies.set(cookie)
+  }
+}
+
 export async function resolveUser(request: Request, response?: NextResponse): Promise<{ userId: string | null; supabase: SupabaseClient }> {
   const headerId = getUserIdFromRequest(request)
   if (headerId) {

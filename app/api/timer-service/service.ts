@@ -1,5 +1,5 @@
 // app/api/timer-service/service.ts
-import { createRouteHandlerClient } from "@/lib/supabase-server"
+import { getToday, daysBetween } from '@/lib/date-utils'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // ---------- Types ----------
@@ -21,13 +21,6 @@ interface FormattedPreset {
 }
 
 // ---------- Helpers ----------
-export const getToday = (): string => new Date().toISOString().slice(0, 10)
-export const getYesterday = (): string =>
-  new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
-
-export const daysBetween = (date1: string, date2: string): number =>
-  Math.round((new Date(date2).getTime() - new Date(date1).getTime()) / (24 * 60 * 60 * 1000))
-
 export const formatPreset = (row: TimerPresetRow): FormattedPreset => ({
   id: String(row.preset_id),
   name: row.preset_name,
@@ -35,10 +28,6 @@ export const formatPreset = (row: TimerPresetRow): FormattedPreset => ({
   breakMinutes: row.break_duration,
   isDefault: Boolean(row.is_default ?? false),
 })
-
-// ---------- Cookie & Client ----------
-export const createSupabaseClient = (request: Request) =>
-  createRouteHandlerClient(request)
 
 // ---------- Data Operations ----------
 // supabaseClient is used here as param as supabase

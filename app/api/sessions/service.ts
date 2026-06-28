@@ -1,4 +1,4 @@
-import { createRouteHandlerClient } from "@/lib/supabase-server"
+import { getToday, getCurrentHour, daysBetween } from '@/lib/date-utils'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // ---------- Types ----------
@@ -12,21 +12,6 @@ export interface SessionLogRow {
   preset_used: string | null
   created_at: string
 }
-
-// ---------- Helpers ----------
-export const getToday = (): string => new Date().toISOString().slice(0, 10)
-
-export const getYesterday = (): string =>
-  new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
-
-export const getCurrentHour = (): number => new Date().getHours()
-
-export const daysBetween = (date1: string, date2: string): number =>
-  Math.round((new Date(date2).getTime() - new Date(date1).getTime()) / (24 * 60 * 60 * 1000))
-
-// ---------- Cookie Helper ----------
-export const createSupabaseClient = (request: Request) =>
-  createRouteHandlerClient(request)
 
 // ---------- Session Operations ----------
 export const insertSessionLog = async (

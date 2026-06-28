@@ -1,6 +1,4 @@
-import { createRouteHandlerClient } from "@/lib/supabase-server"
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { type NextResponse } from 'next/server'
 
 // ---------- Types ----------
 export interface TaskRow {
@@ -30,15 +28,6 @@ export const formatTask = (row: TaskRow): FormattedTask => ({
   createdAt: row.created_at,
   completedAt: row.complete_at,
 })
-
-// ---------- Cookie Helper ----------
-export const createSupabaseClient = (request: Request, response?: NextResponse) =>
-  createRouteHandlerClient(request, response)
-
-// ---------- Auth ----------
-export const getAuthenticatedUser = async (supabase: SupabaseClient) => {
-  return supabase.auth.getUser()
-}
 
 // ---------- Task Operations ----------
 export const fetchTasks = async (

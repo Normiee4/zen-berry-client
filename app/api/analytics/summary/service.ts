@@ -1,12 +1,5 @@
-import { createRouteHandlerClient } from "@/lib/supabase-server"
+import { getToday } from '@/lib/date-utils'
 import type { SupabaseClient } from '@supabase/supabase-js'
-
-// ---------- Cookie Helper ----------
-export const createSupabaseClient = (request: Request) =>
-  createRouteHandlerClient(request)
-
-// ---------- Helpers ----------
-export const getToday = (): string => new Date().toISOString().slice(0, 10)
 
 // ---------- Analytics Operations ----------
 export const fetchTodayStats = async (supabase: SupabaseClient, userId: string) => {

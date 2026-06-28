@@ -1,11 +1,6 @@
+import { getToday, getDaysAgo } from '@/lib/date-utils'
+export { getToday, getDaysAgo }
 import type { SupabaseClient } from "@supabase/supabase-js"
-
-// ---------- Helpers ----------
-export const getToday = (): string => new Date().toISOString().slice(0, 10)
-
-export const getDaysAgo = (days: number): string => {
-  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
-}
 
 
 

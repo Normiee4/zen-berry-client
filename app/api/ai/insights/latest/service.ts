@@ -1,8 +1,4 @@
-import { createRouteHandlerClient } from "@/lib/supabase-server"
 import type { SupabaseClient } from '@supabase/supabase-js'
-
-export const createSupabaseClient = (request: Request) =>
-  createRouteHandlerClient(request)
 
 export interface LatestInsightResponse {
   insight_id: number

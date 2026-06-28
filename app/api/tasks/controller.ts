@@ -1,28 +1,8 @@
 import { NextResponse } from 'next/server'
 import * as taskService from '@/app/api/tasks/service'
-
-import type { SupabaseClient } from '@supabase/supabase-js'
+import { resolveUser, copyAuthCookies } from '@/lib/auth-helpers'
 
 const MIT_LIMIT = 3
-
-async function resolveUser(request: Request, response?: NextResponse): Promise<{ userId: string | null; supabase: SupabaseClient }> {
-  const headerId = request.headers.get('X-User-Id')
-  if (headerId) {
-    return { userId: headerId, supabase: taskService.createSupabaseClient(request, response) }
-  }
-  const supabase = taskService.createSupabaseClient(request, response)
-  const { data, error } = await supabase.auth.getUser()
-  const user = data?.user ?? null
-  if (error || !user) return { userId: null, supabase }
-  return { userId: user.id, supabase }
-}
-
-function copyAuthCookies(source: NextResponse | null, target: NextResponse) {
-  if (!source) return
-  for (const cookie of source.cookies.getAll()) {
-    target.cookies.set(cookie)
-  }
-}
 
 export async function getTasks(request: Request) {
   try {

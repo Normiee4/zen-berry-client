@@ -68,3 +68,9 @@ Auth-service routes (`/api/auth-service/*`) handle their own auth.
 Full dev cycle via `opencode.json` agents: planner → builder → reviewer → tester → reviewer.
 Two-stage review: code audit after Builder, test audit after Tester. Max 3 loops per stage.
 Feature specs in `docs/features/<name>/SPEC.md`. See `.opencode/context/SHIPPING.md`.
+
+## Contribution Summaries
+After completing any changes, output a structured summary with:
+- **Files changed**: list with paths
+- **What changed**: 1-line per file
+- **Why**: rationale for the change
