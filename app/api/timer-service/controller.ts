@@ -135,7 +135,6 @@ export async function handleTimerAction(request: Request) {
     }
 
     if (action === 'recordBreak') {
-      const { durationMinutes, presetUsed } = await request.json()
       const { error } = await timerService.recordBreak(supabase, userId, durationMinutes ?? 5, presetUsed)
 
       if (error) {

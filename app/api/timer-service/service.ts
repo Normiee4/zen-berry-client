@@ -43,7 +43,7 @@ export const fetchPresets = async (supabase: SupabaseClient, userId: string) => 
 export const fetchTodayStats = async (supabase: SupabaseClient, userId: string) => {
   return supabase
     .from('daily_stats')
-    .select('streak_maintained, daily_pomodoro, daily_task_completed, date')
+    .select('streak_maintained, daily_pomodoro, daily_task_completed, break_count, break_duration, date')
     .eq('user_id', userId)
     .eq('date', getToday())
     .maybeSingle()
@@ -224,7 +224,9 @@ export const recordBreak = async (
   presetUsed?: string
 ) => {
   const now = new Date().toISOString()
-  return supabase.from('session_logs').insert([{
+  const today = getToday()
+
+  const { error: sessionError } = await supabase.from('session_logs').insert([{
     user_id: userId,
     started_at: now,
     completed_at: now,
@@ -232,6 +234,26 @@ export const recordBreak = async (
     was_break: true,
     preset_used: presetUsed ?? null,
   }])
+
+  if (sessionError) return { error: sessionError }
+
+  const { data: existing } = await supabase
+    .from('daily_stats')
+    .select('break_count, break_duration')
+    .eq('user_id', userId)
+    .eq('date', today)
+    .maybeSingle()
+
+  const { error: statsError } = await supabase
+    .from('daily_stats')
+    .upsert({
+      user_id: userId,
+      date: today,
+      break_count: (existing?.break_count ?? 0) + 1,
+      break_duration: (existing?.break_duration ?? 0) + durationMinutes,
+    }, { onConflict: 'user_id,date' })
+
+  return { error: statsError }
 }
 
 const updateHourlyActivity = async (

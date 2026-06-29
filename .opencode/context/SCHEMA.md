@@ -46,6 +46,8 @@
 | `daily_pomodoro` | `numeric` | Nullable |
 | `daily_task_completed` | `numeric` | Nullable |
 | `streak_maintained` | `int4` | Nullable |
+| `break_count` | `int4` | Nullable |
+| `break_duration` | `int4` | Nullable |
 | `created_at` | `timestamptz` |  |
 | `ai_review_count` | `int4` | Nullable |
 

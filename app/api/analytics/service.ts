@@ -8,6 +8,8 @@ export interface DailyStatRow {
   daily_pomodoro: number
   daily_task_completed: number
   streak_maintained: number
+  break_count?: number
+  break_duration?: number
 }
 
 export interface SessionRow {
@@ -25,7 +27,7 @@ export interface PeakHourRow {
 export const fetchTodayStats = async (supabase: SupabaseClient, userId: string) => {
   return supabase
     .from('daily_stats')
-    .select('daily_pomodoro, daily_task_completed, streak_maintained, date')
+    .select('daily_pomodoro, daily_task_completed, streak_maintained, break_count, break_duration, date')
     .eq('user_id', userId)
     .eq('date', getToday())
     .maybeSingle()
@@ -57,25 +59,24 @@ export const fetchTodayFocusMinutes = async (supabase: SupabaseClient, userId: s
 
 export const fetchTodayBreaks = async (supabase: SupabaseClient, userId: string) => {
   const today = getToday()
-  const { count } = await supabase
-    .from('session_logs')
-    .select('*', { count: 'exact', head: true })
+  const { data } = await supabase
+    .from('daily_stats')
+    .select('break_count')
     .eq('user_id', userId)
-    .eq('was_break', true)
-    .gte('completed_at', today)
-  return count ?? 0
+    .eq('date', today)
+    .maybeSingle()
+  return data?.break_count ?? 0
 }
 
 export const fetchTodayBreakMinutes = async (supabase: SupabaseClient, userId: string) => {
   const today = getToday()
   const { data } = await supabase
-    .from('session_logs')
-    .select('duration_minutes')
+    .from('daily_stats')
+    .select('break_duration')
     .eq('user_id', userId)
-    .eq('was_break', true)
-    .gte('completed_at', today)
-  if (!data) return 0
-  return data.reduce((sum, row) => sum + row.duration_minutes, 0)
+    .eq('date', today)
+    .maybeSingle()
+  return data?.break_duration ?? 0
 }
 
 export const fetchTodayMITsCompleted = async (supabase: SupabaseClient, userId: string) => {
