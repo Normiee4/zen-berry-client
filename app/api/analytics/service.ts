@@ -66,6 +66,18 @@ export const fetchTodayBreaks = async (supabase: SupabaseClient, userId: string)
   return count ?? 0
 }
 
+export const fetchTodayBreakMinutes = async (supabase: SupabaseClient, userId: string) => {
+  const today = getToday()
+  const { data } = await supabase
+    .from('session_logs')
+    .select('duration_minutes')
+    .eq('user_id', userId)
+    .eq('was_break', true)
+    .gte('completed_at', today)
+  if (!data) return 0
+  return data.reduce((sum, row) => sum + row.duration_minutes, 0)
+}
+
 export const fetchTodayMITsCompleted = async (supabase: SupabaseClient, userId: string) => {
   const today = getToday()
   const { count } = await supabase

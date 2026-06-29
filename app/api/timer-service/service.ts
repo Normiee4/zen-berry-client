@@ -210,5 +210,57 @@ export const recordPomodoro = async (
     if (sessionError) return { error: sessionError }
   }
 
+  const { error: activityError } = await updateHourlyActivity(supabase, userId, today, 1, 0)
+
+  if (activityError) return { error: activityError }
+
   return { data }
+}
+
+export const recordBreak = async (
+  supabase: SupabaseClient,
+  userId: string,
+  durationMinutes: number,
+  presetUsed?: string
+) => {
+  const now = new Date().toISOString()
+  return supabase.from('session_logs').insert([{
+    user_id: userId,
+    started_at: now,
+    completed_at: now,
+    duration_minutes: durationMinutes,
+    was_break: true,
+    preset_used: presetUsed ?? null,
+  }])
+}
+
+const updateHourlyActivity = async (
+  supabase: SupabaseClient,
+  userId: string,
+  date: string,
+  pomodorosCompleted: number,
+  tasksCompleted: number
+) => {
+  const hourSlot = new Date().getHours()
+  const { data: existing } = await supabase
+    .from('daily_activity_log')
+    .select('pomodoros_completed, tasks_completed')
+    .eq('user_id', userId)
+    .eq('date', date)
+    .eq('hour_slot', hourSlot)
+    .maybeSingle()
+
+  return supabase.from('daily_activity_log').upsert(
+    {
+      user_id: userId,
+      date,
+      hour_slot: hourSlot,
+      pomodoros_completed: (existing?.pomodoros_completed ?? 0) + pomodorosCompleted,
+      tasks_completed: (existing?.tasks_completed ?? 0) + tasksCompleted,
+    },
+    {
+      onConflict: 'user_id,date,hour_slot',
+      ignoreDuplicates: false,
+    }
+  )
 }

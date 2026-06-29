@@ -209,6 +209,7 @@ export const generatePrompt = (data: {
   totalFocusMinutes: number
   tasksCompleted: number
   breaksTaken: number
+  totalBreakMinutes: number
   streak: number
   peakHours: { start: number; end: number; avgPomodoros: number } | null
   hoursSinceBreak: number | null
@@ -224,7 +225,7 @@ export const generatePrompt = (data: {
   }
 }): string => {
   const {
-    pomodoros, totalFocusMinutes, tasksCompleted, breaksTaken, streak,
+    pomodoros, totalFocusMinutes, tasksCompleted, breaksTaken, totalBreakMinutes, streak,
     peakHours, hoursSinceBreak, weeklyHistory, weeklyTotals,
     comparison, consistencyRate, lifetime,
   } = data
@@ -256,6 +257,7 @@ TODAY'S STATS:
 - Total focus time: ${totalFocusMinutes} minutes
 - Tasks completed: ${tasksCompleted}
 - Breaks taken: ${breaksTaken}
+- Total break time: ${totalBreakMinutes} minutes
 - Current streak: ${streak} days
 - Peak productivity hours: ${peakHours ? `${peakHours.start}:00-${peakHours.end}:00` : 'Not enough data'}
 - Hours since last break: ${hoursSinceBreak !== null ? Math.floor(hoursSinceBreak) + ' hours' : 'N/A'}

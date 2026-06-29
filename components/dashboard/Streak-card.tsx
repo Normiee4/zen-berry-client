@@ -10,7 +10,7 @@ const fetchSummary = async () => {
 
 export function StreakCard() {
   const { data: summary } = useQuery({
-    queryKey: ["analytics-summary-streak"],
+    queryKey: ["analytics-summary"],
     queryFn: fetchSummary,
     staleTime: 30 * 1000,
     refetchOnWindowFocus: true,

@@ -134,6 +134,21 @@ export async function handleTimerAction(request: Request) {
       return res
     }
 
+    if (action === 'recordBreak') {
+      const { durationMinutes, presetUsed } = await request.json()
+      const { error } = await timerService.recordBreak(supabase, userId, durationMinutes ?? 5, presetUsed)
+
+      if (error) {
+        const res = NextResponse.json({ error: error.message }, { status: 400 })
+        copyAuthCookies(cookieHolder, res)
+        return res
+      }
+
+      const res = NextResponse.json({ success: true }, { status: 200 })
+      copyAuthCookies(cookieHolder, res)
+      return res
+    }
+
     if (action === 'updatePreset') {
       if (!presetId) {
         const res = NextResponse.json({ error: 'presetId is required' }, { status: 400 })

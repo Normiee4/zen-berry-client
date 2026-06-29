@@ -18,7 +18,7 @@ function formatMinutes(minutes: number): string {
 
 export function TodayRecap() {
   const { data: summary } = useQuery({
-    queryKey: ["analytics-summary-streak"],
+    queryKey: ["analytics-summary"],
     queryFn: fetchSummary,
     staleTime: 30 * 1000,
     refetchOnWindowFocus: true,
@@ -53,6 +53,7 @@ export function TodayRecap() {
 
   return (
     <div className="flex h-full flex-col rounded-3xl border border-matcha-dark/20 bg-strawberry-light/30 p-6">
+      <h3 className="mb-4 text-base font-semibold text-foreground">Today&apos;s Recap</h3>
       <div className="flex flex-1 items-center justify-center">
         <div className="grid w-full grid-cols-2 gap-4">
           {items.map((item) => (

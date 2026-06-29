@@ -18,6 +18,9 @@ export function useTimer() {
     loadStats,
     completedFocusCycle,
     clearCompletedFocusCycle,
+    completedBreakCycle,
+    clearCompletedBreakCycle,
+    showBreakReminder,
     restoreSession,
     currentStreak,
     pomodorosToday,
@@ -35,6 +38,8 @@ export function useTimer() {
     currentStreak,
     pomodorosToday,
     completedFocusCycle,
+    completedBreakCycle,
+    showBreakReminder,
     // Computed (optional, but keeps component simple)
     activePreset: presets.find((p) => p.id === activePresetId) || presets[0],
     // Actions
@@ -49,6 +54,7 @@ export function useTimer() {
     loadStats,
     restoreSession,
     clearCompletedFocusCycle,
+    clearCompletedBreakCycle,
     alarmSound,
     setAlarmSound,
   }

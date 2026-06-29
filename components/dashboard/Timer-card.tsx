@@ -47,6 +47,9 @@ export function TimerCard() {
     restoreSession,
     completedFocusCycle,
     clearCompletedFocusCycle,
+    completedBreakCycle,
+    clearCompletedBreakCycle,
+    showBreakReminder,
     alarmSound,
     setAlarmSound,
   } = useTimer();
@@ -108,6 +111,37 @@ export function TimerCard() {
   }, [completedFocusCycle, clearCompletedFocusCycle, queryClient]);
 
   useEffect(() => {
+    if (!completedBreakCycle) return;
+
+    const recordBreak = async () => {
+      try {
+        const state = useTimerStore.getState()
+        const res = await fetch('/api/timer-service', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'recordBreak',
+            durationMinutes: state.currentPreset?.breakMinutes ?? 5,
+            presetUsed: state.currentPreset?.name,
+          }),
+        })
+        if (res.ok) {
+          queryClient.invalidateQueries({ queryKey: ['analytics-summary'] })
+          queryClient.invalidateQueries({ queryKey: ['ai-insights-latest'] })
+        } else {
+          console.error('Failed to record break:', await res.text())
+        }
+      } catch (e) {
+        console.error('Failed to record break:', e)
+      } finally {
+        clearCompletedBreakCycle()
+      }
+    }
+
+    recordBreak()
+  }, [completedBreakCycle, clearCompletedBreakCycle, queryClient]);
+
+  useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === 'visible' && useTimerStore.getState().completedFocusCycle) {
         toast.success('Focus session completed while you were away! 🎉')
@@ -118,6 +152,7 @@ export function TimerCard() {
   }, [])
 
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [skipBreakOpen, setSkipBreakOpen] = useState(false);
   const [newPresetName, setNewPresetName] = useState("");
   const [newFocusMinutes, setNewFocusMinutes] = useState(25);
   const [newBreakMinutes, setNewBreakMinutes] = useState(5);
@@ -243,7 +278,13 @@ export function TimerCard() {
       {/* Mode Toggle */}
       <div className="mx-auto mb-6 flex gap-2">
         <button
-          onClick={() => setMode("focus")}
+          onClick={() => {
+            if (showBreakReminder) {
+              setSkipBreakOpen(true)
+            } else {
+              setMode("focus")
+            }
+          }}
           className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium cursor-pointer transition-colors ${
             mode === "focus"
               ? "bg-matcha text-white"
@@ -522,6 +563,41 @@ export function TimerCard() {
                   </div>
                 </DialogContent>
               </Dialog>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Skip Break Confirmation */}
+        <Dialog open={skipBreakOpen} onOpenChange={setSkipBreakOpen}>
+          <DialogContent className="max-w-sm bg-white p-0">
+            <DialogHeader className="border-b border-border p-6 pb-4">
+              <DialogTitle className="text-lg font-semibold">Skip your break?</DialogTitle>
+            </DialogHeader>
+            <div className="p-6 pt-4">
+              <p className="mb-6 text-sm text-muted-foreground">
+                A well-rested mind performs better. Are you sure you want to skip your break and start another focus session?
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setSkipBreakOpen(false)}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Take a break
+                </Button>
+                <Button
+                  onClick={() => {
+                    setSkipBreakOpen(false)
+                    const state = useTimerStore.getState()
+                    state.clearCompletedFocusCycle()
+                    useTimerStore.setState({ showBreakReminder: false })
+                    setMode("focus")
+                  }}
+                  className="flex-1 bg-strawberry text-foreground hover:bg-strawberry/80"
+                >
+                  Skip break
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>

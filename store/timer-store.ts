@@ -137,6 +137,8 @@ type TimerState = {
   pomodorosToday: number;
   lastPomodoroDate: string | null;
   completedFocusCycle: boolean;
+  completedBreakCycle: boolean;
+  showBreakReminder: boolean;
   alarmSound: AlarmSound;
   timerJustCompleted: boolean;
 
@@ -158,6 +160,7 @@ type TimerState = {
     lastPomodoroDate: string | null;
   }) => void;
   clearCompletedFocusCycle: () => void;
+  clearCompletedBreakCycle: () => void;
   setAlarmSound: (sound: AlarmSound) => void;
   restoreSession: () => void;
 };
@@ -196,6 +199,8 @@ export const useTimerStore = create<TimerState>()(
     pomodorosToday: 0,
     lastPomodoroDate: null,
     completedFocusCycle: false,
+    completedBreakCycle: false,
+    showBreakReminder: false,
     alarmSound: loadAlarmSound(),
     timerJustCompleted: false,
 
@@ -293,6 +298,8 @@ export const useTimerStore = create<TimerState>()(
         breakWasStarted: false,
         isRunning: false,
         completedFocusCycle: false,
+        completedBreakCycle: false,
+        showBreakReminder: false,
         startTimestamp: null,
         initialDuration: totalSeconds,
         timerJustCompleted: false,
@@ -320,7 +327,7 @@ export const useTimerStore = create<TimerState>()(
           : 0;
         const newTotalSeconds = newMode === "focus" ? focusSeconds : breakSeconds;
 
-        if (wasFocusMode) {
+          if (wasFocusMode) {
           const today = getTodayDate();
           const yesterday = getYesterdayDate();
           let streak = state.currentStreak;
@@ -348,6 +355,8 @@ export const useTimerStore = create<TimerState>()(
             pomodorosToday: todayCount,
             lastPomodoroDate: today,
             completedFocusCycle: true,
+            completedBreakCycle: false,
+            showBreakReminder: true,
             startTimestamp: null,
             initialDuration: newTotalSeconds,
             timerJustCompleted: true,
@@ -363,6 +372,8 @@ export const useTimerStore = create<TimerState>()(
           breakWasStarted: false,
           isRunning: false,
           completedFocusCycle: false,
+          completedBreakCycle: true,
+          showBreakReminder: false,
           startTimestamp: null,
           initialDuration: newTotalSeconds,
           timerJustCompleted: true,
@@ -531,6 +542,7 @@ export const useTimerStore = create<TimerState>()(
     },
 
     clearCompletedFocusCycle: () => set({ completedFocusCycle: false, timerJustCompleted: false }),
+    clearCompletedBreakCycle: () => set({ completedBreakCycle: false }),
 
     setAlarmSound: (sound: AlarmSound) => {
       saveAlarmSound(sound);
