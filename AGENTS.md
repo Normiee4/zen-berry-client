@@ -71,7 +71,7 @@ Feature specs in `docs/features/<name>/SPEC.md`. See `.opencode/context/SHIPPING
 
 ## Contribution Summaries
 After completing any changes, output a structured summary with:
-- **Contribution Title**: fix for debug (fix:auth duplication of util) , feat for new feature, patch: for minor updates and fix.
+- **Contribution Title**: fix for debug (fix:auth duplication of util) , feat for new feature, patch: for minor updates and fix, hotfix for major debug/refactor.
 - **Files changed**: bulleted list with paths (not table), and it should be in `-   `. 
 - **What changed**: 1-line per file
 - **Why**: rationale for the change
