@@ -3,13 +3,13 @@
 ## Command
 `/ship <feature>: <description>`
 
-The feature name maps directly to `docs/features/<feature>/`. Use kebab-case for feature names.
+The feature name maps directly to `.opencode/context/<feature>/`. Use kebab-case for feature names.
 
 ## Agent Roles
 
 | Agent | Mode | Permissions | Responsibility |
 |-------|------|-------------|----------------|
-| Planner | subagent | edit: allow | Create/update `docs/features/<name>/SPEC.md` |
+| Planner | subagent | edit: allow | Create/update `.opencode/context/<name>/SPEC.md` |
 | Builder | subagent | edit: allow | Implement code from SPEC.md, follow RULES.md |
 | Tester | subagent | edit: allow | Create `docs/features/<name>/TEST-SPEC.md` + test files |
 | Reviewer | subagent | edit: **deny** | Read-only audit, produce review report |
@@ -21,7 +21,7 @@ The feature name maps directly to `docs/features/<feature>/`. Use kebab-case for
         │
         ▼
 ┌──────────┐
-│ Planner  │ → docs/features/auth/SPEC.md (new or updated)
+ │ Planner  │ → .opencode/context/auth/SPEC.md (new or updated)
 └────┬─────┘
      │ spec path
      ▼
@@ -88,6 +88,6 @@ After Builder finishes, Reviewer audits code against the SPEC.md. On FAIL, the o
 After Tester finishes, Reviewer audits tests against SPEC.md + acceptance criteria. On FAIL, the orchestrator loops back to Tester with the review report. Tester reworks, then Reviewer re-audits. Max 3 loops per stage before surfacing to the user.
 
 ## Spec Conventions
-- `docs/features/<name>/SPEC.md` — feature spec, created/updated by planner
-- `docs/features/<name>/TEST-SPEC.md` — test spec, created by tester
+- `.opencode/context/<name>/SPEC.md` — feature spec, created/updated by planner
+- `.opencode/context/<name>/TEST-SPEC.md` — test spec, created by tester
 - Feature names are kebab-case, e.g., `analytics-dashboard`, `user-profile`
