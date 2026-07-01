@@ -21,7 +21,7 @@ The feature name maps directly to `docs/features/<feature>/`. Use kebab-case for
         │
         ▼
 ┌──────────┐
-│ Planner  │ → docs/features/auth/SPEC.md (new or updated)
+ │ Planner  │ → docs/features/auth/SPEC.md (new or updated)
 └────┬─────┘
      │ spec path
      ▼

@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Sidebar } from "@/components/sidebar/sidebar"
 import { SidebarToggle } from "@/components/sidebar/sidebar-toggle"
+import { MessageSquareText, MessageSquareWarning } from "lucide-react"
+import { ReviewModal } from "@/components/feedback/review-modal"
 
 export default function DashboardLayout({
   children,
@@ -42,15 +45,35 @@ export default function DashboardLayout({
         <header className="sticky top-0 z-20 border-b border-border/30 bg-white/80 backdrop-blur-md">
           <div className="flex items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <SidebarToggle onClick={() => setSidebarOpen(true)} />
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-matcha text-sm font-bold text-cream">
-              ZB
-            </div>
+            <img
+              src="/Zen-berry Logo.png"
+              alt="Zen Berry"
+              className="h-9 w-9 object-contain"
+            />
             <h1 className="text-lg font-bold text-foreground">Zen Berry</h1>
+            <div className="ml-auto flex items-center gap-1">
+              <Link
+                href="/feedback?tab=review"
+                className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-strawberry-light/50 hover:text-matcha"
+              >
+                <MessageSquareText className="size-4" strokeWidth={1.5} />
+                Review
+              </Link>
+              <Link
+                href="/feedback?tab=report"
+                className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-strawberry-light/50 hover:text-matcha"
+              >
+                <MessageSquareWarning className="size-4" strokeWidth={1.5} />
+                Report
+              </Link>
+            </div>
           </div>
         </header>
 
         <main className="flex-1">{children}</main>
       </div>
+
+      <ReviewModal />
     </div>
   )
 }

@@ -124,6 +124,38 @@
 | `name` | `text` | Nullable |
 | `created_at` | `timestamptz` |  |
 
+### `reviews`
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary (default: `gen_random_uuid()`) |
+| `user_id` | `uuid` | NOT NULL, FK → `auth.users.id` ON DELETE CASCADE |
+| `username` | `text` | NOT NULL |
+| `rating` | `smallint` | NOT NULL, CHECK (1–5) |
+| `struggles_solved` | `text` | NOT NULL |
+| `routine_improvement` | `text` | NOT NULL |
+| `completed_more` | `text` | NOT NULL |
+| `part_of_routine` | `text` | NOT NULL |
+| `recommend_to_others` | `text` | NOT NULL |
+| `additional_feedback` | `text` | Nullable |
+| `created_at` | `timestamptz` | NOT NULL, default `now()` |
+
+> **RLS**: Public SELECT; INSERT/UPDATE/DELETE restricted to own `user_id`.
+
+### `reports`
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary (default: `gen_random_uuid()`) |
+| `user_id` | `uuid` | NOT NULL, FK → `auth.users.id` ON DELETE CASCADE |
+| `issue` | `text` | NOT NULL |
+| `explanation` | `text` | NOT NULL |
+| `suggestions` | `text` | NOT NULL |
+| `bug_detail` | `text` | Nullable |
+| `created_at` | `timestamptz` | NOT NULL, default `now()` |
+
+> **RLS**: SELECT/INSERT/UPDATE/DELETE restricted to own `user_id`. Owner bypasses via service-role client.
+
 ## API Routes
 
 ### Authentication
@@ -223,6 +255,14 @@ POST   /pins/reorder          Batch reorder pins (body: { items: [{ pin_id, posi
 POST   /waitlist/join
 GET    /waitlist/status/:email
 DELETE /waitlist/:registrationId (admin)
+```
+
+### Feedback
+
+```
+POST   /api/feedback/review       Submit a review (auth required)
+POST   /api/feedback/report        Submit a bug report or suggestion (auth required)
+GET    /api/feedback/reports       Fetch reports — all (owner) or own (user)
 ```
 
 ## Route Priority
