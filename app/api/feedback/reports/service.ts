@@ -8,6 +8,7 @@ export interface ReportRow {
   explanation: string
   suggestions: string
   bug_detail: string | null
+  status: 'pending' | 'received' | 'resolved'
   created_at: string
 }
 
@@ -18,6 +19,7 @@ export interface FormattedReport {
   explanation: string
   suggestions: string
   bugDetail: string | null
+  status: 'pending' | 'received' | 'resolved'
   createdAt: string
 }
 
@@ -30,6 +32,7 @@ export function formatReport(row: ReportRow): FormattedReport {
     explanation: row.explanation,
     suggestions: row.suggestions,
     bugDetail: row.bug_detail,
+    status: row.status,
     createdAt: row.created_at,
   }
 }
@@ -43,6 +46,18 @@ export const fetchAllReports = async (supabase: SupabaseClient) => {
 
   if (error) throw error
   return data as ReportRow[]
+}
+
+export const updateReportStatus = async (supabase: SupabaseClient, reportId: string, status: 'pending' | 'received' | 'resolved') => {
+  const { data, error } = await supabase
+    .from('reports')
+    .update({ status })
+    .eq('id', reportId)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as ReportRow
 }
 
 export const fetchUserReports = async (supabase: SupabaseClient, userId: string) => {

@@ -70,8 +70,13 @@ Two-stage review: code audit after Builder, test audit after Tester. Max 3 loops
 Feature specs in `docs/features/<name>/SPEC.md`. See `.opencode/context/SHIPPING.md`.
 
 ## Contribution Summaries
-After completing any changes, output a structured summary with:
-- **Contribution Title**: fix for debug (fix:auth duplication of util) , feat for new feature, patch: for minor updates and fix, hotfix for major debug/refactor.
-- **Files changed**: bulleted list with paths (not table), and it should be in `-   `. 
-- **What changed**: 1-line per file
-- **Why**: rationale for the change
+After completing any changes, output a structured summary using this template:
+
+**Contribution Title:** `type: short description` (types: `feat` for features, `fix` for debug, `patch` for minor updates, `hotfix` for major fixes)
+
+**Key changes:**
+
+-  `what` — 1 line per file or logical change group
+-  `why` — rationale for the change
+
+All bullet items use `-  ` prefix (two spaces after the dash). Group related file changes under a single `what` bullet when they serve the same purpose.

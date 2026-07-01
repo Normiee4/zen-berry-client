@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { MessageSquareText, Star } from 'lucide-react'
+import { Star } from 'lucide-react'
 
 export function FeedbackSection() {
   return (
@@ -34,40 +34,25 @@ export function FeedbackSection() {
       <div className="relative z-10 mx-auto max-w-4xl px-4 text-center sm:px-6">
         {/* Section Header */}
         <span className="mb-4 inline-block rounded-full bg-matcha px-4 py-1.5 text-sm font-medium text-white">
-          Feedback
+          Reviews
         </span>
         <h2 className="mb-4 text-balance text-3xl font-bold text-foreground sm:text-4xl">
           What Our Users Say
         </h2>
         <p className="mx-auto mb-10 max-w-2xl text-pretty text-lg text-muted-foreground">
-          Your thoughts help us grow. Read reviews from our community or share your own
-          experience with Zen Berry.
+          See how Zen Berry has helped others stay focused and productive.
         </p>
 
-        {/* CTA Buttons */}
-        <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <Button
-            asChild
-            size="lg"
-            className="bg-matcha px-8 text-white hover:bg-matcha/90"
-          >
-            <Link href="/reviews" className="inline-flex items-center gap-2">
-              <Star className="size-4" />
-              See all reviews
-            </Link>
-          </Button>
-          <Button
-            asChild
-            size="lg"
-            variant="outline"
-            className="border-matcha/30 bg-white/50 text-foreground hover:bg-strawberry-light hover:text-foreground"
-          >
-            <Link href="/feedback" className="inline-flex items-center gap-2">
-              <MessageSquareText className="size-4" />
-              Give feedback
-            </Link>
-          </Button>
-        </div>
+        <Button
+          asChild
+          size="lg"
+          className="bg-matcha px-8 text-white hover:bg-matcha/90"
+        >
+          <Link href="/reviews" className="inline-flex items-center gap-2">
+            <Star className="size-4" />
+            See all reviews
+          </Link>
+        </Button>
       </div>
     </section>
   )

@@ -201,7 +201,7 @@ app/api/feedback/
 
 - **Type:** Client component (`"use client"`)
 - **Auth:** Required — if not authenticated, show a login prompt or redirect
-- **Layout:** Two tabs — "Send a Review" and "Report an Issue"
+- **Layout:** Three tabs — "Send a Review", "Report an Issue", "My Submissions"
 - **Review tab:**
   - Star rating selector (1–5, interactive clickable stars)
   - 5 textarea questions (required):
@@ -219,6 +219,9 @@ app/api/feedback/
     3. Do you have any suggestions? (required)
     4. Additional bug details (optional)
   - Submit button → `POST /api/feedback/report`
+- **URL query param:** `?tab=review` (default), `?tab=report`, or `?tab=submissions` pre-selects the active tab on mount
+  - Used by dashboard "Review" and "Support" buttons to land users on the correct form
+- **Back button:** Header has an `ArrowLeft` + "Back" button using `router.back()` so users can return to wherever they navigated from
 - **On review success:** `sonner` toast + redirect to `/reviews`
 - **On report success:** `sonner` toast (stay on page)
 
@@ -273,6 +276,18 @@ app/api/feedback/
   - Relative timestamp (e.g., "2 days ago")
 - **Styling:** Consistent with app — `rounded-3xl`, strawberry-light background, etc.
 
+### `components/feedback/my-submissions.tsx`
+
+- **Type:** Client component
+- **Data fetching:** `GET /api/feedback/reports` — returns the current user's own reports via the non-owner path in the controller
+- **Display:** Collapsible list of submissions, each showing:
+  - Issue title + formatted date
+  - Status badge: "Received" (matcha-colored, static — no status workflow)
+  - Expandable details: explanation, suggestions, bug details
+- **Empty state:** Inbox icon + "No submissions yet" + helper text
+- **Loading state:** Spinner
+- **Note:** There is no status tracking (open/in-progress/resolved). The "Received" badge is a confirmation receipt, not a ticket tracker. This is intentional to avoid setting expectations of follow-up.
+
 ### `components/feedback/reviews-list.tsx`
 
 - **Type:** Server component
@@ -280,15 +295,27 @@ app/api/feedback/
 - **Renders:** Grid layout of `ReviewCard` components
 - **Used by:** `app/reviews/page.tsx`
 
+### `components/feedback/review-modal.tsx`
+
+- **Type:** Client component
+- **Triggers after:** 3 dashboard visits (tracked in localStorage `zb_review_modal`)
+- **Pre-conditions:**
+  1. User must be authenticated
+  2. User must not have already submitted a review (checked via Supabase `reviews` table — `select count where user_id = auth.uid()`)
+  3. Not dismissed within last 3 days
+- **UI:** Modal overlay with 5 filled stars, "Love Zen Berry?" heading, "Write a Review" button → `/feedback?tab=review`, "Maybe later" dismiss button
+- **Dismiss behavior:** Sets `dismissedAt` timestamp in localStorage, re-shows after 3 days
+- **Icons:** `Star`, `ArrowRight`, `X`
+
 ### `components/landing/feedback-section.tsx`
 
 - **Type:** Client or server component
 - **Content:**
   - Title: "What Our Users Say"
-  - Brief description or highlight quote
-  - Two CTAs:
+  - Description: "See how Zen Berry has helped others stay focused and productive."
+  - Single CTA:
     - "See all reviews" → `/reviews`
-    - "Give feedback" → `/feedback`
+  - (No "Give feedback" CTA — only logged-in users can submit reviews)
 
 ---
 
@@ -302,6 +329,15 @@ app/api/feedback/
 
 1. **Product column:** Add "Reviews" link → `/reviews`
 2. **Resources column:** Add "Feedback" link → `/feedback`
+
+### Dashboard nav changes (`app/dashboard/layout.tsx`)
+
+1. Replace the "ZB" logo badge with the actual logo image (`/Zen-berry Logo.png`, h-9 w-9, object-contain)
+2. Add two buttons to the right side of the sticky header (ml-auto):
+   - **Review** → `/feedback?tab=review` — takes the user to the review form
+   - **Report** → `/feedback?tab=report` — takes the user to the report form
+3. Styling: rounded-xl, muted foreground, hover highlights with strawberry-light/matcha
+4. Icons: `MessageSquareText` (Review), `MessageSquareWarning` (Report)
 
 ---
 
@@ -324,6 +360,16 @@ Public reviews fetch happens server-side (not via the API route), so there is no
 
 After the feature is implemented, append the new tables (`reviews`, `reports`) to `.opencode/context/SCHEMA.md` to keep the schema documentation up to date.
 
+## Feature Iteration Protocol
+
+When returning to this feature for changes or additions:
+
+1. **Update this spec first** — reflect any new components, API routes, env vars, or behavioral changes before writing code
+2. **Keep acceptance criteria current** — add/remove/modify ACs to match the updated scope
+3. **Update the implementation plan** — add new steps for any new files or modifications
+4. **Document the change in SCHEMA.md** — if the change involves new tables, columns, or RLS policies
+5. **Why:** This spec is the single source of truth for the feature. Keeping it current prevents drift between the design and the implementation in future iteration loops.
+
 ---
 
 ## Implementation Plan
@@ -340,15 +386,19 @@ After the feature is implemented, append the new tables (`reviews`, `reports`) t
    - `components/feedback/report-form.tsx`
    - `components/feedback/review-card.tsx`
    - `components/feedback/reviews-list.tsx`
+   - `components/feedback/review-modal.tsx`
+   - `components/feedback/my-submissions.tsx`
    - `components/landing/feedback-section.tsx`
 6. **Create pages:**
    - `app/feedback/page.tsx`
    - `app/reviews/page.tsx`
    - `app/report-logs/page.tsx`
 7. **Update landing page:**
-   - Add `<FeedbackSection />` to `app/page.tsx`
+   - Add `<FeedbackSection />` to `app/page.tsx` (single "See all reviews" CTA only)
    - Add footer links for Reviews and Feedback
-8. **Update SCHEMA.md** — append new table schemas
+8. **Update dashboard:**
+   - `app/dashboard/layout.tsx` — Replace ZB badge with logo image, add Review + Report nav buttons, add `<ReviewModal />`
+9. **Update SCHEMA.md** — append new table schemas
 
 ---
 
@@ -363,8 +413,13 @@ After the feature is implemented, append the new tables (`reviews`, `reports`) t
 - [ ] `app/reviews/page.tsx` displays all reviews publicly with star ratings and Q&A
 - [ ] `app/report-logs/page.tsx` shows 404 for non-owner authenticated users
 - [ ] `app/report-logs/page.tsx` shows reports table for the owner
-- [ ] Landing page renders `<FeedbackSection />` between About and Footer
+- [ ] Landing page renders `<FeedbackSection />` between About and Footer (single "See all reviews" CTA)
 - [ ] Footer contains "Reviews" and "Feedback" links
+- [ ] Dashboard header shows logo image instead of "ZB" text
+- [ ] Dashboard header has "Review" and "Report" buttons linking to `/feedback?tab=`
+- [ ] Review modal appears after 3 dashboard visits (if user has no existing review and not dismissed within 3 days)
+- [ ] "Maybe later" dismisses modal for 3 days; "Write a Review" navigates to `/feedback?tab=review`
+- [ ] Review modal never shows for users who already submitted a review
 - [ ] RLS policies allow public SELECT on `reviews`, restrict user access on `reports`
 - [ ] Star rating input is interactive (clickable, hover states, 1–5)
 - [ ] Toast notifications on success/error for both forms
