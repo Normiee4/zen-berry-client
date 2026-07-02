@@ -26,6 +26,7 @@ Every API endpoint under `app/api/<name>/` follows:
 matcher: ['/dashboard/:path*', '/api/((?!waitlist|auth-service).*)', '/auth/:path*']
 ```
 Auth-service routes (`/api/auth-service/*`) handle their own auth.
+Middleware lives in `proxy.ts` (root), not `middleware.ts`. Next.js 16 supports both filenames.
 
 ### State Management
 - **Server data** → TanStack React Query (queries + mutations)
@@ -40,7 +41,7 @@ Auth-service routes (`/api/auth-service/*`) handle their own auth.
 
 ### Env Files
 - `.env` (gitignored) — Production keys, do not commit
-- `.env.dev.local` (checked in) — Dev Supabase placeholders + tester bypass secrets
+- `.env.sample.dev` (checked in) — Dev Supabase placeholders + tester bypass secrets
 
 ## CI Pipelines (3 workflow files)
 - `frontend-ci.yml` — `lint` (continue-on-error) → `typecheck` → `build` on PR/push to main/develop
@@ -58,11 +59,27 @@ Auth-service routes (`/api/auth-service/*`) handle their own auth.
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `GEMINI_API_KEY`
 - Optional: `GEMINI_MODEL` (defaults to `gemini-2.0-flash`), `BETA_BYPASS_SECRETS`
 
+## Skills (loaded via `skill` tool)
+
+Agents must explicitly call `skill({ name: "..." })` to load these — they don't auto-inject.
+
+| Skill | Load when | Loader |
+|-------|-----------|--------|
+| `frontend-design` | Building UI — applies Zen Berry brand (matcha/strawberry/cream palette, Nunito Sans) | Builder |
+| `ui-ux-pro-max` | Designing, building, or reviewing UI — 50+ styles, 160+ palettes, 57 font pairings | Builder, Reviewer |
+| `web-design-guidelines` | Auditing UI for accessibility and design best practices | Builder, Reviewer |
+| `socratic-method` | User wants to learn a concept instead of getting the answer | Any agent |
+| `grill-me` | User says "grill me" or asks to stress-test a plan/design | Any agent |
+| `feature-validator` | User pitches a new feature idea without clear validation | Any agent |
+| `diagnose` | User reports an error, bug, regression, or test failure | Builder |
+
 ## Reference Docs
-- `docs/PRD.md` — Product requirements
-- `docs/DESIGN.md` — Architecture, analytics flow, AI feature spec
-- `docs/SCHEMA.md` — ER diagram, full API routes with priority tiers
-- `docs/security/SKILL.md` — Auth, validation, rate limiting patterns
+- `.opencode/context/prd.md` — Product requirements
+- `.opencode/context/DESIGN.md` — Architecture, analytics flow, AI feature spec
+- `.opencode/context/SCHEMA.md` — ER diagram, full API routes with priority tiers
+- `.opencode/context/RULES.md` — Naming conventions, SOLID, DRY, coding standards
+- `.opencode/context/SHIPPING.md` — `/ship` protocol, review loops, agent roles
+- `docs/features/` — Feature specs (`feedback-system/`, `productivity-tracking/`, `timer-alarms/`)
 
 ## `/ship <feature>: <description>` Protocol
 Full dev cycle via `opencode.json` agents: planner → builder → reviewer → tester → reviewer.

@@ -153,7 +153,7 @@ export async function getProductivity(request: NextRequest) {
       {
         today: {
           pomodorosCompleted: statsResult?.data?.daily_pomodoro ?? 0,
-          tasksCompleted: todayTasksCompleted,
+          tasksCompleted: todayTasksCompleted.count,
           mitsCompleted: todayMITsCompleted,
           focusMinutes: todayFocusMinutes,
           breakCount: todayBreaks,
