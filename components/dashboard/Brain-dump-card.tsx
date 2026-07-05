@@ -161,7 +161,7 @@ export function BrainDumpCard({
                 onToggleComplete={onToggleComplete}
                 onDelete={onDelete}
               />
-              <ScrollBar orientation="vertical" forceMount className="data-[state=hidden]:opacity-30 data-[state=visible]:opacity-100 transition-opacity" />
+              <ScrollBar orientation="vertical" forceMount className="data-[state=hidden]:opacity-30 data-[state=visible]:opacity-100 transition-opacity bg-white/30 backdrop-blur-md rounded-full" />
             </ScrollArea>
           </div>
         }
@@ -237,7 +237,7 @@ export function BrainDumpCard({
                     ))}
                   </div>
                 )}
-                <ScrollBar orientation="vertical" forceMount className="data-[state=hidden]:opacity-30 data-[state=visible]:opacity-70 transition-opacity" />
+                <ScrollBar orientation="vertical" forceMount className="data-[state=hidden]:opacity-30 data-[state=visible]:opacity-100 transition-opacity bg-white/30 backdrop-blur-md rounded-full" />
               </ScrollArea>
               {provided.placeholder}
             </div>
