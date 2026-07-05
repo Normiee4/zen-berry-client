@@ -82,7 +82,7 @@ export default function DashboardPage() {
       const mit = mits[pendingDrag.sourceIndex]
       if (!mit) { setPendingDrag(null); return }
       addTask({ title: mit.title, completed: false, type: "braindump" })
-      markAsDone(mit.id)
+      deleteTask(mit.id)
     }
 
     if (pendingDrag.direction === "to-mit") {
