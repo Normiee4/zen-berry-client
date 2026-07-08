@@ -79,7 +79,7 @@ export default function ReportLogsPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-cream">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="size-8 animate-spin text-matcha" />
       </div>
     )
@@ -87,15 +87,15 @@ export default function ReportLogsPage() {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-cream">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <p className="text-muted-foreground">{error}</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-cream">
-      <div className="border-b border-strawberry-light/50 bg-white/60 backdrop-blur-sm">
+    <div className="min-h-screen bg-background">
+      <div className="border-b border-strawberry-light/50 bg-card/60 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           <Link
             href="/"
@@ -121,7 +121,7 @@ export default function ReportLogsPage() {
             <p className="text-lg text-muted-foreground">No reports yet.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-3xl border border-strawberry-light/50 bg-white/80 backdrop-blur-sm">
+          <div className="overflow-x-auto rounded-3xl border border-strawberry-light/50 bg-card/80 backdrop-blur-sm">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-strawberry-light/50 bg-strawberry-light/30">
@@ -161,7 +161,7 @@ export default function ReportLogsPage() {
                           {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
                           <ChevronDown className="size-3" />
                         </button>
-                        <div className="absolute right-0 top-full z-10 mt-1 hidden min-w-[130px] rounded-xl border border-strawberry-light/50 bg-white shadow-lg group-hover:block">
+                        <div className="absolute right-0 top-full z-10 mt-1 hidden min-w-[130px] rounded-xl border border-strawberry-light/50 bg-card shadow-lg group-hover:block">
                           {['pending', 'received', 'resolved'].map((s) => (
                             <button
                               key={s}

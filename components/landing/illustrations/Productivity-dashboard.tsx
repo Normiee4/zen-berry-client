@@ -128,7 +128,7 @@ export function ProductivityDashboard() {
   }, [activePreset.id])
 
   return (
-    <div className="rounded-2xl border border-strawberry-light/50 bg-white/80 p-6 shadow-xl backdrop-blur-sm">
+    <div className="rounded-2xl border border-strawberry-light/50 bg-card/80 p-6 shadow-xl backdrop-blur-sm">
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
@@ -294,7 +294,7 @@ export function ProductivityDashboard() {
         {/* Reset Button */}
         <button
           onClick={handleReset}
-          className="flex size-10 items-center justify-center rounded-full border border-border bg-white text-muted-foreground transition-all hover:border-matcha hover:text-matcha"
+          className="flex size-10 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all hover:border-matcha hover:text-matcha"
           aria-label="Reset timer"
         >
           <RotateCcw className="size-4" />
@@ -317,7 +317,7 @@ export function ProductivityDashboard() {
         <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
           <DialogTrigger asChild>
             <button
-              className="flex size-10 items-center justify-center rounded-full border border-border bg-white text-muted-foreground transition-all hover:border-matcha hover:text-matcha"
+              className="flex size-10 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-all hover:border-matcha hover:text-matcha"
               aria-label="Timer settings"
             >
               <Settings className="size-4" />
@@ -339,7 +339,7 @@ export function ProductivityDashboard() {
             <span className="ml-auto rounded bg-strawberry px-2 py-0.5 text-xs font-medium">25m</span>
           </div>
           
-          <div className="flex items-center gap-3 rounded-lg border border-strawberry-light/50 bg-white/50 p-3">
+          <div className="flex items-center gap-3 rounded-lg border border-strawberry-light/50 bg-card/50 p-3">
             <div className="size-5 rounded-full border-2 border-matcha/30" />
             <span className="text-sm text-muted-foreground">Write weekly report</span>
             <span className="ml-auto rounded bg-muted px-2 py-0.5 text-xs">45m</span>

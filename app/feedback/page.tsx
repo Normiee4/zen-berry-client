@@ -36,7 +36,7 @@ export default function FeedbackPage() {
 
   if (isAuthenticated === null) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-cream">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="size-8 animate-spin rounded-full border-4 border-matcha border-t-transparent" />
       </div>
     )
@@ -44,7 +44,7 @@ export default function FeedbackPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-cream">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
           <h1 className="mb-4 text-2xl font-bold text-foreground">Authentication Required</h1>
           <p className="mb-6 text-muted-foreground">Please log in to submit feedback.</p>
@@ -60,9 +60,9 @@ export default function FeedbackPage() {
   }
 
   return (
-    <div className="min-h-screen bg-cream">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b border-strawberry-light/50 bg-white/60 backdrop-blur-sm">
+      <div className="border-b border-strawberry-light/50 bg-card/60 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           <button
             onClick={() => router.back()}
@@ -82,7 +82,7 @@ export default function FeedbackPage() {
 
       <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 sm:py-16">
         {/* Tab Switcher */}
-        <div className="mb-8 flex rounded-2xl border border-strawberry-light/50 bg-white/60 p-1 backdrop-blur-sm">
+        <div className="mb-8 flex rounded-2xl border border-strawberry-light/50 bg-card/60 p-1 backdrop-blur-sm">
           <button
             type="button"
             onClick={() => setActiveTab('review')}
@@ -125,7 +125,7 @@ export default function FeedbackPage() {
         </div>
 
         {/* Content */}
-        <div className="rounded-3xl border border-strawberry-light/50 bg-white/80 p-8 backdrop-blur-sm">
+        <div className="rounded-3xl border border-strawberry-light/50 bg-card/80 p-8 backdrop-blur-sm">
           {activeTab === 'review' && (
             <>
               <div className="mb-6">

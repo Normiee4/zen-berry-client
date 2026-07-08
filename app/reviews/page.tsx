@@ -20,9 +20,9 @@ export default async function ReviewsPage() {
   const formattedReviews = (reviews as ReviewRow[] | null)?.map(formatReview) ?? []
 
   return (
-    <div className="min-h-screen bg-cream">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b border-strawberry-light/50 bg-white/60 backdrop-blur-sm">
+      <div className="border-b border-strawberry-light/50 bg-card/60 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-matcha">
             <ArrowLeft className="size-4" />

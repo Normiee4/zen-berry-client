@@ -88,7 +88,7 @@ export function ReviewModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="relative mx-4 w-full max-w-md rounded-3xl border border-strawberry-light/50 bg-white p-8 shadow-xl">
+      <div className="relative mx-4 w-full max-w-md rounded-3xl border border-strawberry-light/50 bg-card p-8 shadow-xl">
         <button
           onClick={dismiss}
           className="absolute right-4 top-4 rounded-full p-1 text-muted-foreground transition-colors hover:bg-strawberry-light/50 hover:text-foreground"

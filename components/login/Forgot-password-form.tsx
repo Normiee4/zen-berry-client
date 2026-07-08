@@ -37,7 +37,7 @@ export function ForgotPasswordForm() {
 
   if (sent) {
     return (
-      <div className="rounded-2xl border border-border bg-white/80 p-8 backdrop-blur text-center space-y-4">
+      <div className="rounded-2xl border border-border bg-card/80 p-8 backdrop-blur text-center space-y-4">
         <div className="text-4xl">✉️</div>
         <h2 className="text-xl font-semibold">Check your inbox</h2>
         <p className="text-sm text-muted-foreground">
@@ -52,7 +52,7 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-border bg-white/80 p-8 backdrop-blur">
+    <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-border bg-card/80 p-8 backdrop-blur">
       <div className="text-center space-y-2">
         <h2 className="text-xl font-semibold">Forgot password?</h2>
         <p className="text-sm text-muted-foreground">
@@ -70,7 +70,7 @@ export function ForgotPasswordForm() {
           placeholder="you@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="border-border bg-cream/50"
+          className="border-border bg-background/50"
           disabled={loading}
           required
         />

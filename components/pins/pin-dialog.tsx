@@ -64,7 +64,7 @@ export function PinDialog({ open, onOpenChange, onSave, onDelete, editPin }: Pin
                 setHeadingError(false)
               }}
               placeholder="e.g. React Resources"
-              className={`w-full rounded-xl border bg-white px-4 py-2.5 text-sm outline-none transition-colors placeholder:text-muted-foreground/40 ${
+              className={`w-full rounded-xl border bg-card px-4 py-2.5 text-sm outline-none transition-colors placeholder:text-muted-foreground/40 ${
                 headingError
                   ? "border-red-400 focus:border-red-400"
                   : "border-border focus:border-matcha"
@@ -85,7 +85,7 @@ export function PinDialog({ open, onOpenChange, onSave, onDelete, editPin }: Pin
               onChange={(e) => setContent(e.target.value)}
               placeholder="Paste links, notes, or anything..."
               rows={4}
-              className="w-full resize-none rounded-xl border border-border bg-white px-4 py-2.5 text-sm outline-none transition-colors placeholder:text-muted-foreground/40 focus:border-matcha"
+              className="w-full resize-none rounded-xl border border-border bg-card px-4 py-2.5 text-sm outline-none transition-colors placeholder:text-muted-foreground/40 focus:border-matcha"
             />
           </div>
 

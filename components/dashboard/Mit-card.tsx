@@ -31,7 +31,7 @@ function StaticMITList({
 }) {
   if (mits.length === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/20 bg-white/30 p-6">
+      <div className="flex flex-1 items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/20 bg-card/30 p-6">
         <div className="flex flex-col items-center gap-2 text-center">
           <span className="text-3xl">📌</span>
           <p className="text-sm font-medium text-muted-foreground">
@@ -47,7 +47,7 @@ function StaticMITList({
       {mits.map((mit, index) => (
         <div
           key={mit.id}
-          className="flex items-center gap-3 rounded-xl p-4 bg-white/70"
+          className="flex items-center gap-3 rounded-xl p-4 bg-card/70"
         >
           <span className="flex size-6 items-center justify-center text-sm font-medium text-muted-foreground">
             {index + 1}
@@ -116,7 +116,7 @@ export function MITCard({
 
       {/* Add MIT Input */}
       <div className="mb-4">
-        <div className="flex items-center gap-2 rounded-xl bg-white/70 p-3">
+        <div className="flex items-center gap-2 rounded-xl bg-card/70 p-3">
           <input
             type="text"
             value={newMit}
@@ -156,7 +156,7 @@ export function MITCard({
               className="flex flex-1 flex-col gap-3 overflow-y-auto"
             >
               {mits.length === 0 ? (
-                <div className="flex flex-1 items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/20 bg-white/30 p-6">
+                <div className="flex flex-1 items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/20 bg-card/30 p-6">
                   <div className="flex flex-col items-center gap-2 text-center">
                     <span className="text-3xl">📌</span>
                     <p className="text-sm font-medium text-muted-foreground">
@@ -173,7 +173,7 @@ export function MITCard({
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
                         className={`flex items-center gap-3 rounded-xl p-4 ${
-                          snapshot.isDragging ? "bg-matcha-light/80 shadow-lg" : "bg-white/70"
+                          snapshot.isDragging ? "bg-matcha-light/80 shadow-lg" : "bg-card/70"
                         }`}
                       >
                         <span className="flex size-6 items-center justify-center text-sm font-medium text-muted-foreground">

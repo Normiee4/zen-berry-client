@@ -246,7 +246,7 @@ export function AnimatedMatchaCup({
 
       {/* Progress Bar */}
       <div className="w-full max-w-xs">
-        <div className="h-2 w-full overflow-hidden rounded-full bg-white/50">
+        <div className="h-2 w-full overflow-hidden rounded-full bg-card/50">
           <div
             className="h-full rounded-full bg-matcha transition-all duration-500 ease-out"
             style={{ width: `${displayFill}%` }}
@@ -263,7 +263,7 @@ export function AnimatedMatchaCup({
         </div>
       )}
       {isComplete && !showCelebration && (
-        <div className="rounded-xl bg-white/70 px-4 py-2 text-center">
+        <div className="rounded-xl bg-card/70 px-4 py-2 text-center">
           <p className="text-sm font-medium text-foreground">{message}</p>
         </div>
       )}

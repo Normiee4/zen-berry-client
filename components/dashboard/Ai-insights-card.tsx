@@ -175,7 +175,7 @@ export function AIInsightsCard() {
         <span className="text-base">🍓</span>
       </div>
 
-      <div className="flex flex-col rounded-2xl bg-white/70 p-6">
+      <div className="flex flex-col rounded-2xl bg-card/70 p-6">
         <div className="flex items-start gap-4">
           <div className={`relative size-14 shrink-0 ${logoAnimation}`}>
             <img

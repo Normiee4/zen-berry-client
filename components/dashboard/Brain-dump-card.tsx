@@ -32,7 +32,7 @@ function StaticTaskList({
 }) {
   if (tasks.length === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/20 bg-white/30 p-6">
+      <div className="flex flex-1 items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/20 bg-card/30 p-6">
         <div className="flex flex-col items-center gap-2 text-center">
           <span className="text-3xl">🧠</span>
           <p className="text-sm font-medium text-muted-foreground">
@@ -49,7 +49,7 @@ function StaticTaskList({
         <div
           key={task.id}
           className={`flex items-center gap-3 rounded-xl p-3 transition-colors ${
-            task.completed ? "bg-matcha-light/40" : "bg-white/70"
+            task.completed ? "bg-matcha-light/40" : "bg-card/70"
           }`}
         >
           <button
@@ -57,7 +57,7 @@ function StaticTaskList({
             className={`flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
               task.completed
                 ? "border-matcha bg-matcha"
-                : "border-muted-foreground/30 bg-white"
+                : "border-muted-foreground/30 bg-card"
             }`}
           >
             {task.completed && (
@@ -133,7 +133,7 @@ export function BrainDumpCard({
       </p>
 
       {/* Input */}
-      <div className="mb-4 flex items-center gap-2 rounded-xl bg-white/70 p-3">
+      <div className="mb-4 flex items-center gap-2 rounded-xl bg-card/70 p-3">
         <input
           type="text"
           value={newTaskTitle}
@@ -161,7 +161,7 @@ export function BrainDumpCard({
                 onToggleComplete={onToggleComplete}
                 onDelete={onDelete}
               />
-              <ScrollBar orientation="vertical" forceMount className="data-[state=hidden]:opacity-30 data-[state=visible]:opacity-100 transition-opacity bg-white/30 backdrop-blur-md rounded-full" />
+              <ScrollBar orientation="vertical" forceMount className="data-[state=hidden]:opacity-30 data-[state=visible]:opacity-100 transition-opacity bg-card/30 backdrop-blur-md rounded-full" />
             </ScrollArea>
           </div>
         }
@@ -175,7 +175,7 @@ export function BrainDumpCard({
             >
               <ScrollArea className="flex-1 max-h-[380px]">
                 {tasks.length === 0 ? (
-                  <div className="flex flex-1 items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/20 bg-white/30 p-6">
+                  <div className="flex flex-1 items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/20 bg-card/30 p-6">
                     <div className="flex flex-col items-center gap-2 text-center">
                       <span className="text-3xl">🧠</span>
                       <p className="text-sm font-medium text-muted-foreground">
@@ -193,7 +193,7 @@ export function BrainDumpCard({
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
                             className={`flex items-center gap-3 rounded-xl p-3 transition-colors ${
-                              task.completed ? "bg-matcha-light/40" : "bg-white/70"
+                              task.completed ? "bg-matcha-light/40" : "bg-card/70"
                             } ${snapshot.isDragging ? "shadow-lg" : ""}`}
                           >
                             <button
@@ -201,7 +201,7 @@ export function BrainDumpCard({
                               className={`flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
                                 task.completed
                                   ? "border-matcha bg-matcha"
-                                  : "border-muted-foreground/30 bg-white"
+                                  : "border-muted-foreground/30 bg-card"
                               }`}
                             >
                               {task.completed && (
@@ -237,7 +237,7 @@ export function BrainDumpCard({
                     ))}
                   </div>
                 )}
-                <ScrollBar orientation="vertical" forceMount className="data-[state=hidden]:opacity-30 data-[state=visible]:opacity-100 transition-opacity bg-white/30 backdrop-blur-md rounded-full" />
+                <ScrollBar orientation="vertical" forceMount className="data-[state=hidden]:opacity-30 data-[state=visible]:opacity-100 transition-opacity bg-card/30 backdrop-blur-md rounded-full" />
               </ScrollArea>
               {provided.placeholder}
             </div>

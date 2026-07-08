@@ -91,7 +91,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
                   className={`flex h-10 w-32 items-center justify-center rounded-xl border-2 text-sm font-semibold ${
                     i === currentSlide + 1
                       ? "border-matcha bg-matcha/10 text-matcha"
-                      : "border-strawberry/30 bg-white/50 text-strawberry/60"
+                      : "border-strawberry/30 bg-card/50 text-strawberry/60"
                   }`}
                 >
                   MIT #{i}
@@ -133,7 +133,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-cream/95 backdrop-blur-sm transition-opacity duration-400 ${
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm transition-opacity duration-400 ${
         isExiting ? "opacity-0" : "opacity-100"
       }`}
     >
@@ -148,7 +148,7 @@ export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
 
       {/* Card */}
       <div className="mx-4 w-full max-w-lg">
-        <div className="rounded-3xl border border-matcha-dark/15 bg-white p-10 shadow-xl">
+        <div className="rounded-3xl border border-matcha-dark/15 bg-card p-10 shadow-xl">
           {/* Illustration */}
           <div className="mb-8 min-h-[140px]">{renderIllustration(currentSlide)}</div>
 

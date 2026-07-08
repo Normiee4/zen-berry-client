@@ -44,14 +44,14 @@ export function PinCard({ id, heading, content, color, onEdit, onDelete }: PinCa
       <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
         <button
           onClick={(e) => { e.stopPropagation(); onEdit(id) }}
-          className="flex items-center justify-center rounded-lg bg-white/60 p-1.5 text-muted-foreground transition-colors hover:bg-white hover:text-foreground"
+          className="flex items-center justify-center rounded-lg bg-card/60 p-1.5 text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
           aria-label="Edit pin"
         >
           <Pencil className="size-3.5" strokeWidth={1.5} />
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onDelete(id) }}
-          className="flex items-center justify-center rounded-lg bg-white/60 p-1.5 text-muted-foreground transition-colors hover:bg-white hover:text-red-500"
+          className="flex items-center justify-center rounded-lg bg-card/60 p-1.5 text-muted-foreground transition-colors hover:bg-card hover:text-red-500"
           aria-label="Delete pin"
         >
           <Trash2 className="size-3.5" strokeWidth={1.5} />

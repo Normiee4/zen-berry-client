@@ -54,7 +54,7 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-border bg-white/80 p-8 backdrop-blur">
+    <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-border bg-card/80 p-8 backdrop-blur">
       <div className="space-y-2">
         <Label htmlFor="email" className="text-sm font-medium">
           Email address
@@ -65,7 +65,7 @@ export function LoginForm() {
           placeholder="you@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="border-border bg-cream/50"
+          className="border-border bg-background/50"
           disabled={loading}
           required
         />
@@ -88,7 +88,7 @@ export function LoginForm() {
           placeholder="••••••••"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="border-border bg-cream/50"
+          className="border-border bg-background/50"
           disabled={loading}
           required
         />
@@ -104,7 +104,7 @@ export function LoginForm() {
           <div className="w-full border-t border-border" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-muted-foreground">
+          <span className="bg-card px-2 text-muted-foreground">
             Or continue with
           </span>
         </div>
@@ -113,7 +113,7 @@ export function LoginForm() {
       <Button
         type="button"
         variant="outline"
-        className="w-full border-border bg-cream/50"
+        className="w-full border-border bg-background/50"
         size="lg"
         disabled={loading}
         onClick={handleGoogleLogin}

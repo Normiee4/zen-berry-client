@@ -34,7 +34,7 @@ const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<
   
   const data = payload[0].payload
   return (
-    <div className="bg-white/95 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-border/30">
+    <div className="bg-card/95 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-border/30">
       <p className="text-xs font-medium text-foreground mb-1">{data.day}</p>
       <p className="text-sm text-matcha font-semibold">
         🍅 {data.pomodoros} pomodoro{data.pomodoros !== 1 ? "s" : ""}

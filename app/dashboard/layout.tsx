@@ -33,7 +33,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-cream">
+    <div className="flex min-h-screen bg-background">
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -42,7 +42,7 @@ export default function DashboardLayout({
       />
 
       <div className="flex flex-1 flex-col">
-        <header className="sticky top-0 z-20 border-b border-border/30 bg-white/80 backdrop-blur-md">
+        <header className="sticky top-0 z-20 border-b border-border/30 bg-card/80 backdrop-blur-md">
           <div className="flex items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <SidebarToggle onClick={() => setSidebarOpen(true)} />
             <img

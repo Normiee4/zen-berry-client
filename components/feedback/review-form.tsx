@@ -108,7 +108,7 @@ export function ReviewForm() {
             onChange={(e) => updateField(question.key, e.target.value)}
             required={question.required}
             rows={3}
-            className="w-full rounded-xl border border-strawberry-light/50 bg-white/60 p-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-matcha/50 focus:outline-none focus:ring-2 focus:ring-matcha/20"
+            className="w-full rounded-xl border border-strawberry-light/50 bg-card/60 p-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-matcha/50 focus:outline-none focus:ring-2 focus:ring-matcha/20"
             placeholder="Share your thoughts..."
           />
         </div>
@@ -127,7 +127,7 @@ export function ReviewForm() {
           value={formData.additional_feedback || ''}
           onChange={(e) => updateField('additional_feedback', e.target.value)}
           rows={3}
-          className="w-full rounded-xl border border-strawberry-light/50 bg-white/60 p-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-matcha/50 focus:outline-none focus:ring-2 focus:ring-matcha/20"
+          className="w-full rounded-xl border border-strawberry-light/50 bg-card/60 p-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-matcha/50 focus:outline-none focus:ring-2 focus:ring-matcha/20"
           placeholder="Any additional feedback..."
         />
       </div>

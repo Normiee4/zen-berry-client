@@ -63,7 +63,7 @@ export function ResetPasswordForm() {
 
   if (!ready) {
     return (
-      <div className="rounded-2xl border border-border bg-white/80 p-8 backdrop-blur text-center space-y-4">
+      <div className="rounded-2xl border border-border bg-card/80 p-8 backdrop-blur text-center space-y-4">
         <div className="text-4xl">🔐</div>
         <h2 className="text-xl font-semibold">Invalid or expired reset link</h2>
         <p className="text-sm text-muted-foreground">
@@ -78,7 +78,7 @@ export function ResetPasswordForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-border bg-white/80 p-8 backdrop-blur">
+    <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-border bg-card/80 p-8 backdrop-blur">
       <div className="text-center space-y-2">
         <h2 className="text-xl font-semibold">Set new password</h2>
         <p className="text-sm text-muted-foreground">
@@ -97,7 +97,7 @@ export function ResetPasswordForm() {
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="border-border bg-cream/50 pr-10"
+            className="border-border bg-background/50 pr-10"
             disabled={loading}
             required
             minLength={6}
@@ -124,7 +124,7 @@ export function ResetPasswordForm() {
             placeholder="••••••••"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="border-border bg-cream/50 pr-10"
+            className="border-border bg-background/50 pr-10"
             disabled={loading}
             required
             minLength={6}

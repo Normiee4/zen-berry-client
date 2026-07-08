@@ -46,7 +46,7 @@ export function WaitlistForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-border bg-white/80 p-8 backdrop-blur">
+    <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-border bg-card/80 p-8 backdrop-blur">
       <div className="space-y-2">
         <Label htmlFor="email" className="text-sm font-medium">
           Email address
@@ -59,7 +59,7 @@ export function WaitlistForm() {
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="border-border bg-cream/50 pl-10"
+            className="border-border bg-background/50 pl-10"
             required
             disabled={isLoading}
           />
@@ -76,7 +76,7 @@ export function WaitlistForm() {
           placeholder="Jane Doe"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="border-border bg-cream/50"
+          className="border-border bg-background/50"
           disabled={isLoading}
         />
       </div>

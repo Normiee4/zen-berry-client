@@ -77,7 +77,7 @@ export function MySubmissions() {
       {submissions.map((sub) => (
         <div
           key={sub.id}
-          className="overflow-hidden rounded-2xl border border-strawberry-light/50 bg-white/60"
+          className="overflow-hidden rounded-2xl border border-strawberry-light/50 bg-card/60"
         >
           <button
             type="button"

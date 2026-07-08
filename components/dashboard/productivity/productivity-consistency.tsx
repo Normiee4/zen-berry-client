@@ -27,7 +27,7 @@ export function ProductivityConsistency({ consistency }: ProductivityConsistency
   return (
     <div className="rounded-3xl border border-matcha-dark/20 bg-strawberry-light/30 p-6">
       <h3 className="mb-4 text-sm font-semibold text-foreground">Consistency Rate</h3>
-      <div className="rounded-xl bg-white/60 p-4">
+      <div className="rounded-xl bg-card/60 p-4">
         <div className="mb-3 flex items-baseline gap-2">
           <span className={`text-4xl font-bold ${colorClass}`}>
             {consistency.rate}%

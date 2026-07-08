@@ -32,7 +32,7 @@ export function ProductivityKPIGrid({ today, streak }: ProductivityKPIGridProps)
         label="Focus Minutes"
         value={today.focusMinutes}
         icon={<Clock className="size-5 text-strawberry" strokeWidth={1.5} />}
-        color="bg-cream/60"
+        color="bg-background/60"
       />
       <ProductivityKPICard
         label="Current Streak"

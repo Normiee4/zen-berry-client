@@ -45,9 +45,9 @@ export function ProductivityLifetime({ lifetime }: ProductivityLifetimeProps) {
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="flex items-center gap-3 rounded-xl bg-white/60 p-4"
+            className="flex items-center gap-3 rounded-xl bg-card/60 p-4"
           >
-            <div className="flex size-10 items-center justify-center rounded-full bg-white/80">
+            <div className="flex size-10 items-center justify-center rounded-full bg-card/80">
               {stat.icon}
             </div>
             <div>

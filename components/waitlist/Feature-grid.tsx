@@ -11,7 +11,7 @@ export function FeaturesGrid() {
       {features.map((feature, idx) => (
         <div
           key={idx}
-          className="rounded-xl border border-border bg-white/70 p-4 backdrop-blur"
+          className="rounded-xl border border-border bg-card/70 p-4 backdrop-blur"
         >
           <div className="mb-2 text-2xl">{feature.emoji}</div>
           <h3 className="font-semibold text-foreground">{feature.title}</h3>

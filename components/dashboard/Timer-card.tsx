@@ -288,7 +288,7 @@ export function TimerCard() {
           className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium cursor-pointer transition-colors ${
             mode === "focus"
               ? "bg-matcha text-white"
-              : "bg-white/60 text-foreground hover:bg-white/80"
+              : "bg-card/60 text-foreground hover:bg-card/80"
           }`}
         >
           <span className="text-base">🌱</span>
@@ -299,7 +299,7 @@ export function TimerCard() {
           className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
             mode === "break"
               ? "bg-strawberry text-foreground"
-              : "bg-white/60 text-foreground hover:bg-white/80"
+              : "bg-card/60 text-foreground hover:bg-card/80"
           }`}
         >
           <span className="text-base">🍓</span>
@@ -381,7 +381,7 @@ export function TimerCard() {
           onClick={reset}
           size="icon"
           variant="outline"
-          className="size-10 rounded-full border-border bg-white/60 hover:bg-white cursor-pointer"
+          className="size-10 rounded-full border-border bg-card/60 hover:bg-card cursor-pointer"
           aria-label="Reset timer"
         >
           <RotateCcw className="size-4 text-foreground" />
@@ -391,12 +391,12 @@ export function TimerCard() {
             <Button
               size="icon"
               variant="outline"
-              className="size-10 rounded-full border-border bg-white/60 hover:bg-white cursor-pointer"
+              className="size-10 rounded-full border-border bg-card/60 hover:bg-card cursor-pointer"
             >
               <Settings className="size-4 text-foreground" />
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md bg-white p-0 max-h-[90dvh] overflow-y-auto">
+          <DialogContent className="max-w-md bg-card p-0 max-h-[90dvh] overflow-y-auto">
             <DialogHeader className="flex flex-row items-center justify-between border-b border-border p-6 pb-4">
               <DialogTitle className="text-lg font-semibold">Timer Settings</DialogTitle>
             </DialogHeader>
@@ -412,7 +412,7 @@ export function TimerCard() {
                       className={`flex items-center rounded-lg border p-4 transition-colors ${
                         activePreset.id === preset.id
                           ? "border-l-4 border-l-matcha border-t-matcha-light/50 border-r-matcha-light/50 border-b-matcha-light/50 bg-matcha-light/20"
-                          : "border-border hover:bg-cream/50"
+                          : "border-border hover:bg-background/50"
                       }`}
                     >
                       <button
@@ -472,7 +472,7 @@ export function TimerCard() {
                     placeholder="My Custom Timer"
                     value={newPresetName}
                     onChange={(e) => setNewPresetName(e.target.value)}
-                    className="border-border bg-white"
+                    className="border-border bg-card"
                   />
                 </div>
                 <div className="mb-4 grid grid-cols-2 gap-4">
@@ -485,7 +485,7 @@ export function TimerCard() {
                       type="number"
                       value={newFocusMinutes}
                       onChange={(e) => setNewFocusMinutes(Number(e.target.value))}
-                      className="border-border bg-white"
+                      className="border-border bg-card"
                     />
                   </div>
                   <div>
@@ -497,7 +497,7 @@ export function TimerCard() {
                       type="number"
                       value={newBreakMinutes}
                       onChange={(e) => setNewBreakMinutes(Number(e.target.value))}
-                      className="border-border bg-white"
+                      className="border-border bg-card"
                     />
                   </div>
                 </div>
@@ -512,7 +512,7 @@ export function TimerCard() {
 
               {/* Edit Preset Dialog */}
               <Dialog open={editingPreset !== null} onOpenChange={(open) => { if (!open) setEditingPreset(null) }}>
-                <DialogContent className="max-w-md bg-white p-0 max-h-[90dvh] overflow-y-auto">
+                <DialogContent className="max-w-md bg-card p-0 max-h-[90dvh] overflow-y-auto">
                   <DialogHeader className="flex flex-row items-center justify-between border-b border-border p-6 pb-4">
                     <DialogTitle className="text-lg font-semibold">Edit Preset</DialogTitle>
                   </DialogHeader>
@@ -522,7 +522,7 @@ export function TimerCard() {
                       <Input
                         value={editingPreset?.name ?? ''}
                         onChange={(e) => setEditingPreset((prev) => prev ? { ...prev, name: e.target.value } : null)}
-                        className="border-border bg-white"
+                        className="border-border bg-card"
                       />
                     </div>
                     <div className="mb-4 grid grid-cols-2 gap-4">
@@ -532,7 +532,7 @@ export function TimerCard() {
                           type="number"
                           value={editingPreset?.focusMinutes ?? 25}
                           onChange={(e) => setEditingPreset((prev) => prev ? { ...prev, focusMinutes: Number(e.target.value) } : null)}
-                          className="border-border bg-white"
+                          className="border-border bg-card"
                         />
                       </div>
                       <div>
@@ -541,7 +541,7 @@ export function TimerCard() {
                           type="number"
                           value={editingPreset?.breakMinutes ?? 5}
                           onChange={(e) => setEditingPreset((prev) => prev ? { ...prev, breakMinutes: Number(e.target.value) } : null)}
-                          className="border-border bg-white"
+                          className="border-border bg-card"
                         />
                       </div>
                     </div>
@@ -569,7 +569,7 @@ export function TimerCard() {
 
         {/* Skip Break Confirmation */}
         <Dialog open={skipBreakOpen} onOpenChange={setSkipBreakOpen}>
-          <DialogContent className="max-w-sm bg-white p-0">
+          <DialogContent className="max-w-sm bg-card p-0">
             <DialogHeader className="border-b border-border p-6 pb-4">
               <DialogTitle className="text-lg font-semibold">Skip your break?</DialogTitle>
             </DialogHeader>

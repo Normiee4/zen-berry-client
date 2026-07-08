@@ -22,7 +22,7 @@ export function ProductivityPeakHours({ peakHours }: ProductivityPeakHoursProps)
     return (
       <div className="rounded-3xl border border-matcha-dark/20 bg-strawberry-light/30 p-6">
         <h3 className="mb-2 text-sm font-semibold text-foreground">Peak Productivity Hours</h3>
-        <div className="flex items-center justify-center rounded-xl bg-white/60 p-6">
+        <div className="flex items-center justify-center rounded-xl bg-card/60 p-6">
           <p className="text-sm text-muted-foreground">No data yet</p>
         </div>
       </div>
@@ -43,7 +43,7 @@ export function ProductivityPeakHours({ peakHours }: ProductivityPeakHoursProps)
         <h3 className="text-sm font-semibold text-foreground">Peak Productivity Hours</h3>
       </div>
 
-      <div className="rounded-xl bg-white/60 p-4">
+      <div className="rounded-xl bg-card/60 p-4">
         <div className="mb-3 flex items-baseline justify-between">
           <div>
             <p className="text-lg font-bold text-foreground">

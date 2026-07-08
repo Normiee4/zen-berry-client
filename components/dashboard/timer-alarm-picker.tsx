@@ -51,7 +51,7 @@ export function TimerAlarmPicker({ alarmSound, onAlarmSoundChange }: TimerAlarmP
             className={`flex items-center rounded-lg border p-4 transition-colors ${
               alarmSound === option.value
                 ? "border-l-4 border-l-matcha border-t-matcha-light/50 border-r-matcha-light/50 border-b-matcha-light/50 bg-matcha-light/20"
-                : "border-border hover:bg-cream/50"
+                : "border-border hover:bg-background/50"
             }`}
           >
             <button
