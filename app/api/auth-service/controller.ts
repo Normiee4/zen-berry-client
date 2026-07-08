@@ -33,12 +33,15 @@ export async function register(request: Request) {
   if (rl instanceof NextResponse) return rl
 
   try {
-    const { email, password, fullName } = await request.json()
+    const { email, password, fullName, consentAccepted } = await request.json()
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 })
     }
     if (password.length < 6) {
       return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 })
+    }
+    if (!consentAccepted) {
+      return NextResponse.json({ error: 'You must accept the Terms of Use and Privacy Policy' }, { status: 400 })
     }
 
     const response = NextResponse.json({ success: true, message: 'Account created successfully' }, { status: 201 })
@@ -55,6 +58,7 @@ export async function register(request: Request) {
         user_id: data.user.id,
         email: data.user.email,
         username: fullName ?? email.split('@')[0],
+        consent_accepted_at: new Date().toISOString(),
       })
 
     if (insertError) {
@@ -144,7 +148,8 @@ export async function updateMe(request: Request) {
       if (!validThemes.includes(body.theme_preference)) {
         return NextResponse.json({ error: 'Invalid theme preference' }, { status: 400 })
       }
-      await authService.updateUser(supabase, user.id, { theme_preference: body.theme_preference })
+      const { error: updateError } = await authService.updateUser(supabase, user.id, { theme_preference: body.theme_preference })
+      if (updateError) throw updateError
     }
 
     if (body.has_onboarded !== undefined) {

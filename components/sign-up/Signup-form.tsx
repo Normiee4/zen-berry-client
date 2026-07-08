@@ -18,6 +18,7 @@ export function SignupForm() {
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [loading, setLoading] = useState(false)
+  const [consentAccepted, setConsentAccepted] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,12 +33,17 @@ export function SignupForm() {
       return
     }
 
+    if (!consentAccepted) {
+      toast.error("You must accept the Terms of Use and Privacy Policy")
+      return
+    }
+
     setLoading(true)
 
     const res = await fetch("/api/auth-service/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, fullName: name }),
+      body: JSON.stringify({ email, password, fullName: name, consentAccepted: true }),
     })
 
     setLoading(false)
@@ -133,6 +139,27 @@ export function SignupForm() {
       </div>
 
       <BenefitsList />
+
+      <label className="flex items-start gap-3 text-sm text-muted-foreground">
+        <input
+          type="checkbox"
+          checked={consentAccepted}
+          onChange={(e) => setConsentAccepted(e.target.checked)}
+          className="mt-0.5 size-4 rounded border-border accent-matcha"
+          disabled={loading}
+          required
+        />
+        <span className="leading-relaxed">
+          I have read and agree to the{" "}
+          <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-medium text-matcha underline underline-offset-2 hover:text-matcha-light">
+            Terms of Use
+          </a>{" "}
+          and{" "}
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-medium text-matcha underline underline-offset-2 hover:text-matcha-light">
+            Privacy Policy
+          </a>.
+        </span>
+      </label>
 
       <Button type="submit" className="w-full bg-strawberry text-foreground hover:bg-strawberry-light" size="lg" disabled={loading}>
         {loading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <ArrowRight className="mr-2 size-4" />}
