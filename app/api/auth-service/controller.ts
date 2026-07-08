@@ -108,12 +108,19 @@ export async function getMe(request: Request) {
       return NextResponse.json({ user: null }, { status: 200 })
     }
 
+    const { data: userRow } = await supabase
+      .from('users')
+      .select('theme_preference')
+      .eq('user_id', user.id)
+      .single()
+
     return NextResponse.json({
       user: {
         id: user.id,
         email: user.email,
         name: user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'User',
         has_onboarded: user.user_metadata?.has_onboarded ?? false,
+        theme_preference: userRow?.theme_preference ?? 'light-zen',
       },
     })
   } catch {
@@ -123,7 +130,7 @@ export async function getMe(request: Request) {
 
 export async function updateMe(request: Request) {
   try {
-    const { has_onboarded } = await request.json()
+    const body = await request.json()
     const response = NextResponse.json({ success: true })
     const supabase = createClient(request, response)
     const { data: { user } } = await supabase.auth.getUser()
@@ -132,12 +139,45 @@ export async function updateMe(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { error } = await supabase.auth.updateUser({
-      data: { has_onboarded },
-    })
+    if (body.theme_preference) {
+      const validThemes = ['light-zen', 'warm-earth', 'cozy-dark']
+      if (!validThemes.includes(body.theme_preference)) {
+        return NextResponse.json({ error: 'Invalid theme preference' }, { status: 400 })
+      }
+      await authService.updateUser(supabase, user.id, { theme_preference: body.theme_preference })
+    }
 
-    if (error) throw error
+    if (body.has_onboarded !== undefined) {
+      const { error } = await supabase.auth.updateUser({
+        data: { has_onboarded: body.has_onboarded },
+      })
+      if (error) throw error
+    }
 
+    return response
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function deleteMe(request: Request) {
+  try {
+    const supabase = createClient(request, new NextResponse())
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { error } = await authService.deleteUser(user.id)
+    if (error) {
+      console.error('Failed to delete user:', error)
+      return NextResponse.json({ error: 'Failed to delete account' }, { status: 500 })
+    }
+
+    const response = NextResponse.json({ success: true })
+    const supabaseForLogout = createClient(request, response)
+    await authService.signOut(supabaseForLogout)
     return response
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

@@ -1,7 +1,7 @@
 "use client"
 
 import { usePathname, useRouter } from "next/navigation"
-import { Timer, Pin, BarChart3, LogOut } from "lucide-react"
+import { Timer, Pin, BarChart3, User, LogOut } from "lucide-react"
 
 interface SidebarProps {
   isOpen: boolean
@@ -14,6 +14,10 @@ const navItems = [
   { href: "/dashboard", label: "Focus", icon: Timer },
   { href: "/dashboard/pins", label: "Pins", icon: Pin },
   { href: "/dashboard/productivity", label: "Productivity", icon: BarChart3 },
+] as const
+
+const bottomItems = [
+  { href: "/dashboard/profile", label: "Profile", icon: User },
 ] as const
 
 export function Sidebar({ isOpen, onClose, userName, onLogout }: SidebarProps) {
@@ -81,6 +85,27 @@ export function Sidebar({ isOpen, onClose, userName, onLogout }: SidebarProps) {
 
         {/* Spacer */}
         <div className="flex-1" />
+
+        {/* Bottom items */}
+        <nav className="flex flex-col gap-1 px-3 py-2">
+          {bottomItems.map((item) => {
+            const isActive = pathname === item.href
+            return (
+              <button
+                key={item.href}
+                onClick={() => handleNavigate(item.href)}
+                className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-matcha/10 text-matcha"
+                    : "text-muted-foreground hover:bg-strawberry/10 hover:text-foreground"
+                }`}
+              >
+                <item.icon className="size-5" strokeWidth={1.5} />
+                {item.label}
+              </button>
+            )
+          })}
+        </nav>
 
         {/* Logout */}
         {onLogout && (
