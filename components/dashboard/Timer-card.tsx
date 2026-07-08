@@ -334,7 +334,7 @@ export function TimerCard() {
 
         {/* Center Content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono text-4xl font-bold text-primary">{formattedTime}</span>
+          <span className="font-mono text-4xl font-bold text-foreground">{formattedTime}</span>
           <span className="mt-1 text-sm text-muted-foreground">
             {mode === "focus" ? "Time to focus" : "Take a break"}
           </span>

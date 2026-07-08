@@ -100,20 +100,20 @@
 }
 
 .cozy-dark {
-  --background: #1E1B16;
+  --background: #2A3D2C;
   --foreground: #EDE9E0;
-  --card: #2A2722;
+  --card: #3A523C;
   --card-foreground: #EDE9E0;
-  --muted: #3A3732;
-  --muted-foreground: #9C9688;
-  --border: #3A3732;
-  --popover: #2A2722;
+  --muted: #3A523C;
+  --muted-foreground: #C4B8A0;
+  --border: #4A634C;
+  --popover: #3A523C;
   --popover-foreground: #EDE9E0;
-  --secondary: #3A3732;
-  --secondary-foreground: #EDE9E0;
-  --accent: #3A3732;
+  --secondary: #4A634C;
+  --secondary-foreground: #C4B8A0;
+  --accent: #3A523C;
   --accent-foreground: #EDE9E0;
-  --input: #3A3732;
+  --input: #4A634C;
 }
 
 .warm-earth {
