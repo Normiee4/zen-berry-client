@@ -3,7 +3,7 @@ import { Footer } from "@/components/landing/Footer"
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-cream">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <header className="mb-12">
           <Link

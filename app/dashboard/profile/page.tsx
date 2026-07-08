@@ -174,7 +174,7 @@ export default function ProfilePage() {
                 className={`relative rounded-xl border-2 p-4 text-left transition-all ${
                   isActive
                     ? "border-matcha bg-matcha/5"
-                    : "border-border/30 bg-card hover:border-matcha/50"
+                    : "border-border/30 bg-white hover:border-matcha/50"
                 }`}
               >
                 {isActive && (

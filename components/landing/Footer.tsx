@@ -24,9 +24,9 @@ const footerLinks = {
     { label: "Feedback", href: "/feedback" },
   ],
   legal: [
-    { label: "Privacy", href: "#" },
-    { label: "Terms", href: "#" },
-    { label: "Cookies", href: "#" },
+    { label: "Privacy", href: "/privacy" },
+    { label: "Terms", href: "/terms" },
+    { label: "Cookies", href: "/privacy#cookies" },
   ],
 }
 

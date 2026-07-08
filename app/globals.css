@@ -99,6 +99,40 @@
   
 }
 
+.cozy-dark {
+  --background: #1E1B16;
+  --foreground: #EDE9E0;
+  --card: #2A2722;
+  --card-foreground: #EDE9E0;
+  --muted: #3A3732;
+  --muted-foreground: #9C9688;
+  --border: #3A3732;
+  --popover: #2A2722;
+  --popover-foreground: #EDE9E0;
+  --secondary: #3A3732;
+  --secondary-foreground: #EDE9E0;
+  --accent: #3A3732;
+  --accent-foreground: #EDE9E0;
+  --input: #3A3732;
+}
+
+.warm-earth {
+  --background: #F5F0E8;
+  --foreground: #2D2820;
+  --card: #FFFFFF;
+  --card-foreground: #2D2820;
+  --muted: #E8E0D0;
+  --muted-foreground: #8C8678;
+  --border: #D8D0C0;
+  --popover: #FFFFFF;
+  --popover-foreground: #2D2820;
+  --secondary: #E8E0D0;
+  --secondary-foreground: #2D2820;
+  --accent: #E8E0D0;
+  --accent-foreground: #2D2820;
+  --input: #D8D0C0;
+}
+
 @keyframes steam {
   0% {
     transform: translateY(0) scaleX(1);

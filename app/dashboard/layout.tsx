@@ -8,6 +8,17 @@ import { SidebarToggle } from "@/components/sidebar/sidebar-toggle"
 import { MessageSquareText, MessageSquareWarning } from "lucide-react"
 import { ReviewModal } from "@/components/feedback/review-modal"
 
+interface UserData {
+  name: string
+  theme_preference?: string
+}
+
+const THEME_CLASS_MAP: Record<string, string> = {
+  'light-zen': '',
+  'warm-earth': 'warm-earth',
+  'cozy-dark': 'cozy-dark',
+}
+
 export default function DashboardLayout({
   children,
 }: {
@@ -15,13 +26,18 @@ export default function DashboardLayout({
 }) {
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [user, setUser] = useState<{ name: string } | null>(null)
+  const [user, setUser] = useState<UserData | null>(null)
 
   useEffect(() => {
     fetch("/api/auth-service/me")
       .then((res) => res.json())
       .then((data) => {
-        if (data.user) setUser(data.user)
+        if (data.user) {
+          setUser(data.user)
+          const theme = data.user.theme_preference ?? 'light-zen'
+          const cls = THEME_CLASS_MAP[theme] ?? ''
+          document.documentElement.className = cls
+        }
       })
       .catch(() => {})
   }, [])
