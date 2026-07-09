@@ -21,6 +21,8 @@ class AudioManager {
   private currentStopTimeout: ReturnType<typeof setTimeout> | null = null;
   private _isPlaying = false;
   private initPromise: Promise<void> | null = null;
+  private _keepAliveSource: AudioBufferSourceNode | null = null;
+  private queuedSound: AlarmSound | null = null;
 
   init(): Promise<void> {
     if (this.initPromise) return this.initPromise;
@@ -46,18 +48,58 @@ class AudioManager {
         }),
       );
 
+      this.ctx.onstatechange = () => {
+        if (this.ctx?.state === "suspended") {
+          this.registerUnlockHandler();
+        }
+      };
+
       if (this.ctx.state === "suspended") {
-        const unlock = () => {
-          this.ctx?.resume();
-          document.removeEventListener("pointerdown", unlock);
-          document.removeEventListener("keydown", unlock);
-        };
-        document.addEventListener("pointerdown", unlock, { once: true });
-        document.addEventListener("keydown", unlock, { once: true });
+        this.registerUnlockHandler();
       }
     } catch {
       this.ctx = null;
     }
+  }
+
+  private registerUnlockHandler(): void {
+    const unlock = () => {
+      this.ctx?.resume();
+      if (this.queuedSound) {
+        const sound = this.queuedSound;
+        this.queuedSound = null;
+        this.playInternal(sound);
+      }
+      document.removeEventListener("pointerdown", unlock);
+      document.removeEventListener("keydown", unlock);
+    };
+    document.addEventListener("pointerdown", unlock, { once: true });
+    document.addEventListener("keydown", unlock, { once: true });
+  }
+
+  startKeepAlive(): void {
+    if (!this.ctx || this._keepAliveSource) return;
+    try {
+      const buffer = this.ctx.createBuffer(1, 1, this.ctx.sampleRate);
+      const source = this.ctx.createBufferSource();
+      source.buffer = buffer;
+      source.loop = true;
+      source.connect(this.ctx.destination);
+      source.start();
+      this._keepAliveSource = source;
+    } catch {
+      // keepalive failure is non-fatal
+    }
+  }
+
+  stopKeepAlive(): void {
+    if (!this._keepAliveSource) return;
+    try {
+      this._keepAliveSource.stop();
+    } catch {
+      // already ended
+    }
+    this._keepAliveSource = null;
   }
 
   play(sound: AlarmSound): void {
@@ -66,17 +108,39 @@ class AudioManager {
     const buffer = this.buffers.get(sound);
     if (!buffer) return;
 
+    if (this.ctx.state === "suspended") {
+      this.queuedSound = sound;
+      this.ctx.resume().then(() => {
+        if (this.ctx?.state === "running" && this.queuedSound === sound) {
+          this.queuedSound = null;
+          this.playInternal(sound);
+        }
+      }).catch(() => {
+        // kept queued for gesture handler
+      });
+      return;
+    }
+
+    this.playInternal(sound);
+  }
+
+  private playInternal(sound: AlarmSound): void {
+    if (sound === "none") return;
+
+    const buffer = this.buffers.get(sound);
+    if (!buffer) return;
+
     const duration = ALARM_DURATIONS[sound as Exclude<AlarmSound, "none">] ?? 4000;
     this._isPlaying = true;
 
     try {
-      const source = this.ctx.createBufferSource();
+      const source = this.ctx!.createBufferSource();
       source.buffer = buffer;
 
-      const gain = this.ctx.createGain();
+      const gain = this.ctx!.createGain();
       gain.gain.value = 0.5;
 
-      source.connect(gain).connect(this.ctx.destination);
+      source.connect(gain).connect(this.ctx!.destination);
       source.start();
       this.currentSource = source;
 

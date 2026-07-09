@@ -3,6 +3,9 @@
 
   "instructions": [
     "AGENTS.md",
+    ".opencode/context/PRD.md",
+    ".opencode/context/DESIGN.md",
+    ".opencode/context/SCHEMA.md",
     ".opencode/context/SHIPPING.md",
     ".opencode/context/RULES.md"
   ],

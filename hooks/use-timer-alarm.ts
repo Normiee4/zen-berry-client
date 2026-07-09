@@ -5,6 +5,24 @@ import { audioManager } from "@/lib/audio-manager";
 export function useTimerAlarm() {
   useEffect(() => {
     audioManager.init();
+
+    return () => {
+      audioManager.stopKeepAlive();
+    };
+  }, []);
+
+  useEffect(() => {
+    const unsub = useTimerStore.subscribe(
+      (state) => state.isRunning,
+      (isRunning) => {
+        if (isRunning) {
+          audioManager.startKeepAlive();
+        } else {
+          audioManager.stopKeepAlive();
+        }
+      },
+    );
+    return () => unsub();
   }, []);
 
   useEffect(() => {

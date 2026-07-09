@@ -3,7 +3,11 @@
 - Type: new
 - Status: updated
 - Created: 2026-06-22
-- Updated: 2026-06-25
+- Updated: 2026-07-09
+- Feature version: 2.0.0
+  - 1.0.0 (2026-06-22) — initial alarm sound picker + `HTMLAudioElement` playback
+  - 2.0.0 (2026-06-25) — migrated to Web Audio API (`AudioContext` + `AudioBufferSourceNode`), `timerJustCompleted` subscription, shared `AudioManager` singleton
+  - 2.1.0 (2026-07-09) — silent keepalive loop, `onstatechange` re-registration, `ctx.resume()` fallback, gesture-queue recovery
 
 ## Problem Statement
 
@@ -22,6 +26,8 @@ When a focus or rest timer cycle completes, there is no audible feedback. Users 
 - Desktop + iPad split-screen focus is the primary use case; mobile/tablet full-switch is out of scope
 - Guard against multiple overlapping alarm fires (e.g., rapid tab switches) with an `isPlaying` flag
 - Active session crash recovery must preserve the selected alarm sound
+- On iOS Safari (especially iPad split-screen), the `AudioContext` can be suspended when the tab is inactive; the system must keep the context alive during the timer via an inaudible silent loop
+- Three-layer defense for iOS AudioContext suspension: silent keepalive loop → programmatic `ctx.resume()` → gesture-queued playback
 
 ## Acceptance Criteria
 
@@ -41,6 +47,9 @@ When a focus or rest timer cycle completes, there is no audible feedback. Users 
 - [ ] Audio files are served from `/audio/<name>_alarm.mp3` via Next.js public directory
 - [ ] All new/modified files follow kebab-case naming and use named exports (except `page.tsx`)
 - [ ] No new dependencies beyond existing ones
+- [ ] An inaudible silent loop (`startKeepAlive()` / `stopKeepAlive()`) keeps the `AudioContext` in `"running"` state while the timer is active, preventing iOS Safari from suspending it during split-screen usage
+- [ ] `AudioContext.onstatechange` handler re-registers the gesture unlock listener whenever the context transitions back to `"suspended"`
+- [ ] `play()` checks `ctx.state` and attempts `ctx.resume()` if suspended; if resume fails, the sound is queued for playback on the next user gesture
 
 ## Technical Design
 
@@ -142,6 +151,9 @@ A singleton class that wraps the Web Audio API. Responsible for:
 - Pre-fetching and decoding all 4 MP3 files into `AudioBuffer` objects
 - Resuming the `AudioContext` on first user gesture (iOS Safari requirement)
 - Playing alarm sounds and previews via `AudioBufferSourceNode`
+- Keeping the `AudioContext` alive during the timer via a silent audio loop (iOS split-screen)
+- Re-registering the gesture unlock handler whenever the context is re-suspended (`onstatechange`)
+- Queuing sound playback for the next user gesture if `ctx.resume()` fails
 
 ```typescript
 import type { AlarmSound } from "@/store/timer-store";
@@ -149,16 +161,48 @@ import type { AlarmSound } from "@/store/timer-store";
 class AudioManager {
   private ctx: AudioContext | null = null;
   private buffers = new Map<string, AudioBuffer>();
-  // ...
+  private currentSource: AudioBufferSourceNode | null = null;
+  private currentStopTimeout: ReturnType<typeof setTimeout> | null = null;
+  private _isPlaying = false;
+  private initPromise: Promise<void> | null = null;
+  private _keepAliveSource: AudioBufferSourceNode | null = null;
+  private queuedSound: AlarmSound | null = null;
 
   async init(): Promise<void> {
     // Creates AudioContext, fetches + decodes all MP3s
-    // Registers pointerdown/keydown listeners to resume suspended context
+    // Sets up onstatechange → re-registers unlock on re-suspension
+    // Registers pointerdown/keydown listeners if initially suspended
+  }
+
+  private registerUnlockHandler(): void {
+    // Registers pointerdown/keydown listener (once)
+    // On trigger: resumes ctx + plays queuedSound if any
+  }
+
+  startKeepAlive(): void {
+    // Creates a 1-sample silent AudioBufferSourceNode with loop: true
+    // Keeps AudioContext in "running" state during timer
+    // No-op if keepalive already active
+  }
+
+  stopKeepAlive(): void {
+    // Stops and cleans up the silent loop
   }
 
   play(sound: AlarmSound): void {
-    // Plays alarm at 0.5 volume, auto-stops after per-sound duration
     // Guards: returns early if "none", already playing, or buffer not ready
+    // If ctx.state === "suspended":
+    //   1. Queue the sound
+    //   2. Try ctx.resume() programmatically (works on iOS 16+)
+    //   3. If resume succeeds → play immediately, clear queue
+    //   4. If resume fails → stays queued for gesture handler
+    // If ctx.state === "running": play immediately
+  }
+
+  private playInternal(sound: AlarmSound): void {
+    // Creates AudioBufferSourceNode at 0.5 volume
+    // Auto-stops after per-sound duration
+    // Handles onended cleanup
   }
 
   preview(sound: AlarmSound, durationMs = 3000): void {
@@ -166,7 +210,7 @@ class AudioManager {
   }
 
   stop(): void {
-    // Stops any current playback immediately
+    // Stops current alarm/preview playback (does NOT stop keepalive)
   }
 
   getIsPlaying(): boolean {
@@ -189,8 +233,28 @@ import { audioManager } from "@/lib/audio-manager";
 export function useTimerAlarm() {
   useEffect(() => {
     audioManager.init();
+
+    return () => {
+      audioManager.stopKeepAlive();
+    };
   }, []);
 
+  // Keep AudioContext alive during timer (iOS split-screen defense)
+  useEffect(() => {
+    const unsub = useTimerStore.subscribe(
+      (state) => state.isRunning,
+      (isRunning) => {
+        if (isRunning) {
+          audioManager.startKeepAlive();
+        } else {
+          audioManager.stopKeepAlive();
+        }
+      },
+    );
+    return () => unsub();
+  }, []);
+
+  // Play alarm when timer completes
   useEffect(() => {
     const unsub = useTimerStore.subscribe(
       (state) => state.timerJustCompleted,
@@ -298,7 +362,8 @@ Page load:
     → audioManager.init()
       → new AudioContext() created (suspended on iOS)
       → fetch + decodeAudioData for all 4 MP3s → cached as AudioBuffers
-      → pointerdown/keydown listener registered
+      → onstatechange handler set → re-registers unlock on re-suspension
+      → if suspended → registerUnlockHandler() → pointerdown/keydown listener
         → first user gesture → ctx.resume() → audio system unlocked
 
 User selects "Chime" in settings dialog
@@ -306,14 +371,29 @@ User selects "Chime" in settings dialog
     → set({ alarmSound: "chime" })
     → saveAlarmSound("chime")  // localStorage
 
+User starts timer
+  → isRunning = true
+  → use-timer-alarm.ts isRunning subscription fires
+    → audioManager.startKeepAlive()
+      → 1-sample silent buffer, looped, connected to destination
+      → AudioContext stays in "running" state
+
 Timer counts down (via useTimerLogic → tick())
-  → timeLeft reaches 0, timerJustCompleted = true
-  → use-timer-alarm.ts subscription fires
-    → audioManager.play("chime")
-      → AudioBufferSourceNode created from cached buffer
-      → source.connect(gain).connect(ctx.destination)
-      → source.start()
-      → setTimeout(6000ms) → source.stop()
+  → timeLeft reaches 0, timerJustCompleted = true, isRunning = false
+  → isRunning subscription fires → audioManager.stopKeepAlive()
+  → timerJustCompleted subscription fires → audioManager.play("chime")
+    → ctx.state is "running" (keepalive prevented suspension)
+    → AudioBufferSourceNode created from cached buffer
+    → source.connect(gain).connect(ctx.destination)
+    → source.start()
+    → setTimeout(6000ms) → source.stop()
+
+[iOS re-suspension edge case — keepalive bypassed]
+  → ctx.state === "suspended" in play()
+  → queuedSound = "chime"
+  → ctx.resume() attempted:
+    → succeeds (iOS 16+) → playInternal() immediately → alarm sounds  ✅
+    → fails (iOS < 16) → stays queued → next gesture → alarm sounds ✅
 
 User taps preview button for "Bell"
   → audioManager.preview("bell", 3000)
@@ -350,11 +430,28 @@ Page refresh with active session:
 - No `AudioBufferSourceNode` is created, no playback occurs
 - This is the default state for all users
 
-### iOS / iPad autoplay restrictions
-- `new AudioContext()` on iOS Safari starts in `"suspended"` state
-- A `pointerdown`/`keydown` listener is registered once during `init()`; the first user gesture calls `ctx.resume()`, unlocking the audio system for the session
-- Both alarm playback and preview work because they go through the already-resumed `AudioContext`
-- If the audio context cannot be created (unsupported browser), `ctx` is set to `null` and all `play()`/`preview()` calls return early — no audio, no errors
+### iOS / iPad autoplay restrictions & split-screen recovery
+
+Three-layer defense against `AudioContext` suspension (in order of reliability):
+
+**Layer 1 — Silent keepalive loop (primary)**
+- While the timer is running (`isRunning === true`), `startKeepAlive()` creates a 1-sample silent `AudioBufferSourceNode` with `loop: true` connected to `ctx.destination`
+- This keeps the `AudioContext` in `"running"` state, preventing iOS Safari from suspending it even when the tab is in the inactive split-screen pane
+- On timer completion, `stopKeepAlive()` is called (via the `isRunning` subscription firing to `false`), immediately followed by `play()` — the context is still `"running"`, so playback succeeds
+
+**Layer 2 — Programmatic `ctx.resume()` in `play()` (secondary)**
+- If the context is `"suspended"` when `play()` is called (keepalive bypassed by edge case), `play()` queues the sound via `queuedSound` and calls `ctx.resume()`
+- On iOS 16+, `ctx.resume()` from a non-gesture context succeeds if the context was previously unlocked by a user gesture
+- If resume succeeds → `playInternal()` fires immediately → alarm sounds
+
+**Layer 3 — Gesture-queued fallback (tertiary)**
+- If `ctx.resume()` fails (iOS < 16, or restrictive policy), the sound remains queued in `queuedSound`
+- `AudioContext.onstatechange` is set in `init()`: whenever the context transitions to `"suspended"`, `registerUnlockHandler()` is called, adding fresh `pointerdown`/`keydown` listeners
+- `registerUnlockHandler()`'s callback drains `queuedSound` when the gesture fires: resumes context → calls `playInternal()` → alarm sounds
+- This handles the case where the user switches back to the Zen Berry tab and taps anywhere
+
+**Unsupported browser fallback:**
+- If `new AudioContext()` throws or `init()` fails, `ctx` is set to `null` and all `play()`/`preview()`/`startKeepAlive()` calls return early — no audio, no errors
 
 ### Audio buffer fetch or decode fails
 - `Promise.allSettled` ensures one failed sound doesn't block others

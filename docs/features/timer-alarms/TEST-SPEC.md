@@ -1,7 +1,7 @@
 # Test Spec: Timer Alarms
 
 ## Overview
-This document describes the test strategy for the Timer Alarms feature. The feature adds configurable alarm sounds that play when a focus or rest timer completes. It consists of store extensions (alarm sound type + state + persistence), a subscription hook for playback, and a UI picker component inside the Timer Settings dialog.
+This document describes the test strategy for the Timer Alarms feature. The feature adds configurable alarm sounds that play when a focus or rest timer completes. It consists of store extensions (alarm sound type + state + persistence), a shared `AudioManager` singleton (Web Audio API), a subscription hook for playback and keepalive, and a UI picker component inside the Timer Settings dialog.
 
 Since the project does not currently have a unit test runner configured, test files live under `tests/` as reference specs. They are written in a standard `describe`/`it`/`expect` pattern compatible with Vitest (recommended) or Jest. Mocking patterns use `vi.mock()` (Vitest) and can be adapted to `jest.mock()` if needed.
 
@@ -35,32 +35,71 @@ Since the project does not currently have a unit test runner configured, test fi
 
 ---
 
-### 2. Hook Layer — `hooks/use-timer-alarm.ts`
-**Framework**: Unit tests with mocked store subscription and `HTMLAudioElement`
+### 2. Audio Manager Layer — `lib/audio-manager.ts`
+**Framework**: Unit tests with mocked Web Audio API (`AudioContext`, `AudioBufferSourceNode`, `AudioBuffer`, `GainNode`)
 
 #### Happy Path
-- Subscribes to `useTimerStore` with selector `{ timeLeft, isRunning, alarmSound }`
-- When `timeLeft <= 0`, `isRunning === false`, and `alarmSound !== "none"`, creates an `HTMLAudioElement` and calls `.play()`
-- Audio volume is set to `0.5`
-- After `ALARM_DURATION_MS` (4000ms), the audio is paused and `currentTime` reset to 0
-- `isPlayingRef` guard is set to `true` during playback and `false` after timeout
+- `init()` creates an `AudioContext`, fetches and decodes all 4 MP3 buffers, sets up `onstatechange` handler
+- `init()` registers unlock handler via `pointerdown`/`keydown` when context starts suspended
+- `init()` returns the same promise on subsequent calls (idempotent)
+- `startKeepAlive()` creates a 1-sample silent `AudioBufferSourceNode` with `loop: true`
+- `startKeepAlive()` is idempotent (no-op if already active)
+- `stopKeepAlive()` stops and nulls the keepalive source
+- `play("bell")` creates an `AudioBufferSourceNode` at 0.5 volume, calls `source.start()`, sets `_isPlaying = true`
+- `play("chime")` uses the correct duration (4000ms) before auto-stopping
+- `play("lofi")` uses the correct duration (9000ms) before auto-stopping
+- `preview("bell", 3000)` stops current playback, plays at 0.3 volume, auto-stops after 3000ms
+- `stop()` clears timeout, stops source, resets `_isPlaying`
+- `getIsPlaying()` returns current `_isPlaying` state
 
 #### Edge Cases
-- When `alarmSound === "none"`, no audio is created regardless of timer state
-- When `isRunning === true`, no audio is created even if `timeLeft <= 0`
-- When `timeLeft > 0`, no audio is created
-- If a second timer completion fires while alarm is playing (`isPlayingRef.current === true`), playback is skipped (no overlap)
-- `audio.play()` promise rejection (browser autoplay policy) — `isPlayingRef` is reset, no error surfaces
-- `AUDIO_FILES[alarmSound]` lookup returns `undefined` (theoretical, shouldn't happen) — guard returns early
+- `play("none")` returns immediately — no source created
+- `play()` returns early if `_isPlaying` is already `true` (no overlap)
+- `play()` returns early if buffer for the sound is missing (fetch failure)
+- `play()` returns early if `ctx` is `null` (init failed)
+- `preview("none")` returns immediately
+- Calling `preview()` while alarm is playing stops the alarm first
+- `stopKeepAlive()` when no keepalive is active is a safe no-op
+
+#### iOS Suspension Recovery
+- When `ctx.state === "suspended"` in `play()`, the sound is stored in `queuedSound` and `ctx.resume()` is called
+- If `ctx.resume()` succeeds (context transitions to `"running"`), `playInternal()` fires and queue is cleared
+- If `ctx.resume()` fails, `queuedSound` remains set for gesture handler
+- `registerUnlockHandler()`'s callback (on `pointerdown`/`keydown`) resumes context and drains `queuedSound`
+- `queuedSound` is set to `null` after being drained (prevents double-play)
+- `onstatechange` handler re-registers unlock handler via `registerUnlockHandler()` whenever context transitions to `"suspended"`
 
 #### Error Scenarios
-- `new Audio(src)` fails or `play()` rejects — caught silently, `isPlayingRef` and `currentAudioRef` are cleaned up
-- Cleanup on unmount: subscription is unsubscribed via returned `unsub()` function
+- `new AudioContext()` throws → `ctx` is `null`, all playback methods return early
+- `fetch()` fails for a sound → individual buffer is missing, `play()` returns early for that sound only
+- `decodeAudioData()` fails for a sound → same as above, other sounds still work
+- `source.start()` throws → caught silently, `_isPlaying` reset to `false`
 
 ---
 
-### 3. Component Layer — `components/dashboard/timer-alarm-picker.tsx`
-**Framework**: Component tests with `@testing-library/react` and mocked `HTMLAudioElement`
+### 3. Hook Layer — `hooks/use-timer-alarm.ts`
+**Framework**: Unit tests with mocked `AudioManager` (verify calls, don't test real audio) and mocked `useTimerStore.subscribe`
+
+#### Happy Path
+- On mount, calls `audioManager.init()`
+- Subscribes to `state.isRunning` → calls `audioManager.startKeepAlive()` when `true`, `audioManager.stopKeepAlive()` when `false`
+- Subscribes to `state.timerJustCompleted` → calls `audioManager.play()` with current `alarmSound` when `justCompleted` is `true`
+- After calling `play()`, resets `timerJustCompleted` to `false` in the store
+- On unmount, unsubscribes from both subscriptions
+
+#### Guard Clauses
+- When `timerJustCompleted` is `false`, no `play()` call is made
+- When `timerJustCompleted` is `true` but `audioManager.getIsPlaying()` returns `true`, `play()` is skipped (no overlap)
+- When `timerJustCompleted` is `true` and `alarmSound` is `"none"`, `audioManager.play("none")` is called (guard is inside `play()`)
+
+#### Cleanup
+- On unmount, `stopKeepAlive()` is called
+- On unmount, both subscription `unsub()` functions are called
+
+---
+
+### 4. Component Layer — `components/dashboard/timer-alarm-picker.tsx`
+**Framework**: Component tests with `@testing-library/react` and mocked `audioManager`
 
 #### Happy Path
 - Renders all 5 sound options: None, Bell, Chime, Digital, Lo-fi
@@ -68,22 +107,21 @@ Since the project does not currently have a unit test runner configured, test fi
 - Clicking an option fires `onAlarmSoundChange` with the correct value
 - Preview button is visible for every non-"None" option
 - Preview button shows `Volume2` icon when not previewing, `VolumeX` icon when previewing
-- Preview plays the audio file for 3 seconds then stops automatically
+- Preview calls `audioManager.preview(sound, 3000)` and sets previewing state
 - Preview toggle: clicking play then stop works (play → stop → play)
-- Clicking a different sound while previewing stops the current preview and starts the new one
 
 #### Edge Cases
 - "None" option has no preview button
-- When `previewing === sound`, clicking the preview button stops playback (toggle behavior)
-- Audio `play()` promise rejects (browser policy) — `previewing` state resets to `null`
+- When `previewing === sound`, clicking the preview button calls `audioManager.stop()` (toggle behavior)
+- On mount, `audioManager.init()` is called
+- On unmount, `audioManager.stop()` is called
 
-#### Error Scenarios
-- Missing audio file URL → `new Audio(src)` may still create an element, but `play()` rejects — caught in `.catch()`
-- Rapid clicking of preview buttons is handled (previous timeout cleared, previous audio paused)
+#### Mocking
+- Mock `audioManager` singleton: `vi.spyOn(audioManager, 'init')`, `vi.spyOn(audioManager, 'preview')`, `vi.spyOn(audioManager, 'stop')`
 
 ---
 
-### 4. Component Integration — `components/dashboard/Timer-card.tsx`
+### 5. Component Integration — `components/dashboard/Timer-card.tsx`
 **Framework**: Component/render tests with mocked child hooks and components
 
 #### Happy Path
@@ -103,16 +141,59 @@ Since the project does not currently have a unit test runner configured, test fi
 ### localStorage
 Mock via `vi.spyOn(Storage.prototype, 'getItem')` / `vi.spyOn(Storage.prototype, 'setItem')` or simply call `localStorage.setItem()`/`localStorage.clear()` directly (Vitest provides a fake `localStorage` in `jsdom` environment). For initial state tests, use `vi.resetModules()` + dynamic `import()` to force re-evaluation of the store module.
 
-### HTMLAudioElement
-Mock the `Audio` constructor globally:
-```ts
-const mockAudio = {
-  play: vi.fn().mockResolvedValue(undefined),
-  pause: vi.fn(),
-  volume: 0,
-  currentTime: 0,
+### Web Audio API (AudioManager tests)
+Mock the Web Audio API constructors globally:
+
+```typescript
+const mockGainNode = {
+  gain: { value: 0 },
+  connect: vi.fn().mockReturnThis(),
 };
-vi.stubGlobal('Audio', vi.fn(() => mockAudio));
+
+const mockSource = {
+  buffer: null,
+  loop: false,
+  connect: vi.fn(() => mockGainNode),
+  start: vi.fn(),
+  stop: vi.fn(),
+  onended: null as (() => void) | null,
+};
+
+const mockAudioContext = {
+  state: "running",
+  sampleRate: 44100,
+  createBuffer: vi.fn(() => ({
+    getChannelData: vi.fn(() => new Float32Array(1)),
+    duration: 1,
+  })),
+  createBufferSource: vi.fn(() => ({ ...mockSource })),
+  createGain: vi.fn(() => ({ ...mockGainNode })),
+  resume: vi.fn().mockResolvedValue(undefined),
+  destination: {},
+  onstatechange: null as (() => void) | null,
+};
+
+vi.stubGlobal("AudioContext", vi.fn(() => mockAudioContext));
+vi.stubGlobal("AudioBufferSourceNode", vi.fn(() => mockSource));
+```
+
+To simulate a suspended context, override `mockAudioContext.state`:
+
+```typescript
+mockAudioContext.state = "suspended";
+```
+
+### AudioManager singleton (Hook & Component tests)
+For hook and component tests, do not test real Web Audio API internals. Instead, spy on the imported singleton:
+
+```typescript
+import { audioManager } from "@/lib/audio-manager";
+
+vi.spyOn(audioManager, "init");
+vi.spyOn(audioManager, "play");
+vi.spyOn(audioManager, "startKeepAlive");
+vi.spyOn(audioManager, "stopKeepAlive");
+vi.spyOn(audioManager, "getIsPlaying").mockReturnValue(false);
 ```
 
 ### Zustand Store
@@ -134,18 +215,23 @@ For `Timer-card.tsx` tests, mock heavy dependencies:
 |------|------------|---------------|
 | 1 | `alarmSound` field in `TimerState` and `ActiveSession` | `timer-store.test.ts` — type shape + state structure |
 | 2 | `setAlarmSound` action persists to `localStorage` | `timer-store.test.ts` — action updates state + calls saveAlarmSound |
-| 3 | Alarm plays 3–5s on timer completion | `use-timer-alarm.test.ts` — subscription fires playback + timeout clears |
-| 4 | `alarmSound === "none"` → no audio | `use-timer-alarm.test.ts` — guard returns early |
-| 5 | No overlapping audio | `use-timer-alarm.test.ts` — `isPlayingRef` guard blocks re-entry |
+| 3 | Alarm plays on timer completion | `use-timer-alarm.test.ts` — `timerJustCompleted` subscription fires `play()` |
+| 4 | `alarmSound === "none"` → no audio | `audio-manager.test.ts` — `play("none")` returns early |
+| 5 | No overlapping audio | `use-timer-alarm.test.ts` — `getIsPlaying()` guard blocks re-entry |
 | 6 | Settings dialog shows 4 sounds + "None" | `timer-alarm-picker.test.tsx` — renders all 5 options |
-| 7 | Preview button plays 3s, independent of timer | `timer-alarm-picker.test.tsx` — preview Audio + 3s timeout |
+| 7 | Preview button plays 3s via `audioManager.preview` | `timer-alarm-picker.test.tsx` — preview delegates to AudioManager |
 | 8 | Selecting sound updates store + localStorage | `timer-store.test.ts` + `timer-alarm-picker.test.tsx` — onChange fires appropriately |
 | 9 | Page refresh restores from localStorage | `timer-store.test.ts` — initial state from `loadAlarmSound()` |
 | 10 | Crash recovery preserves `alarmSound` | `timer-store.test.ts` — `restoreSession()` applies saved alarmSound |
-| 11 | Uses `HTMLAudioElement` API | `use-timer-alarm.test.ts` — `new Audio(src)` is called |
-| 12 | Audio files served from `/audio/<name>_alarm.mp3` | `use-timer-alarm.test.ts` — `AUDIO_FILES` paths match pattern |
+| 11 | Uses Web Audio API (`AudioContext` + `AudioBufferSourceNode`) | `audio-manager.test.ts` — constructs AudioContext, creates BufferSource |
+| 12 | Audio files served from `/audio/<name>_alarm.mp3` | `audio-manager.test.ts` — `AUDIO_FILES` paths match pattern |
 | 13 | kebab-case + named exports | (lint/typecheck) |
 | 14 | No new dependencies | (build/package.json check) |
+| 15 | Silent keepalive loop keeps context alive during timer | `audio-manager.test.ts` — `startKeepAlive()` creates looping source, `stopKeepAlive()` stops it |
+| 16 | `onstatechange` re-registers unlock on suspension | `audio-manager.test.ts` — statechange triggers `registerUnlockHandler()` |
+| 17 | `play()` queues sound and resumes when suspended | `audio-manager.test.ts` — suspended context → queue + resume attempt |
+| 18 | Gesture handler drains queued sound on next interaction | `audio-manager.test.ts` — pointerdown fires → `playInternal()` called |
+| 19 | `isRunning` subscription starts/stops keepalive | `use-timer-alarm.test.ts` — subscribe to `isRunning` triggers keepalive methods |
 
 ---
 
