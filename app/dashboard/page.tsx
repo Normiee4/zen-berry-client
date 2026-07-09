@@ -15,6 +15,9 @@ import { ConfirmDragDialog } from "@/components/dashboard/ConfirmDragDialog"
 import { DailyZenTip } from "@/components/dashboard/Daily-zen-tip"
 import { TodayRecap } from "@/components/dashboard/Today-recap"
 import { OnboardingOverlay } from "@/components/onboarding/onboarding-overlay"
+import { ProductTour } from "@/components/product-tour/product-tour"
+import { useProductTour } from "@/hooks/use-product-tour"
+import { useProductTourStore } from "@/store/product-tour-store"
 import { toast } from "sonner"
 
 interface PendingDrag {
@@ -44,7 +47,10 @@ export default function DashboardPage() {
       body: JSON.stringify({ has_onboarded: true }),
     })
     setShowOnboarding(false)
+    useProductTourStore.getState().triggerTour()
   }
+
+  const { isActive, steps, onClose } = useProductTour()
 
   const { mits, addMIT, updateTitle, markAsDone, remainingSlots } = useMITApi()
   const { tasks, addTask, deleteTask, updateTask } = useTasksApi()
@@ -103,21 +109,25 @@ export default function DashboardPage() {
       <div className="mx-auto max-w-8xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-6 items-stretch lg:grid-cols-3">
             <div className="flex h-full flex-col gap-6">
-              <div className="flex-1">
+              <div className="flex-1" data-tour="step-2">
                 <ErrorBoundary name="Timer" fallback={<p className="text-sm text-muted-foreground p-4">Timer unavailable</p>}>
                   <TimerCard />
                 </ErrorBoundary>
               </div>
-              <ErrorBoundary name="Streak" fallback={<p className="text-sm text-muted-foreground p-4">Streak unavailable</p>}>
-                <StreakCard />
-              </ErrorBoundary>
-              <ErrorBoundary name="Progress" fallback={<p className="text-sm text-muted-foreground p-4">Progress unavailable</p>}>
-                <MatchaProgressCard />
-              </ErrorBoundary>
+              <div data-tour="step-5">
+                <ErrorBoundary name="Progress" fallback={<p className="text-sm text-muted-foreground p-4">Progress unavailable</p>}>
+                  <MatchaProgressCard />
+                </ErrorBoundary>
+              </div>
+              <div data-tour="step-6">
+                <ErrorBoundary name="Streak" fallback={<p className="text-sm text-muted-foreground p-4">Streak unavailable</p>}>
+                  <StreakCard />
+                </ErrorBoundary>
+              </div>
             </div>
 
             <div className="flex h-full flex-col gap-6">
-              <div className="flex-1">
+              <div className="flex-1" data-tour="step-3">
                 <MITCard
                   mits={mits}
                   droppableId="mit-list"
@@ -127,7 +137,7 @@ export default function DashboardPage() {
                   remainingSlots={remainingSlots}
                 />
               </div>
-              <div className="flex-1">
+              <div className="flex-1" data-tour="step-4">
                 <BrainDumpCard
                   tasks={brainDumpTasks}
                   droppableId="braindump-list"
@@ -142,7 +152,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="flex h-full flex-col gap-6">
-              <div className="flex-[2]">
+              <div className="flex-[2]" data-tour="step-9">
                 <ErrorBoundary name="AI Insights" fallback={<p className="text-sm text-muted-foreground p-4">Insights unavailable</p>}>
                   <AIInsightsCard />
                 </ErrorBoundary>
@@ -150,7 +160,7 @@ export default function DashboardPage() {
               <div className="flex-1">
                 <DailyZenTip />
               </div>
-              <div className="flex-1">
+              <div className="flex-1" data-tour="step-8">
                 <TodayRecap />
               </div>
             </div>
@@ -165,6 +175,7 @@ export default function DashboardPage() {
       />
 
       {showOnboarding && <OnboardingOverlay onComplete={handleOnboardingComplete} />}
+      <ProductTour isActive={isActive} steps={steps} onClose={onClose} />
     </DragDropContext>
   )
 }

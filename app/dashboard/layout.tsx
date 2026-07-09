@@ -7,6 +7,8 @@ import { Sidebar } from "@/components/sidebar/sidebar"
 import { SidebarToggle } from "@/components/sidebar/sidebar-toggle"
 import { MessageSquareText, MessageSquareWarning } from "lucide-react"
 import { ReviewModal } from "@/components/feedback/review-modal"
+import { TourHelpButton } from "@/components/product-tour/tour-help-button"
+import { useProductTourStore } from "@/store/product-tour-store"
 
 interface UserData {
   name: string
@@ -82,6 +84,7 @@ export default function DashboardLayout({
                 <MessageSquareWarning className="size-4" strokeWidth={1.5} />
                 Report
               </Link>
+              <TourHelpButton onClick={() => useProductTourStore.getState().triggerTour()} />
             </div>
           </div>
         </header>
