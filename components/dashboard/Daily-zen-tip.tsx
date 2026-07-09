@@ -30,7 +30,7 @@ export function DailyZenTip() {
   }, [])
 
   return (
-    <div className="flex h-full flex-col rounded-3xl border border-matcha-dark/20 bg-card/60 p-6 backdrop-blur-sm">
+    <div className="flex h-full flex-col rounded-3xl border border-matcha-dark/20 bg-card/60 p-6 backdrop-blur-sm" data-tour="step-7">
       <div className="flex flex-1 items-center justify-center">
         <div className="flex items-start gap-4">
           <div className="relative size-16 shrink-0">

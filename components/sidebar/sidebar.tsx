@@ -63,7 +63,7 @@ export function Sidebar({ isOpen, onClose, userName, onLogout }: SidebarProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex flex-col gap-1 px-3 py-4">
+        <nav className="flex flex-col gap-1 px-3 py-4" data-tour="step-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href
             return (
