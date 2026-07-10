@@ -12,6 +12,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
+import { THEME_CLASS_MAP, THEME_COOKIE_KEY, THEME_LOCAL_STORAGE_KEY } from "@/lib/theme"
 
 interface UserData {
   id: string
@@ -44,12 +45,6 @@ const themes = [
   },
 ]
 
-const THEME_CLASS_MAP: Record<string, string> = {
-  'light-zen': '',
-  'warm-earth': 'warm-earth',
-  'cozy-dark': 'cozy-dark',
-}
-
 export default function ProfilePage() {
   const router = useRouter()
   const [user, setUser] = useState<UserData | null>(null)
@@ -77,6 +72,8 @@ export default function ProfilePage() {
 
     const cls = THEME_CLASS_MAP[themeId] ?? ''
     document.documentElement.className = cls
+    document.cookie = `${THEME_COOKIE_KEY}=${themeId}; path=/; max-age=31536000`
+    localStorage.setItem(THEME_LOCAL_STORAGE_KEY, themeId)
 
     try {
       const res = await fetch("/api/auth-service/me", {

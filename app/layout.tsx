@@ -1,7 +1,9 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next"
 import { Nunito_Sans } from "next/font/google"
+import { cookies } from "next/headers"
 import { Providers } from "./providers"
+import { THEME_CLASS_MAP, THEME_COOKIE_KEY } from "@/lib/theme"
 
 const nunitoSans = Nunito_Sans({
   subsets: ["latin"],
@@ -26,9 +28,13 @@ export const viewport: Viewport = {
   themeColor: "#86A788",
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies()
+  const theme = cookieStore.get(THEME_COOKIE_KEY)?.value ?? "light-zen"
+  const themeClass = THEME_CLASS_MAP[theme] ?? ""
+
   return (
-    <html lang="en">
+    <html lang="en" className={themeClass}>
       <body className={nunitoSans.className}>
         <Providers>{children}</Providers>
       </body>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Volume2, VolumeX } from "lucide-react";
+import { Play, Volume2, VolumeX } from "lucide-react";
 import type { AlarmSound } from "@/store/timer-store";
 import { audioManager } from "@/lib/audio-manager";
 
@@ -76,7 +76,7 @@ export function TimerAlarmPicker({ alarmSound, onAlarmSoundChange }: TimerAlarmP
                 {previewing === option.value ? (
                   <VolumeX className="size-4" />
                 ) : (
-                  <Volume2 className="size-4" />
+                  <Play className="size-4" />
                 )}
               </button>
             )}

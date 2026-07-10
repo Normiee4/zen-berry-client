@@ -9,16 +9,18 @@ import { MessageSquareText, MessageSquareWarning } from "lucide-react"
 import { ReviewModal } from "@/components/feedback/review-modal"
 import { TourHelpButton } from "@/components/product-tour/tour-help-button"
 import { useProductTourStore } from "@/store/product-tour-store"
+import { THEME_CLASS_MAP, THEME_COOKIE_KEY, THEME_LOCAL_STORAGE_KEY } from "@/lib/theme"
 
 interface UserData {
   name: string
   theme_preference?: string
 }
 
-const THEME_CLASS_MAP: Record<string, string> = {
-  'light-zen': '',
-  'warm-earth': 'warm-earth',
-  'cozy-dark': 'cozy-dark',
+function setThemePrefs(theme: string) {
+  const cls = THEME_CLASS_MAP[theme] ?? ""
+  document.documentElement.className = cls
+  document.cookie = `${THEME_COOKIE_KEY}=${theme}; path=/; max-age=31536000`
+  localStorage.setItem(THEME_LOCAL_STORAGE_KEY, theme)
 }
 
 export default function DashboardLayout({
@@ -37,8 +39,7 @@ export default function DashboardLayout({
         if (data.user) {
           setUser(data.user)
           const theme = data.user.theme_preference ?? 'light-zen'
-          const cls = THEME_CLASS_MAP[theme] ?? ''
-          document.documentElement.className = cls
+          setThemePrefs(theme)
         }
       })
       .catch(() => {})
