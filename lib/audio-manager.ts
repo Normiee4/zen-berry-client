@@ -178,6 +178,24 @@ class AudioManager {
     const buffer = this.buffers.get(sound);
     if (!buffer) return;
 
+    if (this.ctx.state === "suspended") {
+      this.ctx.resume().then(() => {
+        this.playPreviewInternal(sound, buffer, durationMs);
+      }).catch(() => {
+        // context couldn't be resumed — gesture handler will retry
+      });
+      return;
+    }
+
+    this.playPreviewInternal(sound, buffer, durationMs);
+  }
+
+  private playPreviewInternal(
+    sound: Exclude<AlarmSound, "none">,
+    buffer: AudioBuffer,
+    durationMs: number,
+  ): void {
+    if (!this.ctx) return;
     this._isPlaying = true;
 
     try {
