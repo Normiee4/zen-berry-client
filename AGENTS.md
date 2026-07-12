@@ -5,7 +5,8 @@
 - `npm run build` — Production build (requires env vars)
 - `npm run lint` — ESLint (flat config in `eslint.config.mjs`)
 - `npm run typecheck` — `tsc --noEmit`
-- No test command exists — Playwright (`@playwright/test`) is in devDeps but not configured
+- `npm test` — Playwright E2E (`tests/e2e/`, 2 browsers: chromium + firefox, auto-starts dev server)
+- `npm run test:ui` — Playwright UI mode
 
 ## Core Architecture
 
@@ -15,11 +16,15 @@ Every API endpoint under `app/api/<name>/` follows:
 - `controller.ts` — Request parsing, auth resolution, response formatting
 - `service.ts` — Supabase queries/mutations only, returns plain data
 
+**Known exception:** `app/api/analytics/summary/` has `controller.ts` + `route.ts` but no `service.ts` — logic lives in the controller.
+
+**Empty directories** (no route files, may confuse): `app/api/task-service/`, `app/api/ai-service/`.
+
 ### Auth Flow
-1. `middleware.ts` runs on all `/api/*` (except waitlist, auth-service), `/dashboard/*`, `/auth/*`
+1. `proxy.ts` (root) runs middleware on all `/api/*` (except waitlist, auth-service), `/dashboard/*`, `/auth/*`
 2. `authorizationMiddleware` sets `X-User-Id` header from Supabase session
 3. Controllers read `X-User-Id` or call `supabase.auth.getUser()` as fallback
-4. Beta bypass: ?beta_secret=<secret> cookie, uses `BETA_BYPASS_SECRETS` env var
+4. Beta bypass: `?beta_secret=<secret>` cookie, uses `BETA_BYPASS_SECRETS` env var
 
 ### Middleware Matcher
 ```ts
@@ -34,6 +39,10 @@ Middleware lives in `proxy.ts` (root), not `middleware.ts`. Next.js 16 supports 
 - **Ephemeral UI** → `useState`
 - Do not store server data in Zustand
 
+### Hook Duality (Legacy ~ Current)
+- `useMIT.ts` / `useTasks.ts` — localStorage-only, legacy. Do not use in new code.
+- `useMITApi.ts` / `useTasksApi.ts` — Current, backed by TanStack Query + `/api/tasks`. Use these.
+
 ### Supabase Clients (3 contexts)
 - `lib/supabase.ts` — `createBrowserClient` (browser)
 - `lib/supabase-server.ts` — `createServerSupabaseClient()` (server components), `createMiddlewareClient()` (middleware), `createRouteHandlerClient()` (route handlers)
@@ -41,7 +50,37 @@ Middleware lives in `proxy.ts` (root), not `middleware.ts`. Next.js 16 supports 
 
 ### Env Files
 - `.env` (gitignored) — Production keys, do not commit
-- `.env.sample.dev` (checked in) — Dev Supabase placeholders + tester bypass secrets
+- `.env.dev.local` (gitignored) — Dev Supabase placeholders + tester bypass secrets
+
+### Database Migrations
+- `supabase/migrations/` — SQL files applied via Supabase dashboard. Do not edit manually in code; write new migration files.
+
+### Theme System
+- 3 themes: `light-zen` (default), `warm-earth`, `cozy-dark`
+- Persisted via cookie (`zenberry_theme`) + localStorage (`zenberry_theme`)
+- Defined in `app/globals.css` as CSS class scopes (`.warm-earth`, `.cozy-dark`)
+
+### Timer Architecture
+- **Timestamp-based tracking** (`startTimestamp` + `initialDuration`) — survives tab throttling, no `setInterval` drift
+- Tick logic in `store/timer-store.ts` via `subscribeWithSelector`
+- Presets (id, name, focusMinutes, breakMinutes, isDefault) stored in localStorage key `zenberry_timer_presets`
+- Streak tracked in localStorage `zenberry_timer_streak` with `lastPomodoroDate` check
+
+### Alarm Sound System
+- 4 sound files: bell, chime, digital, lofi (`/audio/*.mp3`)
+- Web Audio API with preloaded buffers via `AudioManager` class (`lib/audio-manager.ts`)
+- Includes autoplay unlock handler (pointerdown/keydown listener)
+- Keep-alive mechanism prevents AudioContext suspension
+- Alarm sound preference in localStorage key `zenberry_timer_alarm_sound`
+
+### Drag & Drop
+- `@hello-pangea/dnd` for MIT ↔ Brain Dump drag-and-drop
+- Confirmation dialog (`ConfirmDragDialog.tsx`) before executing promote/demote
+- MIT limit (3) enforced client-side + server-side
+
+### Product Tour
+- Driver.js integration with custom `.zb-tour-popover` CSS theme (strawberry/matcha palette)
+- Tour steps defined via `useProductTour` hook, triggered from `product-tour-store.ts`
 
 ## CI Pipelines (3 workflow files)
 - `frontend-ci.yml` — `lint` (continue-on-error) → `typecheck` → `build` on PR/push to main/develop
@@ -79,7 +118,7 @@ Agents must explicitly call `skill({ name: "..." })` to load these — they don'
 - `.opencode/context/SCHEMA.md` — ER diagram, full API routes with priority tiers
 - `.opencode/context/RULES.md` — Naming conventions, SOLID, DRY, coding standards
 - `.opencode/context/SHIPPING.md` — `/ship` protocol, review loops, agent roles
-- `docs/features/` — Feature specs (`feedback-system/`, `productivity-tracking/`, `timer-alarms/`)
+- `docs/features/` — Feature specs (`feedback-system/`, `productivity-tracking/`, `timer-alarms/`, `product-tour/`)
 
 ## `/ship <feature>: <description>` Protocol
 Full dev cycle via `opencode.json` agents: planner → builder → reviewer → tester → reviewer.
