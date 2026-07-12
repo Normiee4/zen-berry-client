@@ -1,19 +1,24 @@
 import { NextResponse } from 'next/server'
 import * as sessionService from '@/app/api/sessions/service'
-import { resolveUser } from '@/lib/auth-helpers'
+import { resolveUser, copyAuthCookies } from '@/lib/auth-helpers'
 
 export async function recordSession(request: Request) {
   try {
-    const { userId, supabase } = await resolveUser(request)
+    const cookieHolder = NextResponse.next()
+    const { userId, supabase } = await resolveUser(request, cookieHolder)
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      const res = NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
     const body = await request.json()
     const { action, durationMinutes, wasBreak, presetUsed } = body
 
     if (action !== 'recordCompletion') {
-      return NextResponse.json({ error: 'Unsupported action' }, { status: 400 })
+      const res = NextResponse.json({ error: 'Unsupported action' }, { status: 400 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
     const results = await Promise.all([
@@ -31,10 +36,12 @@ export async function recordSession(request: Request) {
     const [sessionResult, statsResult] = results
 
     if (sessionResult.error) {
-      return NextResponse.json({ error: sessionResult.error.message }, { status: 400 })
+      const res = NextResponse.json({ error: sessionResult.error.message }, { status: 400 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
-    return NextResponse.json(
+    const res = NextResponse.json(
       {
         session: sessionResult.data,
         streak: statsResult.data ? {
@@ -46,6 +53,8 @@ export async function recordSession(request: Request) {
       },
       { status: 200 }
     )
+    copyAuthCookies(cookieHolder, res)
+    return res
   } catch (error) {
     console.error('Session POST error', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
@@ -54,18 +63,23 @@ export async function recordSession(request: Request) {
 
 export async function getTodayStats(request: Request) {
   try {
-    const { userId, supabase } = await resolveUser(request)
+    const cookieHolder = NextResponse.next()
+    const { userId, supabase } = await resolveUser(request, cookieHolder)
     if (!userId) {
-      return NextResponse.json({ stats: null }, { status: 200 })
+      const res = NextResponse.json({ stats: null }, { status: 200 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
     const statsResult = await sessionService.getTodayStats(supabase, userId)
 
     if (statsResult.error) {
-      return NextResponse.json({ error: statsResult.error.message }, { status: 400 })
+      const res = NextResponse.json({ error: statsResult.error.message }, { status: 400 })
+      copyAuthCookies(cookieHolder, res)
+      return res
     }
 
-    return NextResponse.json(
+    const res = NextResponse.json(
       {
         stats: statsResult.data
           ? {
@@ -78,6 +92,8 @@ export async function getTodayStats(request: Request) {
       },
       { status: 200 }
     )
+    copyAuthCookies(cookieHolder, res)
+    return res
   } catch (error) {
     console.error('Session GET error', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })

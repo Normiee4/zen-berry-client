@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import * as taskService from '@/app/api/tasks/service'
 import { resolveUser, copyAuthCookies } from '@/lib/auth-helpers'
+import { createTaskSchema, updateTaskSchema, deleteTaskSchema } from '@/lib/input-validator'
+import { ZodError } from 'zod'
 
 const MIT_LIMIT = 3
 
@@ -61,15 +63,8 @@ export async function createTask(request: Request) {
     }
 
     const body = await request.json()
-    const { title, type } = body
-
-    if (!title || typeof title !== 'string') {
-      const res = NextResponse.json({ error: 'Title is required' }, { status: 400 })
-      copyAuthCookies(cookieHolder, res)
-      return res
-    }
-
-    const isMIT = type === 'mit'
+    const parsed = createTaskSchema.parse(body)
+    const isMIT = parsed.type === 'mit'
 
     if (isMIT) {
       const mitCountResult = await taskService.fetchMITCount(supabase, userId)
@@ -84,7 +79,7 @@ export async function createTask(request: Request) {
     }
 
     const result = await taskService.insertTask(supabase, userId, {
-      title: title.trim(),
+      title: parsed.title.trim(),
       isMIT,
     })
 
@@ -101,6 +96,11 @@ export async function createTask(request: Request) {
     copyAuthCookies(cookieHolder, res)
     return res
   } catch (error) {
+    if (error instanceof ZodError) {
+      const res = NextResponse.json({ error: error.issues[0].message }, { status: 400 })
+      copyAuthCookies(NextResponse.next(), res)
+      return res
+    }
     console.error('Tasks POST error', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
@@ -117,15 +117,9 @@ export async function updateTask(request: Request) {
     }
 
     const body = await request.json()
-    const { id, title, completed, isMIT } = body
+    const parsed = updateTaskSchema.parse(body)
+    const taskId = Number(parsed.id)
 
-    if (!id) {
-      const res = NextResponse.json({ error: 'Task ID is required' }, { status: 400 })
-      copyAuthCookies(cookieHolder, res)
-      return res
-    }
-
-    const taskId = Number(id)
     if (isNaN(taskId)) {
       const res = NextResponse.json({ error: 'Task not found' }, { status: 404 })
       copyAuthCookies(cookieHolder, res)
@@ -133,9 +127,9 @@ export async function updateTask(request: Request) {
     }
 
     const updates: Record<string, unknown> = {}
-    if (title !== undefined) updates.title = title
-    if (completed !== undefined) updates.completed = completed
-    if (isMIT !== undefined) updates.type = isMIT ? 'MIT' : 'Brain_dump'
+    if (parsed.title !== undefined) updates.title = parsed.title
+    if (parsed.completed !== undefined) updates.completed = parsed.completed
+    if (parsed.isMIT !== undefined) updates.type = parsed.isMIT ? 'MIT' : 'Brain_dump'
 
     const result = await taskService.modifyTask(supabase, userId, taskId, updates)
 
@@ -152,6 +146,11 @@ export async function updateTask(request: Request) {
     copyAuthCookies(cookieHolder, res)
     return res
   } catch (error) {
+    if (error instanceof ZodError) {
+      const res = NextResponse.json({ error: error.issues[0].message }, { status: 400 })
+      copyAuthCookies(NextResponse.next(), res)
+      return res
+    }
     console.error('Tasks PATCH error', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
@@ -169,14 +168,9 @@ export async function deleteTask(request: Request) {
 
     const url = new URL(request.url)
     const id = url.searchParams.get('id')
+    const parsed = deleteTaskSchema.parse({ id })
+    const taskId = Number(parsed.id)
 
-    if (!id) {
-      const res = NextResponse.json({ error: 'Task ID is required' }, { status: 400 })
-      copyAuthCookies(cookieHolder, res)
-      return res
-    }
-
-    const taskId = Number(id)
     if (isNaN(taskId)) {
       const res = NextResponse.json({ error: 'Task not found' }, { status: 404 })
       copyAuthCookies(cookieHolder, res)
@@ -195,6 +189,11 @@ export async function deleteTask(request: Request) {
     copyAuthCookies(cookieHolder, res)
     return res
   } catch (error) {
+    if (error instanceof ZodError) {
+      const res = NextResponse.json({ error: error.issues[0].message }, { status: 400 })
+      copyAuthCookies(NextResponse.next(), res)
+      return res
+    }
     console.error('Tasks DELETE error', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
