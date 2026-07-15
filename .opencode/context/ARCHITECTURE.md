@@ -3,26 +3,40 @@
 ## 1. System Overview
 
 ```
-                      ┌──────────────────────────────────────┐
-                      │            Vercel (Edge)             │
-                      │  ┌────────────────────────────────┐  │
-                      │  │     Next.js 16 (App Router)    │  │
-                      │  │                                │  │
-                      │  │  ┌──────────┐  ┌───────────┐  │  │
-                      │  │  │  Pages   │  │    API     │  │  │
-                      │  │  │ (SPA)    │  │ (REST)    │  │  │
-                      │  │  └────┬─────┘  └─────┬─────┘  │  │
-                      │  │       │              │        │  │
-                      │  │  ┌────▼──────────────▼─────┐  │  │
-                      │  │  │     Middleware (proxy.ts)│  │  │
-                      │  │  └─────────────────────────┘  │  │
-                      │  └────────────────────────────────┘  │
-                      └──────────┬───────────────┬───────────┘
-                                 │               │
-                    ┌────────────▼─────┐   ┌─────▼────────────┐
-                    │   Supabase Auth  │   │   Gemini API     │
-                    │   (PostgreSQL)   │   │   (Google AI)    │
-                    └──────────────────┘   └──────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                      Vercel (Edge)                               │
+│  ┌────────────────────────────────────────────────────────────┐  │
+│  │                 Next.js 16 (App Router)                    │  │
+│  │                                                            │  │
+│  │  ┌──────────────┐ ┌───────────┐ ┌───────────┐             │  │
+│  │  │   Pages/SPA  │ │  Zustand  │ │  TanStack │             │  │
+│  │  │  (dashboard, │ │  (Timer,  │ │   Query   │             │  │
+│  │  │   auth, etc) │ │  Streak)  │ │ (Server   │             │  │
+│  │  └──────┬───────┘ └───────────┘ │  State)   │             │  │
+│  │         │                       └─────┬─────┘             │  │
+│  │         └──────────────┬──────────────┘                   │  │
+│  │                        ▼                                  │  │
+│  │  ┌──────────────────────────────────────────────────┐     │  │
+│  │  │           API Routes (REST, 3-Layer)             │     │  │
+│  │  │  /api/tasks · /api/sessions · /api/analytics    │     │  │
+│  │  │  /api/ai · /api/pins · /api/feedback            │     │  │
+│  │  │  route.ts → controller.ts → service.ts          │     │  │
+│  │  └──────────────────────┬───────────────────────────┘     │  │
+│  │                         │                                 │  │
+│  │  ┌──────────────────────▼───────────────────────────┐     │  │
+│  │  │          Middleware (proxy.ts)                    │     │  │
+│  │  │  Beta Bypass → Auth → Validation → Error Handler │     │  │
+│  │  └──────────────────────────────────────────────────┘     │  │
+│  └────────────────────────────┬──────────────────────────────┘  │
+│                               │                                 │
+└───────────────────────────────┼─────────────────────────────────┘
+                                │
+                   ┌────────────┴────────────┐
+                   │                         │
+        ┌──────────▼─────┐          ┌────────▼────────┐
+        │     Supabase   │          │   Gemini API    │
+        │  Auth + PostgreSQL│       │   (Google AI)   │
+        └────────────────┘          └─────────────────┘
 ```
 
 - **Deployment model**: Monolithic — frontend + API served from a single Next.js process on Vercel
@@ -277,6 +291,40 @@ The ViewModel layer exists where it earned its keep — combining data sources (
 
 Current hooks use TanStack Query + `/api/tasks`. Legacy hooks are localStorage-only. Do not use legacy hooks in new code.
 
+### 4.5 TanStack Query Keys
+
+```typescript
+export const queryKeys = {
+  tasks: {
+    all: ['tasks'] as const,
+    lists: () => [...queryKeys.tasks.all, 'list'] as const,
+    list: (filters: TaskFilters) => [...queryKeys.tasks.lists(), filters] as const,
+  },
+  analytics: {
+    summary: ['analytics', 'summary'] as const,
+    history: (period: string, cursor?: string) => ['analytics', 'history', period, cursor] as const,
+    insights: ['analytics', 'insights'] as const,
+  },
+  sessions: {
+    all: ['sessions'] as const,
+  }
+};
+```
+
+### 4.6 Component Tree
+
+```
+components/dashboard/
+├── Timer-card.tsx          Zustand-backed timer with presets, alarm
+├── Streak-card.tsx         Reads streak from Zustand store
+├── MIT-card.tsx            Task CRUD via useMITApi hook
+├── Brain-dump-card.tsx     Task CRUD via useTasksApi hook
+├── AI-insights-card.tsx    AI review trigger + display
+├── Matcha-progress-card.tsx Today's analytics summary
+├── Analytics-chart.tsx     Recharts-based weekly history
+└── Hourly-heatmap.tsx      Optional hourly activity viz
+```
+
 ---
 
 ## 5. Data Layer
@@ -385,39 +433,187 @@ Dashboard components re-render with fresh data
 
 ---
 
-## 8. Domain Logic Highlights
+## 8. Analytics Data Flow
 
-### Timer (Zustand + localStorage)
+### 8.1 Data Collection Pipeline
+
+```
+User completes Pomodoro timer
+        │
+        ▼
+┌────────────────────────────────────────────────────────────┐
+│ Frontend: useTimerStore tick() detects timeLeft <= 0      │
+│           + mode === 'focus'                               │
+│           → call POST /api/sessions                        │
+└────────────────────────────────────────────────────────────┘
+        │
+        ▼
+┌────────────────────────────────────────────────────────────┐
+│ /api/sessions (POST)                                       │
+│ 1. recordPomodoro() service → update daily_stats          │
+│ 2. createSessionLog() → insert session_logs               │
+│ 3. updateHourlyActivity() → upsert daily_activity_log    │
+└────────────────────────────────────────────────────────────┘
+        │
+        ▼
+TanStack Query onUseSuccess → invalidates analytics queries
+        │
+        ▼
+Dashboard charts re-fetch and update automatically
+```
+
+### 8.2 Hourly Activity Tracking
+
+```typescript
+// When recording Pomodoro completion:
+const hourSlot = new Date().getHours();
+
+await supabase.from('daily_activity_log').upsert({
+  user_id: user.id,
+  date: getToday(),
+  hour_slot: hourSlot,
+  pomodoros_completed: 1, // SQL: pomodoros_completed + 1
+}, { onConflict: 'user_id,date,hour_slot' });
+```
+
+### 8.3 Peak Hours Calculation
+
+```sql
+-- Query to find peak 2-hour window across last 7 days
+SELECT
+  hour_slot as start_hour,
+  hour_slot + 1 as end_hour,
+  AVG(pomodoros_completed) as avg_pomodoros
+FROM daily_activity_log
+WHERE user_id = :userId
+  AND date >= CURRENT_DATE - 7
+GROUP BY hour_slot
+ORDER BY avg_pomodoros DESC
+LIMIT 1;
+```
+
+---
+
+## 9. Domain Logic Highlights
+
+### 9.1 Timer (Zustand + localStorage)
 - **Timestamp-based tracking**: Uses `startTimestamp` + `initialDuration` instead of `setInterval` ticks — survives browser tab throttling
 - **Session restoration**: Saved to localStorage (`zenberry_active_session`) so timer survives page refresh
 - **Presets**: 3 defaults (Classic 25/5, Deep Work 50/10, Quick Sprint 15/3) plus custom; stored in `zenberry_timer_presets`
 - **Streak**: Calculated from `lastPomodoroDate`; incremented on consecutive-day focus completion
 
-### Alarm System (Web Audio API)
+### 9.2 Alarm System (Web Audio API)
 - 4 sound files: bell, chime, digital, lofi (`/audio/*.mp3`)
 - Preloaded into AudioBuffers by `AudioManager` class (`lib/audio-manager.ts`)
 - Keep-alive mechanism prevents AudioContext suspension
 - Autoplay unlock: registers pointerdown/keydown handlers for browsers that block autoplay
 - Preference stored in `zenberry_timer_alarm_sound`
 
-### AI Review (Gemini)
-- **Rate-limited**: 20 reviews per hour (tracked in `ai_insights.created_at`)
+### 9.3 AI Review (Gemini)
+
+#### Smart Detection Logic
+
+**Rest Reminder Detection:**
+```typescript
+const lastBreak = await supabase
+  .from('session_logs')
+  .select('completed_at')
+  .eq('user_id', user.id)
+  .eq('was_break', true)
+  .not('completed_at', 'is', null)
+  .order('completed_at', { ascending: false })
+  .limit(1)
+  .single();
+
+const hoursSinceBreak = lastBreak?.completed_at
+  ? (Date.now() - new Date(lastBreak.completed_at).getTime()) / (1000 * 60 * 60)
+  : null;
+
+const needsRestReminder = hoursSinceBreak !== null && hoursSinceBreak > 3;
+```
+
+**Low Activity Detection:**
+```typescript
+const todayPomodoros = await supabase
+  .from('daily_stats')
+  .select('daily_pomodoro')
+  .eq('user_id', user.id)
+  .eq('date', getToday())
+  .single();
+
+if (todayPomodoros?.daily_pomodoro === 0) {
+  // No activity - encourage start
+}
+```
+
+#### Gemini API Integration
+
+**Environment Variables Required:**
+```
+GEMINI_API_KEY=your-gemini-api-key
+GEMINI_MODEL=gemini-2.0-flash
+```
+
+**Prompt Engineering:**
+```typescript
+const generatePrompt = (data: DailyStats): string => `
+You are Zen Berry, a friendly and encouraging productivity assistant.
+Analyze the user's productivity data and provide a short, punchy insight.
+
+Today's Stats:
+- Focus sessions completed: ${data.pomodoros}
+- Total focus time: ${data.totalFocusMinutes} minutes
+- Tasks completed: ${data.tasksCompleted}
+- Breaks taken: ${data.breaksTaken}
+- Peak productivity hours: ${data.peakHours || 'Not enough data'}
+- Hours since last break: ${data.hoursSinceBreak || 'N/A'}
+
+${data.needsRestReminder ? 'Note: User has not taken a break in over 3 hours.' : ''}
+
+Response format (JSON):
+{
+  "insight": "2 sentences max, motivational and warm",
+  "suggestion": "1 specific, actionable recommendation"
+}
+`;
+```
+
+**API Call:**
+```typescript
+const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+const result = await model.generateContent(prompt);
+const response = JSON.parse(result.response.text());
+```
+
+#### Fallback Behavior
+
+| Failure Scenario | Fallback Response |
+|-----------------|-------------------|
+| Gemini API error | `insight: "Every focus session counts! Keep the momentum going."` |
+| Rate limited | `{ error: "Please wait X minutes for next review" }` |
+| No data for day | `insight: "Start a focus session to unlock your daily insights!"` |
+| Network timeout | Cache last successful response, show with "Last updated: [time]" |
+
+#### Rate Limiting & Milestone Detection
+
+- **User limit**: 10 AI reviews per day (tracked in `daily_stats.ai_review_count`)
+- **Implementation**: Check before calling Gemini, increment after success
 - **3-tier fallback strategy**:
   1. Gemini API available → parse JSON response
   2. Gemini API down but user has data → `generateDataAwareFallback()` constructs stat-based response
   3. No data at all → `getNoDataResponse()` returns motivational generic messages
 - **Milestone detection**: First review, streak milestones (7/10/20/30/50 days), pomodoro clubs (10/50/100), perfect days
 
-### Drag & Drop (@hello-pangea/dnd)
+### 9.4 Drag & Drop (@hello-pangea/dnd)
 - MIT ↔ Brain Dump promote/demote
 - Confirmation dialog (`ConfirmDragDialog`) before executing
 - MIT limit (3) enforced both client-side (`remainingSlots`) and server-side (MIT count check)
 
 ---
 
-## 9. Cross-Cutting Concerns
+## 10. Cross-Cutting Concerns
 
-### Error Handling Pattern
+### 10.1 Error Handling Pattern
 Controllers use a consistent try/catch pattern:
 ```typescript
 try {
@@ -430,24 +626,55 @@ try {
 }
 ```
 
-### Input Validation
+### 10.2 Input Validation
 - Zod schemas in `lib/input-validator.ts`
 - Controllers use `.parse()` (throws) for required fields, `.safeParse()` for conditional logic
 - Inline validation (`if (!title)`) — eliminated from tasks controller, still present in timer-service controller
 
-### Rate Limiting
+### 10.3 Rate Limiting
 - AI review: 20 requests per hour per user (checked against `ai_insights` table)
 - No global IP-based rate limiting implemented yet
 
+### 10.4 Environment Variables
+
+```bash
+# Supabase (existing)
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+
+# Gemini AI (new)
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-2.0-flash
+
+# Optional
+ANALYTICS_CACHE_SECONDS=300
+AI_REVIEW_RATE_LIMIT=10
+BETA_BYPASS_SECRETS=
+```
+
+### 10.5 Security
+- All endpoints require authentication (via middleware)
+- RLS policies on all tables
+- Input validation with Zod
+- Rate limiting on AI endpoint
+- Never log or expose secrets in client code or error messages
+
+### 10.6 Performance
+- Parallel data fetching with Promise.all
+- Cursor-based pagination for history
+- Server-side aggregation (not client)
+- Analytics caching (5 min default)
+- Timestamp-based timer tracking survives browser tab throttling
+
 ---
 
-## 10. Design Methodology Artifacts
+## 11. Design Methodology Artifacts
 
 | Artifact | Location | Purpose |
 |----------|----------|---------|
 | PRD | `.opencode/context/prd.md` | Product requirements, MVP scope |
 | Architecture | This file | System wiring, layers, data flow |
-| Design | `.opencode/context/DESIGN.md` | AI spec, analytics pipeline, Gemini deep-dive |
+| Design | `.opencode/context/DESIGN.md` | Design system — colors, typography, spacing, themes, animations, art direction, shadcn/ui tokens |
 | Schema | `.opencode/context/SCHEMA.md` | Tables, all planned routes, priority tiers, response examples |
 | Rules | `.opencode/context/RULES.md` | Naming, SOLID, DRY, coding standards |
 | Feature Specs | `docs/features/<name>/SPEC.md` | Per-feature implementation plans |

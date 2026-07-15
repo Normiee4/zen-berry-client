@@ -114,7 +114,7 @@ Agents must explicitly call `skill({ name: "..." })` to load these — they don'
 
 ## Reference Docs
 - `.opencode/context/prd.md` — Product requirements
-- `.opencode/context/DESIGN.md` — Architecture, analytics flow, AI feature spec
+- `.opencode/context/DESIGN.md` — Design system — colors, typography, spacing, themes, animations, art direction, shadcn/ui tokens
 - `.opencode/context/SCHEMA.md` — ER diagram, full API routes with priority tiers
 - `.opencode/context/RULES.md` — Naming conventions, SOLID, DRY, coding standards
 - `.opencode/context/SHIPPING.md` — `/ship` protocol, review loops, agent roles
