@@ -42,7 +42,7 @@
 ```
 route.ts       →   Named HTTP handler (GET/POST/etc), ≤3 lines, calls controller
 controller.ts  →   Request parsing, auth resolution, response formatting, orchestration
-service.ts     →   Data access only (Supabase queries/mutations)
+service.ts     →   Business Logic and Data access only (Supabase queries/mutations)
 ```
 
 **Check:** A file should have one reason to change. If a controller formats responses AND builds Supabase queries, split it.
@@ -71,9 +71,9 @@ service.ts     →   Data access only (Supabase queries/mutations)
 
 ---
 
-## 3. DRY — Extract at 3+ Occurrences
+## 3. DRY — Extract at 4+ Occurrences
 
-Any identical logic block appearing in **3 or more files** must be extracted to `@/lib/`.
+Any identical logic block appearing in **4 or more files** must be extracted to `@/lib/` or `@/util/`.
 
 ### Current Violations (to fix in a follow-up pass)
 
