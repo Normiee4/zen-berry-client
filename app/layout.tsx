@@ -15,13 +15,23 @@ const nunitoSans = Nunito_Sans({
 export const metadata: Metadata = {
   title: "Zen Berry",
   description: "A mindful productivity app with Pomodoro timer, task management, and AI-powered insights",
+  applicationName: "Zen Berry",
   icons: {
     icon: "/favicon.ico",
     apple: [
+      { url: "/apple-touch-icon-180.png", sizes: "180x180", type: "image/png" },
       { url: "/apple-touch-icon.svg", sizes: "180x180", type: "image/svg+xml" },
     ],
   },
   manifest: "/site.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Zen Berry",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 }
 
 export const viewport: Viewport = {
