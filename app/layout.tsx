@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next"
 import { Nunito_Sans } from "next/font/google"
 import { cookies } from "next/headers"
 import { Providers } from "./providers"
+import { InstallPrompt } from "@/components/InstallPrompt"
 import { THEME_CLASS_MAP, THEME_COOKIE_KEY } from "@/lib/theme"
 
 const nunitoSans = Nunito_Sans({
@@ -46,7 +47,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={themeClass}>
       <body className={nunitoSans.className}>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <InstallPrompt />
+        </Providers>
       </body>
     </html>
   )

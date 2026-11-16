@@ -5,6 +5,16 @@ import { validationMiddleware } from '@/lib/middleware/input-validation'
 
 async function middleware(request: NextRequest) {
   const url = request.nextUrl
+  const pathname = url.pathname
+
+  // Bypass auth checks for PWA assets and service worker files
+  if (
+    pathname === '/manifest.webmanifest' ||
+    pathname === '/sw.js' ||
+    pathname.startsWith('/workbox')
+  ) {
+    return NextResponse.next()
+  }
 
   const betaCookie = request.cookies.get('beta_bypass')
   if (betaCookie?.value === 'true') {
