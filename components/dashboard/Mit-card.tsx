@@ -5,6 +5,8 @@ import { CircleCheck, Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner"
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import { DnDWrapper } from "@/components/DnDWrapper";
+import { MatchaProgressWidget } from "@/components/MatchaProgressWidget";
+import { useTimerStore } from "@/store/timer-store";
 
 interface MIT {
   id: string;
@@ -83,6 +85,16 @@ export function MITCard({
   const [error, setError] = useState("");
   const [isAdding, setIsAdding] = useState(false);
 
+  const completedMITTodayCount = useTimerStore((state) => state.completedMITTodayCount);
+  const needsBreak = useTimerStore((state) => state.needsBreak);
+  const incrementCompletedMIT = useTimerStore((state) => state.incrementCompletedMIT);
+
+  const handleMarkDone = (id: string) => {
+    incrementCompletedMIT();
+    onMarkDone(id);
+    toast.success("MIT completed!");
+  };
+
   const handleAdd = async () => {
     if (!newMit.trim() || isAdding) return;
     setIsAdding(true);
@@ -104,6 +116,14 @@ export function MITCard({
 
   return (
     <div className="flex h-full flex-col rounded-3xl bg-strawberry-light/30 p-6 border border-matcha-dark/20">
+      {/* Matcha Cup Daily Progress Widget */}
+      <MatchaProgressWidget
+        completedCount={completedMITTodayCount}
+        totalCount={3}
+        needsBreak={needsBreak}
+        className="mb-4"
+      />
+
       {/* Header */}
       <div className="mb-4 flex items-center gap-2">
         <span className="text-base">🎯</span>
@@ -143,7 +163,7 @@ export function MITCard({
             <StaticMITList
               mits={mits}
               onUpdateTitle={onUpdateTitle}
-              onMarkDone={onMarkDone}
+              onMarkDone={handleMarkDone}
             />
           </div>
         }
@@ -186,7 +206,7 @@ export function MITCard({
                           className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/50 text-foreground"
                         />
           <button
-            onClick={() => { onMarkDone(mit.id); toast.success("MIT completed!") }}
+            onClick={() => handleMarkDone(mit.id)}
             className="flex size-10 p-2 shrink-0 items-center justify-center rounded-full transition-colors text-matcha cursor-pointer hover:bg-gray-200"
             title="Mark as done"
           >

@@ -1,12 +1,10 @@
-// components/ZenseiMascot.tsx
 'use client'
 
-import React from 'react'
-import { motion, Variants } from 'framer-motion'
+import { motion, type Variants } from 'framer-motion'
 
 export type ZenseiPose = 'thinking' | 'worried' | 'cheerful' | 'celebration'
 
-interface ZenseiMascotProps {
+export interface ZenseiMascotProps {
   pose?: ZenseiPose
   className?: string
 }
@@ -35,7 +33,7 @@ const bodyVariants: Variants = {
   },
 }
 
-export default function ZenseiMascot({
+export function ZenseiMascot({
   pose = 'cheerful',
   className = '',
 }: ZenseiMascotProps) {
@@ -51,7 +49,7 @@ export default function ZenseiMascot({
     >
       <motion.svg
         viewBox="0 0 130 130"
-        className="w-full h-full overflow-visible"
+        className="h-full w-full overflow-visible"
         initial={false}
         animate={pose}
       >
@@ -71,7 +69,7 @@ export default function ZenseiMascot({
         />
 
         <motion.g variants={bodyVariants} style={{ originX: '65px', originY: '80px' }}>
-          {/* Stubby Legs (Warm Terracotta) */}
+          {/* Stubby Legs (Strawberry Coral) */}
           <path
             d="M 54 103 L 52 114 C 52 116.5, 57 116.5, 57 114 L 58 104"
             fill="#C9645B"
@@ -141,7 +139,7 @@ export default function ZenseiMascot({
                 strokeWidth="4.5"
                 strokeLinecap="round"
               />
-              {/* Mini Matcha Cup matching your illustration */}
+              {/* Mini Matcha Cup */}
               <g transform="translate(101, 38)">
                 {/* Steam wisps */}
                 <path
@@ -154,8 +152,8 @@ export default function ZenseiMascot({
                 {/* Cup body */}
                 <path
                   d="M 2 2 L 18 2 L 16 18 C 16 19.5, 4 19.5, 4 18 Z"
-                  fill="#B7C9B0"
-                  stroke="#829A7B"
+                  fill="#A3BE98"
+                  stroke="#7D9B72"
                   strokeWidth="2"
                   strokeLinejoin="round"
                 />
@@ -166,7 +164,7 @@ export default function ZenseiMascot({
                   rx="8"
                   ry="2.2"
                   fill="#FAF7F0"
-                  stroke="#829A7B"
+                  stroke="#7D9B72"
                   strokeWidth="1.8"
                 />
                 {/* Tiny cup face */}
@@ -183,7 +181,7 @@ export default function ZenseiMascot({
             </g>
           )}
 
-          {/* Strawberry Body (Exact muted coral & rounded-taper silhouette) */}
+          {/* Strawberry Body (Tapered kawaii strawberry) */}
           <path
             d="M 65 36 C 42 36, 30 48, 33 69 C 36 89, 53 106, 65 106 C 77 106, 94 89, 97 69 C 100 48, 88 36, 65 36 Z"
             fill="#C9645B"
@@ -206,7 +204,7 @@ export default function ZenseiMascot({
             <ellipse cx="65" cy="97" rx="1.6" ry="2.4" />
           </g>
 
-          {/* Stem & Sage Leafy Cap */}
+          {/* Stem & Sage Leafy Crown */}
           <g strokeLinecap="round" strokeLinejoin="round">
             {/* Curved Brown Stem */}
             <path
@@ -224,11 +222,11 @@ export default function ZenseiMascot({
             />
           </g>
 
-          {/* Large Pastel Blush Circles */}
+          {/* Soft Blush Circles */}
           <circle cx="46" cy="74" r="5.5" fill="#E8B4AE" opacity="0.85" />
           <circle cx="84" cy="74" r="5.5" fill="#E8B4AE" opacity="0.85" />
 
-          {/* Eyes (Warm Espresso Brown) */}
+          {/* Eyes (Espresso Brown) */}
           {isHappy ? (
             <g fill="none" stroke="#5A3E31" strokeWidth="2.8" strokeLinecap="round">
               <path d="M 50 69 Q 54 64 58 69" />
@@ -292,7 +290,7 @@ export default function ZenseiMascot({
           )}
         </motion.g>
 
-        {/* POSE OVERLAY 1: Thinking Question Mark */}
+        {/* Pose Animation 1: Thinking Floating Sage Dots & Question Mark */}
         {pose === 'thinking' && (
           <motion.g
             animate={{ y: [0, -4, 0], opacity: [0.7, 1, 0.7] }}
@@ -313,7 +311,7 @@ export default function ZenseiMascot({
           </motion.g>
         )}
 
-        {/* POSE OVERLAY 2: Worried Sweat Drop */}
+        {/* Pose Animation 2: Worried Animated Blue Sweat Drop */}
         {pose === 'worried' && (
           <motion.path
             d="M 94 46 C 94 46 90 52 90 55 C 90 57.2 91.8 59 94 59 C 96.2 59 98 57.2 98 55 C 98 52 94 46 94 46 Z"
@@ -325,7 +323,7 @@ export default function ZenseiMascot({
           />
         )}
 
-        {/* POSE OVERLAY 3: Pastel Celebration Confetti */}
+        {/* Pose Animation 3: Celebration Animated Pastel Confetti */}
         {pose === 'celebration' && (
           <g>
             <motion.circle
@@ -368,3 +366,5 @@ export default function ZenseiMascot({
     </div>
   )
 }
+
+export default ZenseiMascot

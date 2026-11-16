@@ -1,26 +1,26 @@
-// components/MatchaProgressWidget.tsx
 'use client'
 
-import React from 'react'
 import { motion } from 'framer-motion'
-import ZenseiMascot, { ZenseiPose } from './zensei-mascot'
+import { ZenseiMascot, type ZenseiPose } from '@/components/ZenseiMascot'
 
-interface MatchaProgressWidgetProps {
+export interface MatchaProgressWidgetProps {
   completedCount: number
   totalCount?: number
   needsBreak?: boolean
+  className?: string
 }
 
-export default function MatchaProgressWidget({
+export function MatchaProgressWidget({
   completedCount,
   totalCount = 3,
   needsBreak = false,
+  className = '',
 }: MatchaProgressWidgetProps) {
   // Clamp progress between 0 and totalCount
   const safeCompleted = Math.max(0, Math.min(completedCount, totalCount))
   const progressRatio = totalCount > 0 ? safeCompleted / totalCount : 0
 
-  // Determine Zensei's pose based on MIT progress
+  // Determine Zensei's pose based on MIT progress and break state
   const getZenseiPose = (): ZenseiPose => {
     if (needsBreak) return 'worried'
     if (safeCompleted === 0) return 'thinking'
@@ -50,8 +50,10 @@ export default function MatchaProgressWidget({
   const currentLiquidY = innerBottom - currentLiquidHeight
 
   return (
-    <div className="flex items-center justify-between gap-4 rounded-2xl border border-[#7D9B72]/30 bg-[#FAF7F0] p-4 shadow-sm">
-      {/* Left: Animated Matcha Cup Illustration */}
+    <div
+      className={`flex items-center justify-between gap-4 rounded-2xl border border-[#7D9B72]/30 bg-[#FAF7F0] p-4 shadow-sm transition-all ${className}`}
+    >
+      {/* Left: Animated Matcha Cup Illustration & Micro-copy */}
       <div className="flex items-center gap-3">
         <div className="relative h-20 w-20 shrink-0 select-none">
           <svg
@@ -150,7 +152,7 @@ export default function MatchaProgressWidget({
               strokeWidth="3.8"
             />
 
-            {/* Kawaii Cup Face (Matches matcha_illustration.png) */}
+            {/* Kawaii Cup Face */}
             <g>
               {/* Soft Blush */}
               <circle cx="45" cy="79" r="5" fill="#E8B4AE" opacity="0.85" />
@@ -170,7 +172,7 @@ export default function MatchaProgressWidget({
           </svg>
         </div>
 
-        {/* Progress Text & Pill Indicators */}
+        {/* Progress Text & Indicators */}
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-[#5A3E31]">
@@ -196,3 +198,5 @@ export default function MatchaProgressWidget({
     </div>
   )
 }
+
+export default MatchaProgressWidget

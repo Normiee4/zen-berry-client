@@ -26,6 +26,16 @@ export function useTimer() {
     pomodorosToday,
     alarmSound,
     setAlarmSound,
+    consecutiveFocusSeconds,
+    snoozedUntilSeconds,
+    needsBreak,
+    takeBreak,
+    snoozeBreakReminder,
+    resetConsecutiveFocus,
+    completedMITTodayCount,
+    incrementCompletedMIT,
+    decrementCompletedMIT,
+    setCompletedMITTodayCount,
   } = useTimerStore()
 
   return {
@@ -40,6 +50,10 @@ export function useTimer() {
     completedFocusCycle,
     completedBreakCycle,
     showBreakReminder,
+    consecutiveFocusSeconds,
+    snoozedUntilSeconds,
+    needsBreak,
+    completedMITTodayCount,
     // Computed (optional, but keeps component simple)
     activePreset: presets.find((p) => p.id === activePresetId) || presets[0],
     // Actions
@@ -57,5 +71,11 @@ export function useTimer() {
     clearCompletedBreakCycle,
     alarmSound,
     setAlarmSound,
+    takeBreak,
+    snoozeBreakReminder,
+    resetConsecutiveFocus,
+    incrementCompletedMIT,
+    decrementCompletedMIT,
+    setCompletedMITTodayCount,
   }
 }

@@ -16,6 +16,7 @@ import { useTimerAlarm } from "@/hooks/use-timer-alarm";
 import { useTimerLogic } from '@/lib/timer-logic';
 import { useTimerStore } from "@/store/timer-store";
 import { TimerAlarmPicker } from "@/components/dashboard/timer-alarm-picker";
+import { BreakReminderBanner } from "@/components/BreakReminderBanner";
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { Pause, Play, Plus, Pencil, RotateCcw, Settings, Trash2 } from "lucide-react";
@@ -52,6 +53,9 @@ export function TimerCard() {
     showBreakReminder,
     alarmSound,
     setAlarmSound,
+    needsBreak,
+    takeBreak,
+    snoozeBreakReminder,
   } = useTimer();
 
   useEffect(() => {
@@ -275,6 +279,16 @@ export function TimerCard() {
 
   return (
     <div className="flex h-full min-h-0 flex-col rounded-3xl bg-strawberry-light/30 p-6 overflow-hidden border border-matcha-dark/20">
+      {/* Burnout Prevention Gentle Break Reminder */}
+      {needsBreak && (
+        <div className="mb-4">
+          <BreakReminderBanner
+            onTakeBreak={takeBreak}
+            onSnooze={() => snoozeBreakReminder(15)}
+          />
+        </div>
+      )}
+
       {/* Mode Toggle */}
       <div className="mx-auto mb-6 flex gap-2">
         <button

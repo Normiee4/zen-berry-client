@@ -17,6 +17,83 @@ const PRESETS_STORAGE_KEY = "zenberry_timer_presets";
 const STREAK_STORAGE_KEY = "zenberry_timer_streak";
 const ACTIVE_SESSION_KEY = "zenberry_active_session";
 const ALARM_SOUND_KEY = "zenberry_timer_alarm_sound";
+const CUMULATIVE_FOCUS_KEY = "zenberry_cumulative_focus";
+const MIT_PROGRESS_KEY = "zenberry_mit_progress";
+
+interface CumulativeFocusData {
+  consecutiveFocusSeconds: number;
+  snoozedUntilSeconds: number | null;
+  date: string;
+}
+
+function loadCumulativeFocus(): { consecutiveFocusSeconds: number; snoozedUntilSeconds: number | null } {
+  if (typeof window === "undefined") return { consecutiveFocusSeconds: 0, snoozedUntilSeconds: null };
+  try {
+    const stored = localStorage.getItem(CUMULATIVE_FOCUS_KEY);
+    if (!stored) return { consecutiveFocusSeconds: 0, snoozedUntilSeconds: null };
+    const parsed: CumulativeFocusData = JSON.parse(stored);
+    if (parsed.date === getTodayDate()) {
+      return {
+        consecutiveFocusSeconds: parsed.consecutiveFocusSeconds ?? 0,
+        snoozedUntilSeconds: parsed.snoozedUntilSeconds ?? null,
+      };
+    }
+    return { consecutiveFocusSeconds: 0, snoozedUntilSeconds: null };
+  } catch {
+    return { consecutiveFocusSeconds: 0, snoozedUntilSeconds: null };
+  }
+}
+
+function saveCumulativeFocus(consecutiveFocusSeconds: number, snoozedUntilSeconds: number | null) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(
+      CUMULATIVE_FOCUS_KEY,
+      JSON.stringify({
+        consecutiveFocusSeconds,
+        snoozedUntilSeconds,
+        date: getTodayDate(),
+      })
+    );
+  } catch {
+    // ignore write failures
+  }
+}
+
+interface MITProgressData {
+  count: number;
+  date: string;
+}
+
+function loadMITProgress(): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    const stored = localStorage.getItem(MIT_PROGRESS_KEY);
+    if (!stored) return 0;
+    const parsed: MITProgressData = JSON.parse(stored);
+    if (parsed.date === getTodayDate()) {
+      return parsed.count ?? 0;
+    }
+    return 0;
+  } catch {
+    return 0;
+  }
+}
+
+function saveMITProgress(count: number) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(
+      MIT_PROGRESS_KEY,
+      JSON.stringify({
+        count,
+        date: getTodayDate(),
+      })
+    );
+  } catch {
+    // ignore write failures
+  }
+}
 
 interface ActiveSession {
   startTimestamp: number;
@@ -142,6 +219,15 @@ type TimerState = {
   alarmSound: AlarmSound;
   timerJustCompleted: boolean;
 
+  // Cumulative focus tracking (burnout prevention)
+  consecutiveFocusSeconds: number;
+  snoozedUntilSeconds: number | null;
+  consecutiveBreakSeconds: number;
+  needsBreak: boolean;
+
+  // MIT progress tracking for Matcha Cup
+  completedMITTodayCount: number;
+
   // Actions
   start: () => void;
   pause: () => void;
@@ -163,6 +249,12 @@ type TimerState = {
   clearCompletedBreakCycle: () => void;
   setAlarmSound: (sound: AlarmSound) => void;
   restoreSession: () => void;
+  takeBreak: () => void;
+  snoozeBreakReminder: (minutes?: number) => void;
+  resetConsecutiveFocus: () => void;
+  incrementCompletedMIT: () => void;
+  decrementCompletedMIT: () => void;
+  setCompletedMITTodayCount: (count: number) => void;
 };
 
 const defaultPresets: TimerPreset[] = [
@@ -181,6 +273,9 @@ const initialPresets = (() => {
   const missingDefaults = defaultPresets.filter(p => !storedIds.has(p.id));
   return [...missingDefaults, ...stored];
 })();
+
+const initialCumulative = loadCumulativeFocus();
+const initialMITCount = loadMITProgress();
 
 export const useTimerStore = create<TimerState>()(
   subscribeWithSelector((set, get) => ({
@@ -203,6 +298,17 @@ export const useTimerStore = create<TimerState>()(
     showBreakReminder: false,
     alarmSound: loadAlarmSound(),
     timerJustCompleted: false,
+
+    // Cumulative focus & break tracking
+    consecutiveFocusSeconds: initialCumulative.consecutiveFocusSeconds,
+    snoozedUntilSeconds: initialCumulative.snoozedUntilSeconds,
+    consecutiveBreakSeconds: 0,
+    needsBreak:
+      initialCumulative.consecutiveFocusSeconds >= 5400 &&
+      initialCumulative.consecutiveFocusSeconds >= (initialCumulative.snoozedUntilSeconds ?? 0),
+
+    // MIT progress
+    completedMITTodayCount: initialMITCount,
 
     // Timestamp-based tracking
     startTimestamp: null,
@@ -315,6 +421,29 @@ export const useTimerStore = create<TimerState>()(
       const elapsed = Math.floor((now - state.startTimestamp) / 1000);
       const newTimeLeft = Math.max(0, state.initialDuration - elapsed);
 
+      // Cumulative focus tracking (burnout prevention)
+      let nextFocusSeconds = state.consecutiveFocusSeconds;
+      let nextBreakSeconds = state.consecutiveBreakSeconds;
+      let nextSnoozed = state.snoozedUntilSeconds;
+      let nextNeedsBreak = state.needsBreak;
+
+      if (state.mode === "focus") {
+        nextFocusSeconds += 1;
+        nextBreakSeconds = 0;
+        nextNeedsBreak =
+          nextFocusSeconds >= 5400 &&
+          nextFocusSeconds >= (nextSnoozed ?? 0);
+        saveCumulativeFocus(nextFocusSeconds, nextSnoozed);
+      } else {
+        nextBreakSeconds += 1;
+        if (nextBreakSeconds >= 180) {
+          nextFocusSeconds = 0;
+          nextSnoozed = null;
+          nextNeedsBreak = false;
+          saveCumulativeFocus(0, null);
+        }
+      }
+
       if (newTimeLeft <= 0) {
         clearActiveSession();
         const wasFocusMode = state.mode === "focus";
@@ -327,7 +456,7 @@ export const useTimerStore = create<TimerState>()(
           : 0;
         const newTotalSeconds = newMode === "focus" ? focusSeconds : breakSeconds;
 
-          if (wasFocusMode) {
+        if (wasFocusMode) {
           const today = getTodayDate();
           const yesterday = getYesterdayDate();
           let streak = state.currentStreak;
@@ -360,6 +489,10 @@ export const useTimerStore = create<TimerState>()(
             startTimestamp: null,
             initialDuration: newTotalSeconds,
             timerJustCompleted: true,
+            consecutiveFocusSeconds: nextFocusSeconds,
+            consecutiveBreakSeconds: 0,
+            snoozedUntilSeconds: nextSnoozed,
+            needsBreak: nextNeedsBreak,
           };
         }
 
@@ -377,11 +510,24 @@ export const useTimerStore = create<TimerState>()(
           startTimestamp: null,
           initialDuration: newTotalSeconds,
           timerJustCompleted: true,
+          consecutiveFocusSeconds: nextFocusSeconds,
+          consecutiveBreakSeconds: nextBreakSeconds,
+          snoozedUntilSeconds: nextSnoozed,
+          needsBreak: nextNeedsBreak,
         };
       }
 
       const saveField = state.mode === "focus" ? "focusTimeLeft" : "breakTimeLeft";
-      return { timeLeft: newTimeLeft, [saveField]: newTimeLeft, completedFocusCycle: false, timerJustCompleted: false };
+      return {
+        timeLeft: newTimeLeft,
+        [saveField]: newTimeLeft,
+        completedFocusCycle: false,
+        timerJustCompleted: false,
+        consecutiveFocusSeconds: nextFocusSeconds,
+        consecutiveBreakSeconds: nextBreakSeconds,
+        snoozedUntilSeconds: nextSnoozed,
+        needsBreak: nextNeedsBreak,
+      };
     }),
 
     setMode: (mode: TimerMode) => {
@@ -583,6 +729,78 @@ export const useTimerStore = create<TimerState>()(
       if (saved.alarmSound) {
         set({ alarmSound: saved.alarmSound })
       }
+    },
+
+    takeBreak: () => {
+      const { currentPreset, presets } = get();
+      const preset = currentPreset ?? presets[0];
+      const breakSeconds = (preset?.breakMinutes ?? 5) * 60;
+      clearActiveSession();
+      saveCumulativeFocus(0, null);
+      const now = Date.now();
+      set({
+        mode: "break",
+        timeLeft: breakSeconds,
+        breakTimeLeft: breakSeconds,
+        initialDuration: breakSeconds,
+        startTimestamp: now,
+        isRunning: true,
+        consecutiveFocusSeconds: 0,
+        snoozedUntilSeconds: null,
+        consecutiveBreakSeconds: 0,
+        needsBreak: false,
+        timerJustCompleted: false,
+      });
+      saveActiveSession({
+        startTimestamp: now,
+        initialDuration: breakSeconds,
+        mode: "break",
+        isRunning: true,
+        activePresetId: preset?.id ?? "classic",
+        focusTimeLeft: get().focusTimeLeft,
+        breakTimeLeft: breakSeconds,
+        alarmSound: get().alarmSound,
+      });
+    },
+
+    snoozeBreakReminder: (minutes = 15) => {
+      const { consecutiveFocusSeconds } = get();
+      const snoozedUntil = consecutiveFocusSeconds + minutes * 60;
+      saveCumulativeFocus(consecutiveFocusSeconds, snoozedUntil);
+      set({
+        snoozedUntilSeconds: snoozedUntil,
+        needsBreak: false,
+      });
+    },
+
+    resetConsecutiveFocus: () => {
+      saveCumulativeFocus(0, null);
+      set({
+        consecutiveFocusSeconds: 0,
+        snoozedUntilSeconds: null,
+        consecutiveBreakSeconds: 0,
+        needsBreak: false,
+      });
+    },
+
+    incrementCompletedMIT: () => {
+      const current = get().completedMITTodayCount;
+      const next = current + 1;
+      saveMITProgress(next);
+      set({ completedMITTodayCount: next });
+    },
+
+    decrementCompletedMIT: () => {
+      const current = get().completedMITTodayCount;
+      const next = Math.max(0, current - 1);
+      saveMITProgress(next);
+      set({ completedMITTodayCount: next });
+    },
+
+    setCompletedMITTodayCount: (count: number) => {
+      const safeCount = Math.max(0, count);
+      saveMITProgress(safeCount);
+      set({ completedMITTodayCount: safeCount });
     },
   }))
 );
