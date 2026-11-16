@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { motion } from "framer-motion"
 
 interface AnimatedMatchaCupProps {
   fillPercentage: number
@@ -16,7 +17,7 @@ function Sparkle({ index }: { index: number }) {
 
   return (
     <div
-      className="absolute animate-sparkle text-base opacity-0"
+      className="absolute animate-sparkle text-base opacity-0 select-none"
       style={{
         left: `${left}%`,
         bottom: "0%",
@@ -64,168 +65,137 @@ export function AnimatedMatchaCup({
   }, [fillPercentage])
 
   const isComplete = displayFill >= 90
+  const progressRatio = Math.max(0, Math.min(100, displayFill)) / 100
+
+  // Liquid vertical fill math inside the cup cavity (y: 46 to 108)
+  const innerTop = 46
+  const innerBottom = 108
+  const maxLiquidHeight = innerBottom - innerTop
+  const currentLiquidHeight = maxLiquidHeight * progressRatio
+  const currentLiquidY = innerBottom - currentLiquidHeight
 
   return (
     <div className="flex flex-col items-center justify-center gap-4">
-      {/* Matcha Cup SVG */}
-      <div className="relative h-44 w-36">
+      {/* Kawaii Glass Matcha Cup SVG */}
+      <div className="relative h-44 w-36 select-none">
         <svg
-          viewBox="0 0 200 300"
-          className={`h-full w-full transition-transform duration-500 ${showCelebration ? "scale-110" : ""}`}
-          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 120 130"
+          className={`h-full w-full overflow-visible transition-transform duration-500 ${
+            showCelebration ? "scale-110" : ""
+          }`}
+          role="img"
+          aria-label={`Matcha cup ${Math.round(displayFill)}% full`}
         >
           <defs>
-            {/* Ceramic gradient for cup body */}
-            <linearGradient id="ceramicGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#E8F0E8" />
-              <stop offset="50%" stopColor="#D0E0D0" />
-              <stop offset="100%" stopColor="#B8D4B8" />
-            </linearGradient>
-            {/* Matcha liquid gradient */}
-            <linearGradient id="matchaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#86A788" />
-              <stop offset="50%" stopColor="#6B8D6D" />
-              <stop offset="100%" stopColor="#5A7A5C" />
-            </linearGradient>
-            {/* Matcha surface gradient */}
-            <radialGradient id="surfaceGrad" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#A8C8A8" />
-              <stop offset="100%" stopColor="#86A788" />
-            </radialGradient>
-            {/* Shadow gradient */}
-            <linearGradient id="shadowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="rgba(0,0,0,0.08)" />
-              <stop offset="100%" stopColor="rgba(0,0,0,0)" />
-            </linearGradient>
-            <clipPath id="cupClip">
-              <path d="M 55 85 L 45 255 Q 45 280 70 280 L 130 280 Q 155 280 155 255 L 145 85 Z" />
+            {/* Clip path matching the inner glass cavity */}
+            <clipPath id="animated-matcha-cavity">
+              <path d="M 33 44 L 87 44 L 80 104 C 79.5 108, 40.5 108, 40 104 Z" />
             </clipPath>
           </defs>
 
-          {/* Shadow under saucer */}
-          <ellipse cx="100" cy="290" rx="65" ry="8" fill="url(#shadowGrad)" />
-
-          {/* Saucer */}
-          <ellipse cx="100" cy="275" rx="60" ry="10" fill="#D0E0D0" stroke="#86A788" strokeWidth="1.5" />
-          <ellipse cx="100" cy="273" rx="48" ry="7" fill="#E8F0E8" />
-
-          {/* Cup handle */}
-          <path
-            d="M 150 140 Q 185 140 185 180 Q 185 220 150 220"
-            fill="none"
-            stroke="#B8D4B8"
-            strokeWidth="7"
+          {/* Steam Wisps (fade in and sway as cup fills) */}
+          <motion.g
+            stroke="#C8C0B4"
+            strokeWidth="3.2"
             strokeLinecap="round"
-          />
-          <path
-            d="M 150 145 Q 178 145 178 180 Q 178 215 150 215"
             fill="none"
-            stroke="#D0E0D0"
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
+            initial={false}
+            animate={{
+              opacity: displayFill > 0 ? 0.9 : 0.2,
+              y: displayFill > 0 ? [0, -5, 0] : 0,
+            }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <path d="M 46 30 Q 43 21 47 13" />
+            <path d="M 60 28 Q 57 18 61 10" />
+            <path d="M 74 30 Q 71 21 75 13" />
+          </motion.g>
 
-          {/* Cup body */}
+          {/* Outer Glass Wall Background */}
           <path
-            d="M 55 85 L 45 255 Q 45 280 70 280 L 130 280 Q 155 280 155 255 L 145 85 Z"
-            fill="url(#ceramicGrad)"
-            stroke="#86A788"
-            strokeWidth="2"
+            d="M 28 42 L 92 42 L 84 108 C 83 114, 37 114, 36 108 Z"
+            fill="#F5EFE6"
+            stroke="#829A7B"
+            strokeWidth="3.8"
+            strokeLinejoin="round"
           />
 
-          {/* Cup highlight */}
-          <path
-            d="M 55 85 L 48 240 Q 48 260 62 268"
-            fill="none"
-            stroke="white"
-            strokeWidth="2"
-            strokeLinecap="round"
-            opacity="0.25"
-          />
-
-          {/* Matcha fill */}
-          <g clipPath="url(#cupClip)">
-            <rect
-              x="45"
-              y={280 - (displayFill / 100) * 195}
-              width="110"
-              height={(displayFill / 100) * 195}
-              fill="url(#matchaGrad)"
-              className="transition-all duration-300 ease-out"
+          {/* Animated Matcha Liquid Fill */}
+          <g clipPath="url(#animated-matcha-cavity)">
+            <motion.rect
+              x="28"
+              width="64"
+              fill="#A3BE98"
+              initial={false}
+              animate={{
+                y: currentLiquidY,
+                height: currentLiquidHeight,
+              }}
+              transition={{ type: "spring", stiffness: 70, damping: 14 }}
             />
-            {/* Surface shimmer */}
+            {/* Foam Surface Line */}
             {displayFill > 0 && (
-              <ellipse
-                cx="100"
-                cy={280 - (displayFill / 100) * 195 + 4}
-                rx="38"
-                ry="5"
-                fill="url(#surfaceGrad)"
-                opacity="0.6"
-                className="transition-all duration-300"
+              <motion.ellipse
+                cx="60"
+                rx="26"
+                ry="3"
+                fill="#DCE7D5"
+                initial={false}
+                animate={{ cy: currentLiquidY }}
+                transition={{ type: "spring", stiffness: 70, damping: 14 }}
               />
             )}
           </g>
 
-          {/* Cute face on cup */}
+          {/* Glass Highlight Reflection (Left Side) */}
+          <path
+            d="M 35 49 L 41 102"
+            stroke="#FFFFFF"
+            strokeWidth="3"
+            strokeLinecap="round"
+            opacity="0.65"
+          />
+
+          {/* Thick Glass Base */}
+          <path
+            d="M 36 107 C 37 113, 83 113, 84 107"
+            fill="none"
+            stroke="#829A7B"
+            strokeWidth="3.8"
+            strokeLinecap="round"
+          />
+
+          {/* Top Cream Rim */}
+          <ellipse
+            cx="60"
+            cy="42"
+            rx="32"
+            ry="6"
+            fill="#FAF7F0"
+            stroke="#829A7B"
+            strokeWidth="3.6"
+          />
+
+          {/* Cute Kawaii Face */}
           <g>
+            {/* Soft Blush Circles */}
+            <circle cx="45" cy="79" r="5" fill="#E8B4AE" opacity="0.85" />
+            <circle cx="75" cy="79" r="5" fill="#E8B4AE" opacity="0.85" />
             {/* Eyes */}
-            <circle cx="80" cy="160" r="5" fill="#2D3A2D" />
-            <circle cx="120" cy="160" r="5" fill="#2D3A2D" />
-            {/* Eye shine */}
-            <circle cx="78" cy="158" r="1.8" fill="white" opacity="0.7" />
-            <circle cx="118" cy="158" r="1.8" fill="white" opacity="0.7" />
-            {/* Smile */}
+            <circle cx="51" cy="74" r="2.8" fill="#5A3E31" />
+            <circle cx="69" cy="74" r="2.8" fill="#5A3E31" />
+            {/* Eye Shine */}
+            <circle cx="50" cy="73" r="0.9" fill="#FFFFFF" />
+            <circle cx="68" cy="73" r="0.9" fill="#FFFFFF" />
+            {/* Gentle Smile */}
             <path
-              d="M 90 180 Q 100 190 110 180"
-              stroke="#2D3A2D"
-              strokeWidth="2.5"
+              d="M 56 78 Q 60 83 64 78"
               fill="none"
+              stroke="#5A3E31"
+              strokeWidth="2.5"
               strokeLinecap="round"
             />
-            {/* Blush */}
-            <ellipse cx="65" cy="175" rx="9" ry="5.5" fill="#FFCFCF" opacity="0.5" />
-            <ellipse cx="135" cy="175" rx="9" ry="5.5" fill="#FFCFCF" opacity="0.5" />
           </g>
-
-          {/* Cup rim */}
-          <ellipse cx="100" cy="85" rx="47" ry="9" fill="#E8F0E8" stroke="#86A788" strokeWidth="2" />
-          <ellipse cx="100" cy="83" rx="37" ry="6" fill="#B8D4B8" />
-
-          {/* Steam wisps */}
-          {displayFill > 0 && (
-            <>
-              <path
-                d="M 80 75 Q 75 55 82 40 Q 89 25 84 10"
-                fill="none"
-                stroke="#B8D4B8"
-                strokeWidth="2"
-                strokeLinecap="round"
-                opacity="0.4"
-                className="animate-steam origin-bottom"
-              />
-              <path
-                d="M 100 70 Q 95 50 102 35 Q 109 20 104 5"
-                fill="none"
-                stroke="#B8D4B8"
-                strokeWidth="2"
-                strokeLinecap="round"
-                opacity="0.3"
-                className="animate-steam origin-bottom"
-                style={{ animationDelay: "0.4s" }}
-              />
-              <path
-                d="M 120 75 Q 115 55 122 40 Q 129 25 124 10"
-                fill="none"
-                stroke="#B8D4B8"
-                strokeWidth="2"
-                strokeLinecap="round"
-                opacity="0.35"
-                className="animate-steam origin-bottom"
-                style={{ animationDelay: "0.8s" }}
-              />
-            </>
-          )}
         </svg>
 
         {/* Celebration sparkles */}

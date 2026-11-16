@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { Sparkles, Loader2, Clock, TrendingUp, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ZenseiMascot, type ZenseiPose } from "@/components/ZenseiMascot"
 
 interface AIReviewResponse {
   insight: string
@@ -123,20 +124,16 @@ export function AIInsightsCard() {
     reviewMutation.mutate()
   }
 
-  const hasInsight = !!(reviewMutation.data?.insight || latestInsight?.insight)
-
-  const mascotState = reviewMutation.isPending
-    ? "thinking"
-    : hasInsight
-      ? "speaking"
-      : "idle"
-
-  const logoAnimation =
-    mascotState === "thinking"
-      ? "animate-pulse"
-      : mascotState === "speaking"
-        ? "drop-shadow-[0_0_10px_rgba(134,167,136,0.6)]"
-        : ""
+  const getMascotPose = (): ZenseiPose => {
+    if (reviewMutation.isPending) return "thinking"
+    if (displayWarning || (summary?.hoursSinceBreak != null && summary.hoursSinceBreak > 3)) {
+      return "worried"
+    }
+    if (displayMilestone || streak >= 3) {
+      return "celebration"
+    }
+    return "cheerful"
+  }
 
   const displayInsight =
     reviewMutation.data?.insight ||
@@ -177,16 +174,7 @@ export function AIInsightsCard() {
 
       <div className="flex flex-col rounded-2xl bg-card/70 p-6">
         <div className="flex items-start gap-4">
-          <div className={`relative size-14 shrink-0 ${logoAnimation}`}>
-            <img
-              src="/Zen-berry Logo.png"
-              alt="Zensei"
-              className="size-full object-contain"
-            />
-            {mascotState === "speaking" && (
-              <div className="absolute -inset-1 rounded-full border-2 border-matcha/30 animate-ping" style={{ animationDuration: "2s" }} />
-            )}
-          </div>
+          <ZenseiMascot pose={getMascotPose()} className="size-16 sm:size-20 shrink-0 select-none" />
           <div className="flex-1">
             <p className="text-base font-medium text-foreground leading-relaxed">
               {displayInsight}
