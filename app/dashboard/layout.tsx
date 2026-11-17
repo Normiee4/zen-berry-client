@@ -69,7 +69,7 @@ export default function DashboardLayout({
               alt="Zen Berry"
               className="h-9 w-9 object-contain"
             />
-            <h1 className="text-lg font-bold text-foreground">Zen Berry</h1>
+            <span className="text-lg font-bold text-foreground">Zen Berry</span>
             <div className="ml-auto flex items-center gap-1">
               <Link
                 href="/feedback?tab=review"

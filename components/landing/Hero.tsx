@@ -12,7 +12,7 @@ export function Hero() {
   return (
     <section className="relative overflow-hidden bg-linear-to-br from-cream via-strawberry-light/30 to-matcha-light/20">
       {/* Morphed Wavy Background Blobs */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
         {/* Large matcha blob - top right */}
         <svg
           className="absolute -right-32 -top-32 h-37.5 w-37.5 opacity-40"
@@ -138,7 +138,7 @@ export function Hero() {
       </div>
 
       {/* Decorative Wave */}
-      <div className="absolute bottom-0 left-0 right-0">
+      <div aria-hidden="true" className="pointer-events-none absolute bottom-0 left-0 right-0">
         <svg
           viewBox="0 0 1440 120"
           fill="none"

@@ -51,7 +51,7 @@ export function Features() {
   return (
     <section id="features" className="relative overflow-hidden bg-cream py-20 sm:py-28">
       {/* Morphed Wavy Background Blobs */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
         {/* Large soft matcha blob - right side */}
         <svg
           className="absolute -right-40 top-20 h-125 w-125 opacity-25"

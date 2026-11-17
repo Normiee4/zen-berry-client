@@ -33,7 +33,7 @@ export function Header() {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav aria-label="Primary" className="hidden items-center gap-8 md:flex">
           {navLinks.map((link) => (
             <a
               key={link.href}
@@ -49,19 +49,19 @@ export function Header() {
         <div className="hidden items-center gap-3 md:flex">
           {authEnabled ? (
             <>
-              <Button variant="ghost" className="text-foreground hover:bg-strawberry-light hover:text-foreground">
+              <Button asChild variant="ghost" className="text-foreground hover:bg-strawberry-light hover:text-foreground">
                 <Link href="/auth/login">
                   Log in
                 </Link>
               </Button>
-              <Button className="bg-matcha text-white hover:bg-matcha/90">
+              <Button asChild className="bg-matcha text-white hover:bg-matcha/90">
                 <Link href="/auth/signup">
                   Get Started
                 </Link>
               </Button>
             </>
           ) : (
-            <Button className="bg-matcha text-white hover:bg-matcha/90">
+            <Button asChild className="bg-matcha text-white hover:bg-matcha/90">
               <Link href="/auth/waitlist">
                 Join Now
               </Link>
@@ -71,9 +71,11 @@ export function Header() {
 
         {/* Mobile Menu Button */}
         <button
-          className="flex size-10 items-center justify-center rounded-lg text-foreground md:hidden"
+          type="button"
+          className="flex size-11 items-center justify-center rounded-lg text-foreground md:hidden"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-label="Toggle menu"
+          aria-expanded={showMobileMenu}
         >
           {isMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
@@ -82,33 +84,33 @@ export function Header() {
       {/* Mobile Menu */}
       {showMobileMenu && (
         <div className="border-t border-strawberry-light/50 bg-cream px-4 py-4 md:hidden">
-          <nav className="flex flex-col gap-4">
+          <nav aria-label="Mobile" className="flex flex-col gap-2">
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-matcha"
+                className="py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-matcha"
                 onClick={() => setIsMenuOpen(false)}
               >
                 {link.label}
               </a>
             ))}
-            <hr className="border-strawberry-light" />
+            <hr className="my-2 border-strawberry-light" />
             {authEnabled ? (
               <>
-                <Button variant="ghost" className="text-foreground hover:bg-strawberry-light hover:text-foreground">
+                <Button asChild variant="ghost" className="h-11 text-foreground hover:bg-strawberry-light hover:text-foreground">
                   <Link href="/auth/login">
                     Log in
                   </Link>
                 </Button>
-                <Button className="bg-matcha text-white hover:bg-matcha/90">
+                <Button asChild className="h-11 bg-matcha text-white hover:bg-matcha/90">
                   <Link href="/auth/signup">
                     Get Started
                   </Link>
                 </Button>
               </>
             ) : (
-              <Button className="bg-matcha text-white hover:bg-matcha/90">
+              <Button asChild className="h-11 bg-matcha text-white hover:bg-matcha/90">
                 <Link href="/auth/waitlist">
                   Join Now
                 </Link>

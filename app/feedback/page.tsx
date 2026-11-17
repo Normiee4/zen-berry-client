@@ -44,7 +44,7 @@ export default function FeedbackPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
+      <main className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="text-center">
           <h1 className="mb-4 text-2xl font-bold text-foreground">Authentication Required</h1>
           <p className="mb-6 text-muted-foreground">Please log in to submit feedback.</p>
@@ -55,39 +55,42 @@ export default function FeedbackPage() {
             Go to Login
           </Link>
         </div>
-      </div>
+      </main>
     )
   }
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b border-strawberry-light/50 bg-card/60 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+      <header className="border-b border-strawberry-light/50 bg-card/60 backdrop-blur-sm">
+        <nav aria-label="Feedback navigation" className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           <button
+            type="button"
             onClick={() => router.back()}
-            className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-matcha"
+            className="flex items-center gap-1.5 py-1 text-sm text-muted-foreground transition-colors hover:text-matcha"
           >
             <ArrowLeft className="size-4" />
             Back
           </button>
           <Link
             href="/reviews"
-            className="text-sm text-muted-foreground transition-colors hover:text-matcha"
+            className="py-1 text-sm text-muted-foreground transition-colors hover:text-matcha"
           >
             Read Reviews
           </Link>
-        </div>
-      </div>
+        </nav>
+      </header>
 
-      <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 sm:py-16">
+      <main className="mx-auto max-w-2xl px-4 py-12 sm:px-6 sm:py-16">
         {/* Tab Switcher */}
-        <div className="mb-8 flex rounded-2xl border border-strawberry-light/50 bg-card/60 p-1 backdrop-blur-sm">
+        <div role="tablist" aria-label="Feedback options" className="mb-8 flex flex-col gap-1 rounded-2xl border border-strawberry-light/50 bg-card/60 p-1 backdrop-blur-sm sm:flex-row sm:gap-0">
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'review'}
             onClick={() => setActiveTab('review')}
             className={cn(
-              'flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all',
+              'flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-all sm:px-4',
               activeTab === 'review'
                 ? 'bg-matcha text-white shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -98,9 +101,11 @@ export default function FeedbackPage() {
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'report'}
             onClick={() => setActiveTab('report')}
             className={cn(
-              'flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all',
+              'flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-all sm:px-4',
               activeTab === 'report'
                 ? 'bg-matcha text-white shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -111,9 +116,11 @@ export default function FeedbackPage() {
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'submissions'}
             onClick={() => setActiveTab('submissions')}
             className={cn(
-              'flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all',
+              'flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-all sm:px-4',
               activeTab === 'submissions'
                 ? 'bg-matcha text-white shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -125,7 +132,7 @@ export default function FeedbackPage() {
         </div>
 
         {/* Content */}
-        <div className="rounded-3xl border border-strawberry-light/50 bg-card/80 p-8 backdrop-blur-sm">
+        <div className="rounded-3xl border border-strawberry-light/50 bg-card/80 p-6 backdrop-blur-sm sm:p-8">
           {activeTab === 'review' && (
             <>
               <div className="mb-6">
@@ -160,7 +167,7 @@ export default function FeedbackPage() {
             </>
           )}
         </div>
-      </div>
+      </main>
     </div>
   )
 }

@@ -6,7 +6,7 @@ export function FeedbackSection() {
   return (
     <section className="relative overflow-hidden bg-linear-to-br from-matcha-light/20 via-cream to-strawberry-light/30 py-20 sm:py-28">
       {/* Decorative blobs */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
         <svg
           className="absolute -left-20 -top-20 h-100 w-100 opacity-20"
           viewBox="0 0 200 200"

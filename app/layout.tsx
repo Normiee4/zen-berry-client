@@ -13,10 +13,49 @@ const nunitoSans = Nunito_Sans({
   display: "swap",
 })
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://zenberry.app"
+
 export const metadata: Metadata = {
-  title: "Zen Berry",
-  description: "A mindful productivity app with Pomodoro timer, task management, and AI-powered insights",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Zen Berry — Mindful Pomodoro Timer & Productivity App",
+    template: "%s | Zen Berry",
+  },
+  description:
+    "Focus sweetly and grow daily with Zen Berry — a mindful Pomodoro timer, soft task manager, and gentle productivity tracker designed to prevent burnout.",
   applicationName: "Zen Berry",
+  keywords: [
+    "Zen Berry",
+    "pomodoro timer",
+    "mindful productivity",
+    "focus app",
+    "task management",
+    "burnout-free productivity",
+  ],
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "/",
+    siteName: "Zen Berry",
+    title: "Zen Berry — Mindful Pomodoro Timer & Productivity App",
+    description:
+      "Focus sweetly and grow daily with Zen Berry — a mindful Pomodoro timer, soft task manager, and gentle productivity tracker.",
+    images: [
+      {
+        url: "/Zen-berry Logo.png",
+        width: 512,
+        height: 512,
+        alt: "Zen Berry logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Zen Berry — Mindful Pomodoro Timer & Productivity App",
+    description:
+      "Focus sweetly and grow daily with Zen Berry — a mindful Pomodoro timer, soft task manager, and gentle productivity tracker.",
+    images: ["/Zen-berry Logo.png"],
+  },
   icons: {
     icon: "/favicon.ico",
     apple: [
@@ -36,6 +75,9 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
   themeColor: "#86A788",
 }
 

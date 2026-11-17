@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /$
+Allow: /landing$
+Allow: /_next/static/
+Allow: /_next/image/
+Disallow: /
+
+Sitemap: https://zenberry.app/sitemap.xml
