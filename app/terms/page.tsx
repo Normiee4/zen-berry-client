@@ -1,10 +1,19 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { Footer } from "@/components/landing/Footer"
+
+export const metadata: Metadata = {
+  title: "Terms of Use",
+  description:
+    "Read the Terms of Use governing your access to and use of Zen Berry.",
+  robots: { index: false, follow: false },
+}
 
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-cream">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <article>
         <header className="mb-12">
           <Link
             href="/"
@@ -360,7 +369,8 @@ export default function TermsPage() {
             </p>
           </div>
         </section>
-      </div>
+        </article>
+      </main>
       <Footer />
     </div>
   )

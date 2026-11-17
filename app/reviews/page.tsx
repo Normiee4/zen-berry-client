@@ -6,8 +6,9 @@ import { formatReview, type ReviewRow } from '@/app/api/feedback/review/service'
 import { ArrowLeft, MessageSquareText } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Reviews | Zen Berry',
+  title: 'Reviews',
   description: 'See what our users are saying about Zen Berry.',
+  robots: { index: false, follow: false },
 }
 
 export default async function ReviewsPage() {
@@ -22,9 +23,9 @@ export default async function ReviewsPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b border-strawberry-light/50 bg-card/60 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-matcha">
+      <header className="border-b border-strawberry-light/50 bg-card/60 backdrop-blur-sm">
+        <nav aria-label="Reviews navigation" className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <Link href="/" className="flex items-center gap-2 py-1 text-sm text-muted-foreground transition-colors hover:text-matcha">
             <ArrowLeft className="size-4" />
             Back to home
           </Link>
@@ -35,11 +36,11 @@ export default async function ReviewsPage() {
             <MessageSquareText className="size-4" />
             Share your experience
           </Link>
-        </div>
-      </div>
+        </nav>
+      </header>
 
       {/* Content */}
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+      <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
         <div className="mb-10 text-center">
           <h1 className="mb-3 text-3xl font-bold text-foreground sm:text-4xl">
             What Our Users Say
@@ -50,7 +51,7 @@ export default async function ReviewsPage() {
         </div>
 
         <ReviewsList reviews={formattedReviews} />
-      </div>
+      </main>
     </div>
   )
 }

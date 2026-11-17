@@ -1,10 +1,19 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { Footer } from "@/components/landing/Footer"
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description:
+    "Learn how Zen Berry collects, uses, and protects your personal data under the Philippine Data Privacy Act (RA 10173).",
+  robots: { index: false, follow: false },
+}
 
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-cream">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <article>
         <header className="mb-12">
           <Link
             href="/"
@@ -493,7 +502,8 @@ export default function PrivacyPage() {
             </p>
           </div>
         </section>
-      </div>
+        </article>
+      </main>
       <Footer />
     </div>
   )

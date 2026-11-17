@@ -8,19 +8,12 @@ import LinkedInIcon from '@mui/icons-material/LinkedIn'
 
 const footerLinks = {
   product: [
-    { label: "Features", href: "#features" },
-    { label: "Pricing", href: "#pricing" },
+    { label: "Features", href: "/#features" },
+    { label: "How It Works", href: "/#how-it-works" },
+    { label: "About", href: "/#about-zenberry" },
     { label: "Reviews", href: "/reviews" },
   ],
-  company: [
-    { label: "About", href: "#" },
-    { label: "Blog", href: "#" },
-    { label: "Contact", href: "#" },
-  ],
   resources: [
-    { label: "Help Center", href: "#" },
-    { label: "Community", href: "#" },
-    { label: "Guides", href: "#" },
     { label: "Feedback", href: "/feedback" },
   ],
   legal: [
@@ -31,9 +24,9 @@ const footerLinks = {
 }
 
 const socialLinks = [
-  { icon: Mail, href: "#  ", label: "Email"},
-  { icon: GitHubIcon, href: "https://github.com/Norman-Bautista?tab=repositories", label: "GitHub" },
-  { icon: LinkedInIcon, href: "https://www.linkedin.com/in/norman-enricko-bautista-1769572a8/", label: "LinkedIn" },
+  { icon: Mail, href: "mailto:dpo@zenberry.app", label: "Email", external: false },
+  { icon: GitHubIcon, href: "https://github.com/Norman-Bautista?tab=repositories", label: "GitHub", external: true },
+  { icon: LinkedInIcon, href: "https://www.linkedin.com/in/norman-enricko-bautista-1769572a8/", label: "LinkedIn", external: true },
 ]
 
 export function Footer() {
@@ -60,7 +53,9 @@ export function Footer() {
                 <a
                   key={social.label}
                   href={social.href}
-                  className="flex size-10 items-center justify-center rounded-full bg-strawberry-light/50 text-muted-foreground transition-colors hover:bg-matcha hover:text-white"
+                  target={social.external ? "_blank" : undefined}
+                  rel={social.external ? "noopener noreferrer" : undefined}
+                  className="flex size-11 items-center justify-center rounded-full bg-strawberry-light/50 text-muted-foreground transition-colors hover:bg-matcha hover:text-white"
                   aria-label={social.label}
                 >
                   <social.icon className="size-4" />
@@ -70,57 +65,55 @@ export function Footer() {
           </div>
 
           {/* Product */}
-          <div>
-            <h4 className="mb-4 text-sm font-semibold text-foreground">Product</h4>
-            <ul className="space-y-3">
+          <nav aria-label="Product">
+            <h2 className="mb-4 text-sm font-semibold text-foreground">Product</h2>
+            <ul className="space-y-2">
               {footerLinks.product.map((link) => (
                 <li key={link.label}>
-                  <a
+                  <Link
                     href={link.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-matcha"
+                    className="inline-block py-1 text-sm text-muted-foreground transition-colors hover:text-matcha"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
-          </div>
-
-         
+          </nav>
 
           {/* Resources */}
-          <div>
-            <h4 className="mb-4 text-sm font-semibold text-foreground">Resources</h4>
-            <ul className="space-y-3">
+          <nav aria-label="Resources">
+            <h2 className="mb-4 text-sm font-semibold text-foreground">Resources</h2>
+            <ul className="space-y-2">
               {footerLinks.resources.map((link) => (
                 <li key={link.label}>
-                  <a
+                  <Link
                     href={link.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-matcha"
+                    className="inline-block py-1 text-sm text-muted-foreground transition-colors hover:text-matcha"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
-          </div>
+          </nav>
 
           {/* Legal */}
-          <div>
-            <h4 className="mb-4 text-sm font-semibold text-foreground">Legal</h4>
-            <ul className="space-y-3">
+          <nav aria-label="Legal">
+            <h2 className="mb-4 text-sm font-semibold text-foreground">Legal</h2>
+            <ul className="space-y-2">
               {footerLinks.legal.map((link) => (
                 <li key={link.label}>
-                  <a
+                  <Link
                     href={link.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-matcha"
+                    className="inline-block py-1 text-sm text-muted-foreground transition-colors hover:text-matcha"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
-          </div>
+          </nav>
         </div>
 
         {/* Bottom Bar */}

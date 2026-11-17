@@ -32,7 +32,7 @@ export function About() {
   return (
     <section id="about-zenberry" className="relative overflow-hidden bg-linear-to-br from-strawberry-light/20 via-cream to-matcha-light/30 py-20 sm:py-28">
       {/* Morphed Wavy Background Blobs */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
         {/* Large matcha blob - top left */}
         <svg
           className="absolute -left-32 -top-32 h-150 w-150 opacity-30"

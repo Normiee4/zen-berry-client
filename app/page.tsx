@@ -1,39 +1,42 @@
+import type { Metadata } from "next"
+import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 import { createServerSupabaseClient } from "@/lib/supabase-server"
-import { Header } from "@/components/landing/Header"
-import { Hero } from "@/components/landing/Hero"
-import { Features } from "@/components/landing/Features"
-import { HowItWorks } from "@/components/landing/How-it-works"
-import { About } from "@/components/landing/About"
-import { FeedbackSection } from "@/components/landing/feedback-section"
-import { Footer } from "@/components/landing/Footer"
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
+import { LandingContent } from "@/components/landing/landing-content"
+
+export const metadata: Metadata = {
+  title: "Zen Berry — Free Pomodoro Timer & Mindful Productivity Tool",
+  description:
+    "Stay focused without burnout using Zen Berry, a free online Pomodoro timer and mindful productivity tool with task management, focus streaks, and gentle analytics.",
+  keywords: [
+    "pomodoro timer",
+    "free pomodoro timer",
+    "online pomodoro timer",
+    "productivity tool",
+    "mindful productivity app",
+    "focus timer",
+    "task manager",
+    "study timer",
+    "Zen Berry",
+  ],
+  alternates: {
+    canonical: "/landing",
+  },
+}
 
 export default async function Home() {
   const cookieStore = await cookies()
-  const betaCookie = cookieStore.get('beta_bypass')
+  const betaCookie = cookieStore.get("beta_bypass")
 
-  if (betaCookie?.value === 'true') {
-    redirect('/dashboard')
+  if (betaCookie?.value === "true") {
+    redirect("/dashboard")
   }
 
   const supabase = await createServerSupabaseClient()
   const { data: { session } } = await supabase.auth.getSession()
   if (session) {
-    redirect('/dashboard')
+    redirect("/dashboard")
   }
 
-  return (
-    <div className="min-h-screen">
-      <Header />
-      <main>
-        <Hero />
-        <Features />
-        <HowItWorks />
-        <About />
-        <FeedbackSection />
-      </main>
-      <Footer />
-    </div>
-  )
+  return <LandingContent />
 }
