@@ -8,7 +8,6 @@ import { ArrowLeft, MessageSquareText } from 'lucide-react'
 export const metadata: Metadata = {
   title: 'Reviews',
   description: 'See what our users are saying about Zen Berry.',
-  robots: { index: false, follow: false },
 }
 
 export default async function ReviewsPage() {

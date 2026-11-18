@@ -6,7 +6,6 @@ export const metadata: Metadata = {
   title: "Terms of Use",
   description:
     "Read the Terms of Use governing your access to and use of Zen Berry.",
-  robots: { index: false, follow: false },
 }
 
 export default function TermsPage() {

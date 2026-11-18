@@ -6,7 +6,6 @@ export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
     "Learn how Zen Berry collects, uses, and protects your personal data under the Philippine Data Privacy Act (RA 10173).",
-  robots: { index: false, follow: false },
 }
 
 export default function PrivacyPage() {
@@ -224,7 +223,14 @@ export default function PrivacyPage() {
             Cookies
           </h3>
           <p className="text-foreground mb-4">
-            We use the following cookies on our website:
+            We use the following cookies on our website (see our{" "}
+            <Link
+              href="/cookies"
+              className="text-matcha hover:text-matcha-dark transition-colors underline"
+            >
+              Cookie Policy
+            </Link>{" "}
+            for full details and preference controls):
           </p>
           <ul className="list-disc pl-6 space-y-2 text-foreground">
             <li>

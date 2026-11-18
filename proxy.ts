@@ -7,8 +7,10 @@ async function middleware(request: NextRequest) {
   const url = request.nextUrl
   const pathname = url.pathname
 
-  // Bypass auth checks for PWA assets and service worker files
+  // Bypass auth checks for SEO metadata routes, PWA assets, and service worker files
   if (
+    pathname === '/sitemap.xml' ||
+    pathname === '/robots.txt' ||
     pathname === '/manifest.webmanifest' ||
     pathname === '/sw.js' ||
     pathname.startsWith('/workbox')

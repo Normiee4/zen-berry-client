@@ -1,8 +1,6 @@
 User-agent: *
-Allow: /$
-Allow: /landing$
-Allow: /_next/static/
-Allow: /_next/image/
-Disallow: /
+Allow: /
+Disallow: /dashboard
+Disallow: /api
 
-Sitemap: https://zenberry.app/sitemap.xml
+Sitemap: https://zen-berry.vercel.app/sitemap.xml
