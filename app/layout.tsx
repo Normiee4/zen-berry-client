@@ -67,11 +67,11 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
-      { url: "/Zen-berry Logo.png", sizes: "512x512", type: "image/png" },
+      { url: "/zen-berry-logo.png", sizes: "512x512", type: "image/png" },
     ],
     shortcut: "/favicon.ico",
     apple: [
-      { url: "/Zen-berry Logo.png", sizes: "180x180", type: "image/png" },
+      { url: "/zen-berry-logo.png", sizes: "180x180", type: "image/png" },
     ],
   },
   manifest: "/site.webmanifest",
