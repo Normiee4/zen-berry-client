@@ -22,15 +22,17 @@ export function CookieConsentBanner() {
   const [hasSavedChoice, setHasSavedChoice] = useState(false)
 
   useEffect(() => {
-    const saved = getCookieConsent()
-    if (saved) {
-      setHasSavedChoice(true)
-      setAnalyticsEnabled(saved.analytics)
-      syncAnalyticsConsent(saved.analytics)
-    } else {
-      syncAnalyticsConsent(false)
-      setIsOpen(true)
-    }
+    const timer = window.setTimeout(() => {
+      const saved = getCookieConsent()
+      if (saved) {
+        setHasSavedChoice(true)
+        setAnalyticsEnabled(saved.analytics)
+        syncAnalyticsConsent(saved.analytics)
+      } else {
+        syncAnalyticsConsent(false)
+        setIsOpen(true)
+      }
+    }, 0)
 
     const handleOpen = () => {
       const current = getCookieConsent()
@@ -44,6 +46,7 @@ export function CookieConsentBanner() {
 
     window.addEventListener(OPEN_COOKIE_SETTINGS_EVENT, handleOpen)
     return () => {
+      window.clearTimeout(timer)
       window.removeEventListener(OPEN_COOKIE_SETTINGS_EVENT, handleOpen)
     }
   }, [])
