@@ -66,7 +66,7 @@ export default function DashboardLayout({
           <div className="flex items-center gap-2 px-3 py-2 sm:gap-3 sm:px-6 sm:py-3 lg:px-8">
             <SidebarToggle onClick={() => setSidebarOpen(true)} />
             <img
-              src="/Zen-berry Logo.png"
+              src="/zen-berry-logo.png"
               alt="Zen Berry"
               className="h-8 w-8 object-contain sm:h-9 sm:w-9"
             />

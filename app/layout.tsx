@@ -50,7 +50,7 @@ export const metadata: Metadata = {
       "Focus sweetly and grow daily with Zen Berry — a mindful Pomodoro timer, soft task manager, and gentle productivity tracker.",
     images: [
       {
-        url: "/Zen-berry Logo.png",
+        url: "/zen-berry-logo.png",
         width: 512,
         height: 512,
         alt: "Zen Berry logo",
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     title: "Zen Berry — Mindful Pomodoro Timer & Productivity App",
     description:
       "Focus sweetly and grow daily with Zen Berry — a mindful Pomodoro timer, soft task manager, and gentle productivity tracker.",
-    images: ["/Zen-berry Logo.png"],
+    images: ["/zen-berry-logo.png"],
   },
   icons: {
     icon: [

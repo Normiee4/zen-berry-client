@@ -13,7 +13,7 @@ const jsonLd = {
   "@type": "SoftwareApplication",
   name: "Zen Berry",
   url: `${siteUrl}/landing`,
-  image: `${siteUrl}/Zen-berry%20Logo.png`,
+  image: `${siteUrl}/zen-berry-logo.png`,
   applicationCategory: "ProductivityApplication",
   operatingSystem: "Web",
   description:

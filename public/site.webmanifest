@@ -11,13 +11,13 @@
   "theme_color": "#86A788",
   "icons": [
     {
-      "src": "/Zen-berry Logo.png",
+      "src": "/zen-berry-logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/Zen-berry Logo.png",
+      "src": "/zen-berry-logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
