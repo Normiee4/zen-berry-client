@@ -20,7 +20,9 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zen-berry.vercel.ap
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   verification: {
-    google: process.env.NEXT_PUBLIC_GSC_VERIFICATION,
+    google:
+      process.env.NEXT_PUBLIC_GSC_VERIFICATION ||
+      "gfyhFa7XCaZH52TVpwmyOtc0x_9OMFmB6pL5eBpz2I4",
   },
   title: {
     default: "Zen Berry — Mindful Pomodoro Timer & Productivity App",
@@ -29,9 +31,6 @@ export const metadata: Metadata = {
   description:
     "Focus sweetly and grow daily with Zen Berry — a mindful Pomodoro timer, soft task manager, and gentle productivity tracker designed to prevent burnout.",
   applicationName: "Zen Berry",
-  verification: {
-    google: "gfyhFa7XCaZH52TVpwmyOtc0x_9OMFmB6pL5eBpz2I4",
-  },
   keywords: [
     "Zen Berry",
     "pomodoro timer",
