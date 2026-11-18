@@ -2,8 +2,10 @@ import "./globals.css";
 import type { Metadata, Viewport } from "next"
 import { Nunito_Sans } from "next/font/google"
 import { cookies } from "next/headers"
+import { GoogleAnalytics } from "@next/third-parties/google"
 import { Providers } from "./providers"
 import { InstallPrompt } from "@/components/InstallPrompt"
+import { CookieConsentBanner } from "@/components/cookies/cookie-consent-banner"
 import { THEME_CLASS_MAP, THEME_COOKIE_KEY } from "@/lib/theme"
 
 const nunitoSans = Nunito_Sans({
@@ -13,10 +15,13 @@ const nunitoSans = Nunito_Sans({
   display: "swap",
 })
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://zenberry.app"
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zen-berry.vercel.app"
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  verification: {
+    google: process.env.NEXT_PUBLIC_GSC_VERIFICATION,
+  },
   title: {
     default: "Zen Berry — Mindful Pomodoro Timer & Productivity App",
     template: "%s | Zen Berry",
@@ -92,7 +97,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Providers>
           {children}
           <InstallPrompt />
+          <CookieConsentBanner />
         </Providers>
+        {process.env.NEXT_PUBLIC_GA_ID && (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+        )}
       </body>
     </html>
   )

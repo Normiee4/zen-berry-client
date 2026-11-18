@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     "Zen Berry",
   ],
   alternates: {
-    canonical: "/landing",
+    canonical: "/",
   },
 }
 

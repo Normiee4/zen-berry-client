@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Leaf, Heart, Mail } from "lucide-react"
 import GitHubIcon from '@mui/icons-material/GitHub'
 import LinkedInIcon from '@mui/icons-material/LinkedIn'
+import { CookieSettingsButton } from "@/components/cookies/cookie-settings-button"
 
 const footerLinks = {
   product: [
@@ -19,7 +20,7 @@ const footerLinks = {
   legal: [
     { label: "Privacy", href: "/privacy" },
     { label: "Terms", href: "/terms" },
-    { label: "Cookies", href: "/privacy#cookies" },
+    { label: "Cookies", href: "/cookies" },
   ],
 }
 
@@ -112,6 +113,12 @@ export function Footer() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <CookieSettingsButton
+                  label="Cookie Settings"
+                  className="inline-block cursor-pointer py-1 text-sm text-muted-foreground transition-colors hover:text-matcha"
+                />
+              </li>
             </ul>
           </nav>
         </div>
