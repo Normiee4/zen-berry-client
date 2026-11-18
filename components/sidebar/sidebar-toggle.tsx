@@ -11,7 +11,7 @@ export function SidebarToggle({ onClick }: SidebarToggleProps) {
     <button
       onClick={onClick}
       data-tour="step-sidebar"
-      className="flex items-center justify-center rounded-xl p-2 text-muted-foreground transition-colors hover:bg-strawberry/10 hover:text-foreground"
+      className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-strawberry/10 hover:text-foreground"
       aria-label="Toggle sidebar"
     >
       <Menu className="size-6" strokeWidth={1.5} />

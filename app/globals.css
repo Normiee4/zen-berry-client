@@ -93,10 +93,18 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground ;
+  html {
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: contain;
   }
-  
+  body {
+    @apply bg-background text-foreground;
+  }
+  button,
+  a,
+  [role="button"] {
+    touch-action: manipulation;
+  }
 }
 
 .cozy-dark {

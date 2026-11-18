@@ -128,8 +128,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8 flex items-center gap-3">
+    <div className="mx-auto max-w-2xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+      <div className="mb-6 flex items-center gap-3 sm:mb-8">
         <div className="flex size-12 items-center justify-center rounded-full bg-matcha/10">
           <User className="size-6 text-matcha" strokeWidth={1.5} />
         </div>
@@ -139,7 +139,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="mb-6 rounded-xl border border-border/30 bg-card p-6">
+      <div className="mb-4 rounded-xl border border-border/30 bg-card p-4 sm:mb-6 sm:p-6">
         <h2 className="mb-4 text-lg font-semibold text-foreground">Account Information</h2>
         <div className="space-y-3">
           <div>
@@ -153,7 +153,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="mb-6 rounded-xl border border-border/30 bg-card p-6">
+      <div className="mb-4 rounded-xl border border-border/30 bg-card p-4 sm:mb-6 sm:p-6">
         <h2 className="mb-4 text-lg font-semibold text-foreground">Theme</h2>
         <p className="mb-4 text-sm text-muted-foreground">
           Choose your preferred ambiance. Brand accents stay consistent across all themes.
@@ -168,10 +168,10 @@ export default function ProfilePage() {
                 key={theme.id}
                 onClick={() => handleThemeChange(theme.id)}
                 disabled={isSaving}
-                className={`relative rounded-xl border-2 p-4 text-left transition-all ${
+                className={`relative min-h-14 rounded-xl border-2 p-4 text-left transition-all active:scale-[0.98] ${
                   isActive
                     ? "border-matcha bg-matcha/5"
-                    : "border-border/30 bg-white hover:border-matcha/50"
+                    : "border-border/30 bg-card hover:border-matcha/50"
                 }`}
               >
                 {isActive && (
@@ -204,14 +204,14 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-red-200 bg-red-50 p-6">
+      <div className="rounded-xl border border-red-200 bg-red-50 p-4 sm:p-6">
         <h2 className="mb-2 text-lg font-semibold text-red-600">Danger Zone</h2>
         <p className="mb-4 text-sm text-red-500">
           Once you delete your account, all your data will be permanently removed. This action cannot be undone.
         </p>
         <button
           onClick={() => setShowDeleteDialog(true)}
-          className="flex items-center gap-2 rounded-xl bg-red-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600"
+          className="flex min-h-11 items-center gap-2 rounded-xl bg-red-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600 active:scale-[0.98]"
         >
           <Trash2 className="size-4" strokeWidth={1.5} />
           Delete Account

@@ -106,9 +106,9 @@ export default function DashboardPage() {
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="mx-auto max-w-8xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 gap-6 items-stretch lg:grid-cols-3">
-            <div className="flex h-full flex-col gap-6">
+      <div className="mx-auto max-w-8xl space-y-4 px-3 py-4 sm:space-y-6 sm:px-6 md:py-6 lg:px-8 lg:py-8">
+          <div className="grid grid-cols-1 items-stretch gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="flex h-full flex-col gap-4 sm:gap-6">
               <div className="flex-1" data-tour="step-2">
                 <ErrorBoundary name="Timer" fallback={<p className="text-sm text-muted-foreground p-4">Timer unavailable</p>}>
                   <TimerCard />
@@ -126,7 +126,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="flex h-full flex-col gap-6">
+            <div className="flex h-full flex-col gap-4 sm:gap-6">
               <div className="flex-1" data-tour="step-3">
                 <MITCard
                   mits={mits}
@@ -151,8 +151,8 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="flex h-full flex-col gap-6">
-              <div className="flex-[2]" data-tour="step-9">
+            <div className="flex h-full flex-col gap-4 sm:gap-6 md:col-span-2 md:grid md:grid-cols-2 lg:col-span-1 lg:flex lg:flex-col">
+              <div className="md:col-span-2 lg:flex-[2]" data-tour="step-9">
                 <ErrorBoundary name="AI Insights" fallback={<p className="text-sm text-muted-foreground p-4">Insights unavailable</p>}>
                   <AIInsightsCard />
                 </ErrorBoundary>

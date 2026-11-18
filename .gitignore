@@ -49,3 +49,7 @@ blob-report/
 # Serwist
 public/sw*
 public/sw-worker*
+
+#agents
+.agents
+.opencode

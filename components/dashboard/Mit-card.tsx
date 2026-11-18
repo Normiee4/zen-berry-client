@@ -112,7 +112,7 @@ export function MITCard({
   };
 
   return (
-    <div className="flex h-full flex-col rounded-3xl bg-strawberry-light/30 p-6 border border-matcha-dark/20">
+    <div className="flex h-full flex-col rounded-3xl bg-strawberry-light/30 p-4 sm:p-6 border border-matcha-dark/20">
       {/* Header */}
       <div className="mb-4 flex items-center gap-2">
         <span className="text-base">🎯</span>
@@ -125,19 +125,20 @@ export function MITCard({
 
       {/* Add MIT Input */}
       <div className="mb-4">
-        <div className="flex items-center gap-2 rounded-xl bg-card/70 p-3">
+        <div className="flex items-center gap-2 rounded-xl bg-card/70 p-2.5 sm:p-3">
           <input
             type="text"
             value={newMit}
             onChange={(e) => setNewMit(e.target.value)}
             onKeyDown={handleKeyPress}
             placeholder="Add your top priority..."
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/50"
+            className="flex-1 bg-transparent text-base sm:text-sm outline-none placeholder:text-muted-foreground/50"
           />
           <button
             onClick={handleAdd}
             disabled={isAdding}
-            className="flex size-7 items-center justify-center rounded-full bg-matcha text-white hover:bg-matcha/90 disabled:opacity-50 transition-colors"
+            aria-label="Add MIT"
+            className="flex size-10 sm:size-8 shrink-0 items-center justify-center rounded-full bg-matcha text-white hover:bg-matcha/90 disabled:opacity-50 transition-colors active:scale-95"
           >
             {isAdding ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
           </button>

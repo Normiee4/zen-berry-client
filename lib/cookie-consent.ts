@@ -1,5 +1,6 @@
 export const COOKIE_CONSENT_KEY = "zenberry_cookie_consent"
 export const OPEN_COOKIE_SETTINGS_EVENT = "zenberry:open-cookie-settings"
+export const COOKIE_CONSENT_SAVED_EVENT = "zenberry:cookie-consent-saved"
 
 export interface CookieConsentPreferences {
   necessary: true
@@ -20,8 +21,25 @@ declare global {
   }
 }
 
+function readConsentCookie(): CookieConsentPreferences | null {
+  const match = document.cookie
+    .split("; ")
+    .find((entry) => entry.startsWith(`${COOKIE_CONSENT_KEY}=`))
+  if (!match) return null
+
+  const value = match.slice(COOKIE_CONSENT_KEY.length + 1)
+  if (value !== "all" && value !== "essential") return null
+
+  return {
+    necessary: true,
+    analytics: value === "all",
+    updatedAt: new Date().toISOString(),
+  }
+}
+
 /**
- * Reads saved cookie consent preferences from localStorage.
+ * Reads saved cookie consent preferences from localStorage, falling back to the
+ * first-party cookie (survives cleared storage, private tabs and installed PWAs).
  * Returns null if the visitor has not made a choice yet.
  */
 export function getCookieConsent(): CookieConsentPreferences | null {
@@ -29,28 +47,44 @@ export function getCookieConsent(): CookieConsentPreferences | null {
 
   try {
     const raw = window.localStorage.getItem(COOKIE_CONSENT_KEY)
-    if (!raw) return null
-    const parsed: unknown = JSON.parse(raw)
-    if (
-      typeof parsed === "object" &&
-      parsed !== null &&
-      "analytics" in parsed &&
-      typeof (parsed as { analytics: unknown }).analytics === "boolean"
-    ) {
-      const record = parsed as { analytics: boolean; updatedAt?: unknown }
-      return {
-        necessary: true,
-        analytics: record.analytics,
-        updatedAt:
-          typeof record.updatedAt === "string"
-            ? record.updatedAt
-            : new Date().toISOString(),
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw)
+      if (
+        typeof parsed === "object" &&
+        parsed !== null &&
+        "analytics" in parsed &&
+        typeof (parsed as { analytics: unknown }).analytics === "boolean"
+      ) {
+        const record = parsed as { analytics: boolean; updatedAt?: unknown }
+        return {
+          necessary: true,
+          analytics: record.analytics,
+          updatedAt:
+            typeof record.updatedAt === "string"
+              ? record.updatedAt
+              : new Date().toISOString(),
+        }
       }
     }
-    return null
   } catch {
-    return null
+    // fall through to the cookie
   }
+
+  try {
+    const fromCookie = readConsentCookie()
+    if (fromCookie) {
+      // Heal localStorage so later reads are fast.
+      try {
+        window.localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify(fromCookie))
+      } catch {
+        // storage unavailable; the cookie alone is enough
+      }
+      return fromCookie
+    }
+  } catch {
+    // ignore
+  }
+  return null
 }
 
 /**
@@ -94,11 +128,13 @@ export function saveCookieConsent(
       // Ignore storage quota / private mode errors
     }
 
-    const maxAgeSeconds = 60 * 60 * 24 * 180
+    const maxAgeSeconds = 60 * 60 * 24 * 365
     const value = analyticsGranted ? "all" : "essential"
-    document.cookie = `${COOKIE_CONSENT_KEY}=${value}; path=/; max-age=${maxAgeSeconds}; SameSite=Lax`
+    const secure = window.location.protocol === "https:" ? "; Secure" : ""
+    document.cookie = `${COOKIE_CONSENT_KEY}=${value}; path=/; max-age=${maxAgeSeconds}; SameSite=Lax${secure}`
 
     syncAnalyticsConsent(analyticsGranted)
+    window.dispatchEvent(new CustomEvent(COOKIE_CONSENT_SAVED_EVENT))
   }
 
   return preferences

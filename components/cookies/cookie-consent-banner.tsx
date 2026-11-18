@@ -10,16 +10,26 @@ import {
   syncAnalyticsConsent,
 } from "@/lib/cookie-consent"
 
+interface CookieConsentBannerProps {
+  initialAnalyticsConsent?: boolean | null
+}
+
 /**
  * Visitor cookie authorization banner and preferences panel.
  * Appears on first visit until a choice is saved, and can be reopened
  * via the "Cookie Settings" button in the footer or Cookie Policy page.
  */
-export function CookieConsentBanner() {
+export function CookieConsentBanner({
+  initialAnalyticsConsent = null,
+}: CookieConsentBannerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [showCustomize, setShowCustomize] = useState(false)
-  const [analyticsEnabled, setAnalyticsEnabled] = useState(true)
-  const [hasSavedChoice, setHasSavedChoice] = useState(false)
+  const [analyticsEnabled, setAnalyticsEnabled] = useState(
+    initialAnalyticsConsent ?? true
+  )
+  const [hasSavedChoice, setHasSavedChoice] = useState(
+    initialAnalyticsConsent !== null
+  )
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -28,6 +38,10 @@ export function CookieConsentBanner() {
         setHasSavedChoice(true)
         setAnalyticsEnabled(saved.analytics)
         syncAnalyticsConsent(saved.analytics)
+      } else if (initialAnalyticsConsent !== null) {
+        setHasSavedChoice(true)
+        setAnalyticsEnabled(initialAnalyticsConsent)
+        syncAnalyticsConsent(initialAnalyticsConsent)
       } else {
         syncAnalyticsConsent(false)
         setIsOpen(true)
@@ -49,7 +63,7 @@ export function CookieConsentBanner() {
       window.clearTimeout(timer)
       window.removeEventListener(OPEN_COOKIE_SETTINGS_EVENT, handleOpen)
     }
-  }, [])
+  }, [initialAnalyticsConsent])
 
   if (!isOpen) return null
 
@@ -81,7 +95,7 @@ export function CookieConsentBanner() {
       role="dialog"
       aria-modal="false"
       aria-label="Cookie authorization panel"
-      className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-xl rounded-2xl border border-strawberry-light/70 bg-card/95 p-5 shadow-xl backdrop-blur-md sm:inset-x-auto sm:right-6 sm:bottom-6"
+      className="fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-50 mx-auto max-w-xl rounded-2xl border border-strawberry-light/70 bg-card/95 p-5 shadow-xl backdrop-blur-md sm:inset-x-auto sm:right-6 sm:bottom-6"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2.5">

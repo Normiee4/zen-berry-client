@@ -12,12 +12,12 @@ import { BarChart3 } from "lucide-react"
 
 function LoadingSkeleton() {
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8">
+    <div className="mx-auto max-w-6xl space-y-4 px-3 py-4 sm:space-y-6 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+      <div className="mb-6 sm:mb-8">
         <div className="h-8 w-48 rounded-full bg-gray-200 animate-pulse" />
         <div className="mt-2 h-4 w-64 rounded-full bg-gray-100 animate-pulse" />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {[...Array(4)].map((_, i) => (
           <div key={i} className="h-28 rounded-3xl bg-gray-100 animate-pulse" />
         ))}
@@ -59,7 +59,7 @@ export default function ProductivityPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-6xl space-y-4 px-3 py-4 sm:space-y-6 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
       {/* Page Header */}
       <div className="mb-2">
         <div className="flex items-center gap-3">
@@ -78,7 +78,7 @@ export default function ProductivityPage() {
 
       {/* Weekly Chart */}
       <ErrorBoundary name="Productivity Chart" fallback={<p className="text-sm text-muted-foreground p-4">Chart unavailable</p>}>
-        <div className="rounded-3xl border border-matcha-dark/20 bg-strawberry-light/30 p-6">
+        <div className="rounded-3xl border border-matcha-dark/20 bg-strawberry-light/30 p-4 sm:p-6">
           <AnalyticsChart period="week" />
         </div>
       </ErrorBoundary>

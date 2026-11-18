@@ -1,203 +1,238 @@
 "use client"
 
-import { useState } from "react"
-import { ChevronLeft, ChevronRight, ListChecks, StickyNote, Sparkles, X } from "lucide-react"
-
-interface Slide {
-  title: string
-  subtitle: string
-  body: string
-}
-
-const slides: Slide[] = [
-  {
-    title: "Welcome to Zen Berry",
-    subtitle: "Your cozy focus companion",
-    body: "A sweet space to plan your day, focus in sprints, and celebrate progress — all without the noise.",
-  },
-  {
-    title: "Pick Your Top 3",
-    subtitle: "Most Important Tasks",
-    body: "Each day, choose up to 3 MITs. These are your non-negotiable priorities. Everything else comes second.",
-  },
-  {
-    title: "Brain Dump Everything",
-    subtitle: "Clear your mind",
-    body: "Got random thoughts? Dump them here. Quick-capture any task so nothing slips away — promote to MIT when ready.",
-  },
-  {
-    title: "Focus in Sprints",
-    subtitle: "Pomodoro timer",
-    body: "Work in focused bursts with built-in break reminders. Every completed session builds your streak and fills your matcha cup.",
-  },
-  {
-    title: "Grow with Insights",
-    subtitle: "AI-powered review",
-    body: "End your day with a gentle AI insight from Zensei. Track streaks, unlock milestones, and reward yourself with matcha.",
-  },
-]
+import { useEffect, useState } from "react"
+import { ArrowLeft, ArrowRight, X } from "lucide-react"
+import { toast } from "sonner"
+import { useMITApi } from "@/hooks/useTasksApi"
+import { applyTheme } from "@/lib/theme"
+import { useTimerStore } from "@/store/timer-store"
+import {
+  FirstTasksStep,
+  FirstTimerStep,
+  HookStep,
+  PainStep,
+  SetupStep,
+  SolutionStep,
+} from "./onboarding-steps"
+import {
+  MAX_FIRST_TASKS,
+  ONBOARDING_PRESET_IDS,
+  PHASES,
+  type PainId,
+  type ThemeOption,
+} from "./onboarding-content"
 
 interface OnboardingOverlayProps {
   onComplete: () => void
 }
 
+const STEP_HOOK = 0
+const STEP_PAIN = 1
+const STEP_SOLUTION = 2
+const STEP_SETUP = 3
+const STEP_TASKS = 4
+const STEP_TIMER = 5
+const LAST_STEP = STEP_TIMER
+const THEME_IDS: ThemeOption["id"][] = ["light-zen", "warm-earth", "cozy-dark"]
+
+const NEXT_LABELS: Record<number, string> = {
+  [STEP_HOOK]: "Let's find out",
+  [STEP_PAIN]: "Continue",
+  [STEP_SOLUTION]: "Set up my space",
+  [STEP_SETUP]: "Save and continue",
+  [STEP_TASKS]: "Create my tasks",
+  [STEP_TIMER]: "Open my dashboard",
+}
+
 export function OnboardingOverlay({ onComplete }: OnboardingOverlayProps) {
-  const [currentSlide, setCurrentSlide] = useState(0)
+  const [step, setStep] = useState(STEP_HOOK)
   const [isExiting, setIsExiting] = useState(false)
-  const totalSlides = slides.length
-  const isLast = currentSlide === totalSlides - 1
+  const [isSaving, setIsSaving] = useState(false)
 
-  const handleNext = () => {
-    if (isLast) {
-      handleComplete()
-    } else {
-      setCurrentSlide((prev) => prev + 1)
-    }
-  }
+  const [pains, setPains] = useState<PainId[]>([])
+  const [name, setName] = useState("")
+  const [theme, setTheme] = useState<ThemeOption["id"]>("light-zen")
+  const [taskTitles, setTaskTitles] = useState<string[]>([""])
+  const [createdTitles, setCreatedTitles] = useState<string[]>([])
 
-  const handlePrevious = () => {
-    setCurrentSlide((prev) => Math.max(0, prev - 1))
-  }
+  const { addMIT } = useMITApi()
+  const presets = useTimerStore((s) => s.presets)
+  const activePresetId = useTimerStore((s) => s.activePresetId)
+  const setPreset = useTimerStore((s) => s.setPreset)
+
+  const onboardingPresets = ONBOARDING_PRESET_IDS
+    .map((id) => presets.find((p) => p.id === id))
+    .filter((p): p is NonNullable<typeof p> => p !== undefined)
+
+  useEffect(() => {
+    fetch("/api/auth-service/me")
+      .then((res) => res.json())
+      .then((data: { user?: { name?: string; theme_preference?: string } }) => {
+        if (data.user?.name) setName(data.user.name)
+        const savedTheme = THEME_IDS.find((id) => id === data.user?.theme_preference)
+        if (savedTheme) setTheme(savedTheme)
+      })
+      .catch(() => {})
+  }, [])
 
   const handleComplete = () => {
     setIsExiting(true)
     setTimeout(onComplete, 400)
   }
 
-  const slide = slides[currentSlide]
-
-  const renderIllustration = (index: number) => {
-    switch (index) {
-      case 0:
-        return (
-          <div className="flex justify-center">
-            <img
-              src="/Zen-berry Logo.png"
-              alt="Zen Berry"
-              className="h-28 w-28 object-contain"
-            />
-          </div>
-        )
-      case 1:
-        return (
-          <div className="flex items-center justify-center gap-3">
-            <div className="flex items-center justify-center rounded-2xl bg-strawberry/20 p-5">
-              <ListChecks className="size-16 text-strawberry" strokeWidth={1.5} />
-            </div>
-            <div className="flex flex-col gap-2">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className={`flex h-10 w-32 items-center justify-center rounded-xl border-2 text-sm font-semibold ${
-                    i === currentSlide + 1
-                      ? "border-matcha bg-matcha/10 text-matcha"
-                      : "border-strawberry/30 bg-card/50 text-strawberry/60"
-                  }`}
-                >
-                  MIT #{i}
-                </div>
-              ))}
-            </div>
-          </div>
-        )
-      case 2:
-        return (
-          <div className="flex justify-center">
-            <div className="flex items-center justify-center rounded-2xl bg-strawberry/20 p-5">
-              <StickyNote className="size-16 text-strawberry" strokeWidth={1.5} />
-            </div>
-          </div>
-        )
-      case 3:
-        return (
-          <div className="flex justify-center">
-            <img
-              src="/matcha_illustration.png"
-              alt="Matcha cup"
-              className="h-36 w-36 object-contain"
-            />
-          </div>
-        )
-      case 4:
-        return (
-          <div className="flex justify-center">
-            <div className="rounded-full bg-matcha/15 p-6">
-              <Sparkles className="size-16 text-matcha" strokeWidth={1.5} />
-            </div>
-          </div>
-        )
-      default:
-        return null
-    }
+  const togglePain = (id: PainId) => {
+    setPains((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]))
   }
+
+  const handleThemeChange = (next: ThemeOption["id"]) => {
+    setTheme(next)
+    applyTheme(next)
+  }
+
+  const saveAccountSetup = async (): Promise<boolean> => {
+    const res = await fetch("/api/auth-service/me", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ full_name: name.trim(), theme_preference: theme }),
+    })
+    if (!res.ok) {
+      toast.error("We couldn't save your setup. Please try again.")
+      return false
+    }
+    return true
+  }
+
+  const createFirstTasks = async (): Promise<boolean> => {
+    const pending = taskTitles
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0 && !createdTitles.includes(t))
+      .slice(0, MAX_FIRST_TASKS)
+
+    const created: string[] = []
+    for (const title of pending) {
+      const result = await addMIT(title)
+      if (!result.success) break
+      created.push(title)
+    }
+    const allCreated = [...createdTitles, ...created]
+    setCreatedTitles(allCreated)
+    return allCreated.length > 0 && created.length === pending.length
+  }
+
+  const canContinue = (() => {
+    if (isSaving) return false
+    if (step === STEP_PAIN) return pains.length > 0
+    if (step === STEP_SETUP) return name.trim().length > 0
+    if (step === STEP_TASKS) return taskTitles.some((t) => t.trim().length > 0) || createdTitles.length > 0
+    return true
+  })()
+
+  const handleNext = async () => {
+    if (step === LAST_STEP) {
+      handleComplete()
+      return
+    }
+    if (step === STEP_SETUP || step === STEP_TASKS) {
+      setIsSaving(true)
+      const ok = step === STEP_SETUP ? await saveAccountSetup() : await createFirstTasks()
+      setIsSaving(false)
+      if (!ok) return
+    }
+    setStep((prev) => prev + 1)
+  }
+
+  const handleBack = () => setStep((prev) => Math.max(STEP_HOOK, prev - 1))
+
+  const progressPercent = ((step + 1) / PHASES.length) * 100
+  const firstTask = createdTitles[0] ?? taskTitles.find((t) => t.trim().length > 0)?.trim() ?? ""
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm transition-opacity duration-400 ${
+      className={`fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-background/95 backdrop-blur-sm transition-opacity duration-400 ${
         isExiting ? "opacity-0" : "opacity-100"
       }`}
     >
-      {/* Skip button */}
       <button
         onClick={handleComplete}
-        className="absolute right-6 top-6 flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-strawberry/10 hover:text-foreground"
+        className="absolute right-6 top-6 flex min-h-11 items-center gap-1.5 rounded-full px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-strawberry/10 hover:text-foreground"
       >
-        Skip
+        Skip for now
         <X className="size-4" />
       </button>
 
-      {/* Card */}
-      <div className="mx-4 w-full max-w-lg">
-        <div className="rounded-3xl border border-matcha-dark/15 bg-card p-10 shadow-xl">
-          {/* Illustration */}
-          <div className="mb-8 min-h-[140px]">{renderIllustration(currentSlide)}</div>
-
-          {/* Content */}
-          <div className="space-y-3 text-center" key={currentSlide}>
-            <p className="text-sm font-semibold uppercase tracking-widest text-matcha">
-              {slide.subtitle}
-            </p>
-            <h2 className="text-2xl font-bold text-foreground">{slide.title}</h2>
-            <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
-              {slide.body}
-            </p>
+      <div className="mx-4 my-10 w-full max-w-lg">
+        <div className="rounded-3xl border border-matcha-dark/15 bg-card p-8 shadow-xl sm:p-10">
+          {/* Progress */}
+          <div className="mb-8 space-y-2">
+            <div className="flex items-center justify-between text-xs font-semibold">
+              <span className="uppercase tracking-widest text-matcha-dark">{PHASES[step].label}</span>
+              <span className="text-muted-foreground">
+                {step + 1} of {PHASES.length}
+              </span>
+            </div>
+            <div
+              className="h-2 w-full overflow-hidden rounded-full bg-strawberry-light"
+              role="progressbar"
+              aria-valuemin={1}
+              aria-valuemax={PHASES.length}
+              aria-valuenow={step + 1}
+            >
+              <div
+                className="h-full rounded-full bg-matcha transition-all duration-500 ease-out"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
           </div>
 
-          {/* Dots */}
-          <div className="mt-8 flex items-center justify-center gap-2">
-            {slides.map((_, i) => (
-              <div
-                key={i}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  i === currentSlide
-                    ? "w-8 bg-matcha"
-                    : "w-2 bg-strawberry/30"
-                }`}
+          {/* Step content */}
+          <div key={step} className="animate-fadeIn min-h-[320px]">
+            {step === STEP_HOOK && <HookStep name={name} />}
+            {step === STEP_PAIN && <PainStep selected={pains} onToggle={togglePain} />}
+            {step === STEP_SOLUTION && <SolutionStep selected={pains} />}
+            {step === STEP_SETUP && (
+              <SetupStep name={name} theme={theme} onNameChange={setName} onThemeChange={handleThemeChange} />
+            )}
+            {step === STEP_TASKS && (
+              <FirstTasksStep
+                titles={taskTitles}
+                lockedTitles={createdTitles}
+                onChange={(i, value) => setTaskTitles((prev) => prev.map((t, idx) => (idx === i ? value : t)))}
+                onAddRow={() => setTaskTitles((prev) => [...prev, ""])}
+                onRemoveRow={(i) => setTaskTitles((prev) => prev.filter((_, idx) => idx !== i))}
               />
-            ))}
+            )}
+            {step === STEP_TIMER && (
+              <FirstTimerStep
+                presets={onboardingPresets}
+                activePresetId={activePresetId}
+                firstTask={firstTask}
+                onSelect={setPreset}
+              />
+            )}
           </div>
 
           {/* Navigation */}
           <div className="mt-8 flex items-center justify-between">
             <button
-              onClick={handlePrevious}
-              disabled={currentSlide === 0}
-              className="flex items-center gap-1 rounded-xl px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-strawberry/10 hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent"
+              onClick={handleBack}
+              disabled={step === STEP_HOOK || isSaving}
+              className="flex min-h-11 items-center gap-1 rounded-xl px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-strawberry/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-0"
             >
-              <ChevronLeft className="size-4" />
+              <ArrowLeft className="size-4" />
               Back
             </button>
 
             <button
               onClick={handleNext}
-              className={`rounded-xl px-6 py-2.5 text-sm font-semibold text-white transition-all ${
-                isLast
-                  ? "bg-matcha shadow-lg shadow-matcha/25 hover:bg-matcha-dark"
-                  : "bg-strawberry shadow-lg shadow-strawberry/25 hover:bg-strawberry/90"
+              disabled={!canContinue}
+              className={`flex min-h-11 items-center gap-1.5 rounded-xl px-6 text-sm font-semibold transition-all active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 ${
+                step === LAST_STEP
+                  ? "bg-matcha text-white shadow-lg shadow-matcha/25 hover:bg-matcha-dark"
+                  : "bg-strawberry text-foreground shadow-lg shadow-strawberry/25 hover:brightness-95"
               }`}
             >
-              {isLast ? "Start Focusing" : "Next"}
-              {!isLast && <ChevronRight className="ml-1.5 inline size-4" />}
+              {isSaving ? "Saving..." : NEXT_LABELS[step]}
+              {!isSaving && step !== LAST_STEP && <ArrowRight className="size-4" />}
             </button>
           </div>
         </div>

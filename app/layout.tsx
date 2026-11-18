@@ -7,6 +7,7 @@ import { Providers } from "./providers"
 import { InstallPrompt } from "@/components/InstallPrompt"
 import { CookieConsentBanner } from "@/components/cookies/cookie-consent-banner"
 import { THEME_CLASS_MAP, THEME_COOKIE_KEY } from "@/lib/theme"
+import { COOKIE_CONSENT_KEY } from "@/lib/cookie-consent"
 
 const nunitoSans = Nunito_Sans({
   subsets: ["latin"],
@@ -92,6 +93,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const cookieStore = await cookies()
   const theme = cookieStore.get(THEME_COOKIE_KEY)?.value ?? "light-zen"
   const themeClass = THEME_CLASS_MAP[theme] ?? ""
+  const consentCookie = cookieStore.get(COOKIE_CONSENT_KEY)?.value
+  const initialAnalyticsConsent =
+    consentCookie === "all" ? true : consentCookie === "essential" ? false : null
   const gtmId = process.env.NEXT_PUBLIC_GTM_ID ?? "GTM-T73XRTW4"
   const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? "G-ELHWZTE3SC"
 
@@ -105,12 +109,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             __html: `window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', '${gaId}');`,
           }}
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__zbInstallEvent=e;window.dispatchEvent(new Event('zb-install-ready'))});`,
+          }}
+        />
       </head>
       <body className={nunitoSans.className}>
         <Providers>
           {children}
-          <InstallPrompt />
-          <CookieConsentBanner />
+          <InstallPrompt initialHasConsent={initialAnalyticsConsent !== null} />
+          <CookieConsentBanner initialAnalyticsConsent={initialAnalyticsConsent} />
         </Providers>
         {process.env.NEXT_PUBLIC_GA_ID && (
           <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />

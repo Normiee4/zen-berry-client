@@ -267,7 +267,7 @@ export function TimerCard() {
 
   if (!loaded) {
     return (
-      <div className="flex h-full min-h-0 flex-col rounded-3xl bg-strawberry-light/30 p-6 overflow-hidden border border-matcha-dark/20">
+      <div className="flex h-full min-h-0 flex-col rounded-3xl bg-strawberry-light/30 p-4 sm:p-6 overflow-hidden border border-matcha-dark/20">
         <div className="flex flex-1 flex-col items-center justify-center gap-4">
           <Skeleton className="h-8 w-48 rounded-full" />
           <Skeleton className="size-60 rounded-full" />
@@ -278,7 +278,7 @@ export function TimerCard() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col rounded-3xl bg-strawberry-light/30 p-6 overflow-hidden border border-matcha-dark/20">
+    <div className="flex h-full min-h-0 flex-col rounded-3xl bg-strawberry-light/30 p-4 sm:p-6 overflow-hidden border border-matcha-dark/20">
       {/* Burnout Prevention Gentle Break Reminder */}
       {needsBreak && (
         <div className="mb-4">

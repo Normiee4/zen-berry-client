@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Sidebar } from "@/components/sidebar/sidebar"
 import { SidebarToggle } from "@/components/sidebar/sidebar-toggle"
+import { MobileTabBar } from "@/components/sidebar/mobile-tab-bar"
 import { MessageSquareText, MessageSquareWarning } from "lucide-react"
 import { ReviewModal } from "@/components/feedback/review-modal"
 import { TourHelpButton } from "@/components/product-tour/tour-help-button"
@@ -52,7 +53,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-dvh bg-background">
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -60,39 +61,42 @@ export default function DashboardLayout({
         onLogout={handleLogout}
       />
 
-      <div className="flex flex-1 flex-col">
-        <header className="sticky top-0 z-20 border-b border-border/30 bg-card/80 backdrop-blur-md">
-          <div className="flex items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-20 border-b border-border/30 bg-card/80 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+          <div className="flex items-center gap-2 px-3 py-2 sm:gap-3 sm:px-6 sm:py-3 lg:px-8">
             <SidebarToggle onClick={() => setSidebarOpen(true)} />
             <img
               src="/Zen-berry Logo.png"
               alt="Zen Berry"
-              className="h-9 w-9 object-contain"
+              className="h-8 w-8 object-contain sm:h-9 sm:w-9"
             />
-            <span className="text-lg font-bold text-foreground">Zen Berry</span>
-            <div className="ml-auto flex items-center gap-1">
+            <span className="truncate text-base font-bold text-foreground sm:text-lg">Zen Berry</span>
+            <div className="ml-auto flex items-center gap-0.5 sm:gap-1">
               <Link
                 href="/feedback?tab=review"
-                className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-strawberry-light/50 hover:text-matcha"
+                aria-label="Review"
+                className="flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-xl px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-strawberry-light/50 hover:text-matcha sm:px-3"
               >
-                <MessageSquareText className="size-4" strokeWidth={1.5} />
-                Review
+                <MessageSquareText className="size-5 sm:size-4" strokeWidth={1.5} />
+                <span className="hidden sm:inline">Review</span>
               </Link>
               <Link
                 href="/feedback?tab=report"
-                className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-strawberry-light/50 hover:text-matcha"
+                aria-label="Report"
+                className="flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-xl px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-strawberry-light/50 hover:text-matcha sm:px-3"
               >
-                <MessageSquareWarning className="size-4" strokeWidth={1.5} />
-                Report
+                <MessageSquareWarning className="size-5 sm:size-4" strokeWidth={1.5} />
+                <span className="hidden sm:inline">Report</span>
               </Link>
               <TourHelpButton onClick={() => useProductTourStore.getState().triggerTour()} />
             </div>
           </div>
         </header>
 
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">{children}</main>
       </div>
 
+      <MobileTabBar />
       <ReviewModal />
     </div>
   )

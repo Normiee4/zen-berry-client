@@ -19,6 +19,8 @@ export const updateTaskSchema = z.object({
   isMIT: z.boolean().optional(),
 })
 
+export const fullNameSchema = z.string().trim().min(1, 'Name is required').max(60)
+
 export const deleteTaskSchema = z.object({
   id: z.union([z.number(), z.string()]),
 })

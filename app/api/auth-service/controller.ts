@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createRouteHandlerClient } from "@/lib/supabase-server"
 import * as authService from '@/app/api/auth-service/service'
 import { checkRateLimit } from '@/lib/middleware/rate-limit'
+import { fullNameSchema } from '@/lib/input-validator'
 
 const AUTH_RATE_LIMIT = 5
 const AUTH_RATE_WINDOW = 15 * 60 * 1000
@@ -150,6 +151,19 @@ export async function updateMe(request: Request) {
       }
       const { error: updateError } = await authService.updateUser(supabase, user.id, { theme_preference: body.theme_preference })
       if (updateError) throw updateError
+    }
+
+    if (body.full_name !== undefined) {
+      const parsedName = fullNameSchema.safeParse(body.full_name)
+      if (!parsedName.success) {
+        return NextResponse.json({ error: 'Invalid name' }, { status: 400 })
+      }
+      const { error: metaError } = await supabase.auth.updateUser({
+        data: { full_name: parsedName.data },
+      })
+      if (metaError) throw metaError
+      const { error: nameError } = await authService.updateUser(supabase, user.id, { username: parsedName.data })
+      if (nameError) throw nameError
     }
 
     if (body.has_onboarded !== undefined) {
