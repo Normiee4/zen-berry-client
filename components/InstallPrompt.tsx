@@ -34,13 +34,16 @@ function checkIsStandalone(): boolean {
 function checkIsIOS(): boolean {
   if (typeof window === 'undefined') return false
   const userAgent = window.navigator.userAgent.toLowerCase()
-  const isIOSDevice =
+  return (
     /iphone|ipad|ipod/.test(userAgent) ||
     (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1)
-  const isSafariBrowser =
-    /safari/.test(userAgent) && !/crios|fxios|opios|chrome|edg|chromium/i.test(userAgent)
+  )
+}
 
-  return isIOSDevice && isSafariBrowser
+function checkIsMobile(): boolean {
+  if (typeof window === 'undefined') return false
+  const userAgent = window.navigator.userAgent.toLowerCase()
+  return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/.test(userAgent)
 }
 
 function wasRecentlyDismissed(): boolean {
@@ -61,6 +64,7 @@ export function InstallPrompt({ initialHasConsent = false }: InstallPromptProps)
   const pathname = usePathname()
   const isStandalone = useSyncExternalStore(emptySubscribe, checkIsStandalone, () => false)
   const isIOS = useSyncExternalStore(emptySubscribe, checkIsIOS, () => false)
+  const isMobile = useSyncExternalStore(emptySubscribe, checkIsMobile, () => false)
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [isDismissed, setIsDismissed] = useState(true)
   const [hasConsentChoice, setHasConsentChoice] = useState(initialHasConsent)
@@ -127,7 +131,7 @@ export function InstallPrompt({ initialHasConsent = false }: InstallPromptProps)
           <div className="flex-1 text-sm leading-relaxed">
             <p className="font-medium">Install Zen Berry</p>
             <p className="mt-1 text-xs text-stone-600 dark:text-stone-300">
-              Tap the Share button in Safari, then choose Add to Home Screen.
+              Tap the Share button in your browser, then choose Add to Home Screen.
             </p>
           </div>
           <button
@@ -163,6 +167,32 @@ export function InstallPrompt({ initialHasConsent = false }: InstallPromptProps)
           >
             Install
           </button>
+          <button
+            type="button"
+            onClick={dismiss}
+            aria-label="Dismiss installation prompt"
+            className="flex size-10 shrink-0 items-center justify-center rounded-lg text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-800"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      </aside>
+    )
+  }
+
+  if (isMobile) {
+    return (
+      <aside aria-label="Install Zen Berry" className={shellClass}>
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#86A788]/20 text-[#557A57] dark:bg-emerald-950 dark:text-emerald-400">
+            <Download className="h-5 w-5" />
+          </div>
+          <div className="flex-1 text-sm leading-relaxed">
+            <p className="font-medium">Install Zen Berry</p>
+            <p className="mt-1 text-xs text-stone-600 dark:text-stone-300">
+              Open your browser menu and tap Add to Home Screen or Install App for quick access.
+            </p>
+          </div>
           <button
             type="button"
             onClick={dismiss}

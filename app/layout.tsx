@@ -65,10 +65,13 @@ export const metadata: Metadata = {
     images: ["/Zen-berry Logo.png"],
   },
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/Zen-berry Logo.png", sizes: "512x512", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
     apple: [
-      { url: "/apple-touch-icon-180.png", sizes: "180x180", type: "image/png" },
-      { url: "/apple-touch-icon.svg", sizes: "180x180", type: "image/svg+xml" },
+      { url: "/Zen-berry Logo.png", sizes: "180x180", type: "image/png" },
     ],
   },
   manifest: "/site.webmanifest",
