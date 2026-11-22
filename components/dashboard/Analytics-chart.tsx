@@ -1,6 +1,7 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
+import { Timer } from "lucide-react"
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip } from "recharts"
 import { useMemo } from "react"
 
@@ -36,8 +37,9 @@ const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<
   return (
     <div className="bg-card/95 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-border/30">
       <p className="text-xs font-medium text-foreground mb-1">{data.day}</p>
-      <p className="text-sm text-matcha font-semibold">
-        🍅 {data.pomodoros} pomodoro{data.pomodoros !== 1 ? "s" : ""}
+      <p className="inline-flex items-center gap-1.5 text-sm text-matcha font-semibold">
+        <Timer className="size-3.5" aria-hidden="true" />
+        {data.pomodoros} pomodoro{data.pomodoros !== 1 ? "s" : ""}
       </p>
       <p className="text-xs text-muted-foreground">
         {data.focusMinutes > 0 && `${Math.floor(data.focusMinutes / 60)}h ${data.focusMinutes % 60}m focus`}

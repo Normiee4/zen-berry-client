@@ -19,7 +19,7 @@ import { TimerAlarmPicker } from "@/components/dashboard/timer-alarm-picker";
 import { BreakReminderBanner } from "@/components/BreakReminderBanner";
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { Pause, Play, Plus, Pencil, RotateCcw, Settings, Trash2 } from "lucide-react";
+import { Coffee, Pause, Play, Plus, Pencil, RotateCcw, Settings, Sprout, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -148,7 +148,7 @@ export function TimerCard() {
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === 'visible' && useTimerStore.getState().completedFocusCycle) {
-        toast.success('Focus session completed while you were away! 🎉')
+        toast.success('Focus session completed while you were away!')
       }
     }
     document.addEventListener('visibilitychange', handleVisibility)
@@ -305,7 +305,7 @@ export function TimerCard() {
               : "bg-card/60 text-foreground hover:bg-card/80"
           }`}
         >
-          <span className="text-base">🌱</span>
+          <Sprout className="size-4" aria-hidden="true" />
           Focus
         </button>
         <button
@@ -316,7 +316,7 @@ export function TimerCard() {
               : "bg-card/60 text-foreground hover:bg-card/80"
           }`}
         >
-          <span className="text-base">🍓</span>
+          <Coffee className="size-4" aria-hidden="true" />
           Break
         </button>
       </div>

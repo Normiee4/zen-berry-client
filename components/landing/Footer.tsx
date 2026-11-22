@@ -32,7 +32,7 @@ const socialLinks = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-strawberry-light/50 bg-cream">
+    <footer className="border-t border-matcha-light/50 bg-matcha-light/20">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-6">
           {/* Brand Column */}
@@ -41,11 +41,11 @@ export function Footer() {
               <div className="flex size-8 items-center justify-center rounded-full bg-matcha">
                 <Leaf className="size-4 text-white" />
               </div>
-              <span className="text-lg font-semibold text-foreground">Zen Berry</span>
+              <span className="text-lg font-semibold text-matcha-dark">Zen Berry</span>
             </Link>
-            <p className="mb-6 max-w-xs text-sm leading-relaxed text-muted-foreground">
+            <p className="mb-6 max-w-xs text-sm leading-relaxed text-matcha-dark/75">
               A mindful productivity app that helps you focus without the burnout. 
-              Grow your flow, one gentle session at a time. 🍓🍵
+              Grow your flow, one gentle session at a time.
             </p>
             
             {/* Social Links */}

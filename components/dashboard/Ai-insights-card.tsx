@@ -1,10 +1,43 @@
 "use client"
 
+import { useMemo } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { Sparkles, Loader2, Clock, TrendingUp, Zap } from "lucide-react"
+import {
+  AlertCircle,
+  Clock,
+  Flame,
+  Leaf,
+  Lightbulb,
+  Loader2,
+  Sparkles,
+  TrendingUp,
+  Trophy,
+  Zap,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ZenseiMascot, type ZenseiPose } from "@/components/ZenseiMascot"
+
+const ZENSEI_TIPS = [
+  "Rest is productive, too. Step away and come back clearer.",
+  "Three deep breaths reset the mind. Try it before your next session.",
+  "Progress over perfection. A done task beats a perfect plan.",
+  "Your brain is not a storage drive. Dump it, then focus.",
+  "The best time to start was 10 minutes ago. The second best is now.",
+  "A short break every 25 minutes keeps burnout away.",
+  "Matcha tastes better when you've earned it. Finish one task first.",
+  "Small wins compound. One Pomodoro at a time.",
+  "You don't need motivation. You need a routine.",
+  "If a task feels huge, break it until it feels small.",
+  "Your peak hours are precious. Protect them.",
+  "Celebrate the done, not just the done list.",
+  "A clear space helps a clear mind. Tidy your desk, tidy your thoughts.",
+  "Done is better than perfect. Perfect never ships.",
+  "You are not a machine. Rest is how you sustain focus.",
+  "What's the one thing that matters most right now? Start there.",
+  "A wandering mind is not a failing mind. Just guide it back gently.",
+  "The Pomodoro you skip is the one you needed most.",
+]
 
 interface AIReviewResponse {
   insight: string
@@ -96,6 +129,11 @@ function formatConsistency(value: number): string {
 export function AIInsightsCard() {
   const queryClient = useQueryClient()
 
+  const todayTip = useMemo(() => {
+    const dayIndex = new Date().getDate() % ZENSEI_TIPS.length
+    return ZENSEI_TIPS[dayIndex]
+  }, [])
+
   const { data: summary } = useQuery({
     queryKey: ["analytics-summary"],
     queryFn: fetchSummary,
@@ -124,6 +162,20 @@ export function AIInsightsCard() {
     reviewMutation.mutate()
   }
 
+  const streak = summary?.today?.streak ?? 0
+
+  const localCelebration =
+    streak >= 3
+      ? `${streak}-day streak! Zensei says: You're on fire! Keep showing up!`
+      : null
+
+  const displayMilestone =
+    localCelebration ||
+    reviewMutation.data?.milestone ||
+    latestInsight?.milestone
+
+  const displayWarning = reviewMutation.data?.warning
+
   const getMascotPose = (): ZenseiPose => {
     if (reviewMutation.isPending) return "thinking"
     if (displayWarning || (summary?.hoursSinceBreak != null && summary.hoursSinceBreak > 3)) {
@@ -145,60 +197,61 @@ export function AIInsightsCard() {
     latestInsight?.suggestion ||
     "Complete your first Pomodoro to see personalized tips."
 
-  const streak = summary?.today?.streak ?? 0
-
-  const localCelebration =
-    streak >= 3
-      ? `🔥 ${streak}-day streak! Zensei says: You're on fire! Keep showing up!`
-      : null
-
-  const displayMilestone =
-    localCelebration ||
-    reviewMutation.data?.milestone ||
-    latestInsight?.milestone
-
-  const displayWarning = reviewMutation.data?.warning
-
   const insightStats = latestInsight?.stats
 
   return (
-    <div className="flex h-full flex-col rounded-3xl bg-strawberry-light/30 p-8 border border-matcha-dark/20 relative overflow-hidden">
-      <div className="absolute -right-6 -top-6 size-28 opacity-10">
-        <img src="/matcha_illustration.png" alt="" className="size-full object-contain" />
-      </div>
+    <div className="relative flex h-full flex-col overflow-hidden rounded-3xl border border-matcha-dark/20 bg-strawberry-light/30 p-6 sm:p-8">
       <div className="mb-5 flex items-center gap-2">
-        <Sparkles className="size-6 text-matcha" />
+        <Sparkles className="size-5 text-matcha" aria-hidden="true" />
         <h3 className="text-xl font-semibold text-foreground">Zensei Insights</h3>
-        <span className="text-base">🍓</span>
       </div>
 
-      <div className="flex flex-col rounded-2xl bg-card/70 p-6">
-        <div className="flex items-start gap-4">
-          <ZenseiMascot pose={getMascotPose()} className="size-16 sm:size-20 shrink-0 select-none" />
-          <div className="flex-1">
-            <p className="text-base font-medium text-foreground leading-relaxed">
-              {displayInsight}
-            </p>
-            {displaySuggestion && (
-              <p className="mt-2 text-sm text-muted-foreground">
-                💡 {displaySuggestion}
-              </p>
-            )}
+      {/* Mascot + Daily Tip Chat Bubble */}
+      <div className="mb-4 flex items-center gap-4" data-tour="step-7">
+        <ZenseiMascot
+          pose={getMascotPose()}
+          className="size-24 shrink-0 select-none sm:size-28"
+        />
+
+        <div className="relative flex-1 rounded-2xl rounded-tl-sm border border-matcha/25 bg-card/90 p-4 shadow-sm">
+          <div className="mb-1 flex items-center gap-1.5">
+            <Leaf className="size-3.5 text-matcha" aria-hidden="true" />
+            <span className="text-xs font-semibold text-matcha">Zensei&apos;s Daily Tip</span>
           </div>
+          <p className="text-sm italic leading-relaxed text-foreground/85">
+            &ldquo;{todayTip}&rdquo;
+          </p>
+        </div>
+      </div>
+
+      {/* Insights Panel */}
+      <div className="flex flex-1 flex-col rounded-2xl bg-card/75 p-5">
+        <div className="mb-3">
+          <p className="text-base font-medium leading-relaxed text-foreground">
+            {displayInsight}
+          </p>
+          {displaySuggestion && (
+            <p className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
+              <Lightbulb className="mt-0.5 size-4 shrink-0 text-matcha" aria-hidden="true" />
+              <span>{displaySuggestion}</span>
+            </p>
+          )}
         </div>
 
         {displayMilestone && (
-          <div className="mb-3 rounded-lg bg-matcha-light/40 px-3 py-2 text-center">
+          <div className="mb-3 flex items-center justify-center gap-2 rounded-lg bg-matcha-light/40 px-3 py-2 text-center">
+            <Trophy className="size-4 shrink-0 text-matcha" aria-hidden="true" />
             <span className="text-sm font-semibold text-matcha">
-              🏆 {displayMilestone}
+              {displayMilestone}
             </span>
           </div>
         )}
 
         {displayWarning && (
-          <div className="mb-3 rounded-lg bg-strawberry/30 px-3 py-2 text-center">
+          <div className="mb-3 flex items-center justify-center gap-2 rounded-lg bg-strawberry/25 px-3 py-2 text-center">
+            <AlertCircle className="size-4 shrink-0 text-strawberry-dark" aria-hidden="true" />
             <span className="text-sm font-medium text-foreground">
-              🍓 {displayWarning}
+              {displayWarning}
             </span>
           </div>
         )}
@@ -206,25 +259,25 @@ export function AIInsightsCard() {
         <div className="mt-auto flex flex-wrap gap-3 border-t border-border/30 pt-3">
           {summary?.peakHours && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <TrendingUp className="size-3.5 text-matcha" />
+              <TrendingUp className="size-3.5 text-matcha" aria-hidden="true" />
               <span>Peak: {formatPeakHours(summary.peakHours)}</span>
             </div>
           )}
           {insightStats?.consistencyRate != null && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Zap className="size-3.5 text-matcha" />
+              <Zap className="size-3.5 text-matcha" aria-hidden="true" />
               <span>{formatConsistency(insightStats.consistencyRate)} ({Math.round(insightStats.consistencyRate * 100)}%)</span>
             </div>
           )}
           {summary?.today?.streak ? (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <span>🔥</span>
+              <Flame className="size-3.5 text-strawberry-dark" aria-hidden="true" />
               <span>{summary.today.streak}-day streak</span>
             </div>
           ) : null}
           {summary?.hoursSinceBreak != null && summary.hoursSinceBreak > 2 && (
-            <div className="flex items-center gap-1.5 text-xs text-strawberry font-medium">
-              <Clock className="size-3.5" />
+            <div className="flex items-center gap-1.5 text-xs font-medium text-strawberry-dark">
+              <Clock className="size-3.5" aria-hidden="true" />
               <span>No break in {formatHours(summary?.hoursSinceBreak ?? 0)}</span>
             </div>
           )}
@@ -234,7 +287,7 @@ export function AIInsightsCard() {
       <Button
         onClick={handleGenerateReview}
         disabled={reviewMutation.isPending}
-        className="mt-4 w-full bg-matcha hover:bg-matcha/90 text-white font-medium"
+        className="mt-4 w-full bg-matcha font-medium text-white hover:bg-matcha/90"
         size="sm"
       >
         {reviewMutation.isPending ? (
