@@ -41,10 +41,10 @@ export function MatchaProgressCard() {
   const streak = summary?.today?.streak ?? 0
 
   const getMessage = () => {
-    if (streak >= 7) return `🔥 ${streak}-day streak! Zensei says: Your consistency is inspiring. Keep showing up!`
-    if (streak >= 3) return `✨ ${streak}-day streak! Zensei says: You're building momentum. Stay with it!`
+    if (streak >= 7) return `${streak}-day streak! Zensei says: Your consistency is inspiring. Keep showing up!`
+    if (streak >= 3) return `${streak}-day streak! Zensei says: You're building momentum. Stay with it!`
     if (combinedTotal > 0 && combinedTotal % MILESTONE_TARGET === 0) {
-      return `🎉 Milestone! Zensei says: Reward yourself with a matcha! ${combinedTotal} tasks done!`
+      return `Milestone! Zensei says: Reward yourself with a matcha! ${combinedTotal} tasks done!`
     }
     if (fillPercentage >= 90) {
       return "Almost there! Zensei says: Finish strong for your matcha reward."

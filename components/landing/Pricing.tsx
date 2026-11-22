@@ -7,7 +7,7 @@ export function Pricing() {
   return (
     <section id="pricing" className="bg-cream py-20 sm:py-28">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-matcha via-matcha to-matcha-light p-8 sm:p-12 lg:p-16">
+        <div className="relative overflow-hidden rounded-3xl bg-matcha p-8 sm:p-12 lg:p-16">
           {/* Background Decoration */}
           <div className="absolute -right-20 -top-20 size-60 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute -bottom-20 -left-20 size-60 rounded-full bg-strawberry/20 blur-3xl" />

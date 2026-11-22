@@ -12,7 +12,6 @@ import { TimerCard } from "@/components/dashboard/Timer-card"
 import { useMITApi, useTasksApi } from "@/hooks/useTasksApi"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { ConfirmDragDialog } from "@/components/dashboard/ConfirmDragDialog"
-import { DailyZenTip } from "@/components/dashboard/Daily-zen-tip"
 import { TodayRecap } from "@/components/dashboard/Today-recap"
 import { OnboardingOverlay } from "@/components/onboarding/onboarding-overlay"
 import { ProductTour } from "@/components/product-tour/product-tour"
@@ -156,9 +155,6 @@ export default function DashboardPage() {
                 <ErrorBoundary name="AI Insights" fallback={<p className="text-sm text-muted-foreground p-4">Insights unavailable</p>}>
                   <AIInsightsCard />
                 </ErrorBoundary>
-              </div>
-              <div className="flex-1">
-                <DailyZenTip />
               </div>
               <div className="flex-1" data-tour="step-8">
                 <TodayRecap />

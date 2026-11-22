@@ -1,89 +1,52 @@
-
-
 "use client"
 
-import { Heart, Leaf, Sparkles } from "lucide-react"
+import { Heart, Leaf, Sparkles, Sprout } from "lucide-react"
 
 const values = [
   {
     icon: Heart,
     title: "Compassionate Design",
     description: "We believe productivity should nurture your well-being, not drain your energy. Every feature is designed with kindness in mind.",
-    color: "bg-strawberry",
-    iconColor: "text-red-400"
+    color: "bg-strawberry-light",
+    iconColor: "text-strawberry-dark",
   },
   {
     icon: Leaf,
     title: "Sustainable Growth",
     description: "Like a garden, personal growth takes time and care. We help you cultivate habits that last, not force quick wins.",
-    color: "bg-matcha-light",
-    iconColor: "text-matcha"
+    color: "bg-matcha-light/45",
+    iconColor: "text-matcha-dark",
   },
   {
     icon: Sparkles,
     title: "Mindful Innovation",
     description: "Technology should enhance your focus, not distract from it. We blend thoughtful design with gentle functionality.",
     color: "bg-strawberry-light",
-    iconColor: "text-pink-400"
-  }
+    iconColor: "text-strawberry-dark",
+  },
 ]
 
 export function About() {
   return (
-    <section id="about-zenberry" className="relative overflow-hidden bg-linear-to-br from-strawberry-light/20 via-cream to-matcha-light/30 py-20 sm:py-28">
-      {/* Morphed Wavy Background Blobs */}
+    <section id="about-zenberry" className="relative overflow-hidden border-y border-strawberry/25 bg-strawberry-light/35 py-20 sm:py-28">
+      {/* Flat Background Circles */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-        {/* Large matcha blob - top left */}
-        <svg
-          className="absolute -left-32 -top-32 h-150 w-150 opacity-30"
-          viewBox="0 0 200 200"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            fill="#B8D4B8"
-            d="M44.3,-76.5C57.9,-69.5,69.8,-58.4,77.5,-44.8C85.2,-31.2,88.7,-15.6,87.7,-0.6C86.7,14.5,81.1,28.9,73.1,42.1C65.1,55.2,54.6,67,41.5,74.4C28.4,81.7,12.7,84.6,-2.5,88.9C-17.8,93.2,-35.5,98.9,-49.4,92.1C-63.3,85.3,-73.3,66,-79.3,46.7C-85.3,27.5,-87.3,8.3,-83.8,-9.3C-80.3,-26.9,-71.4,-43,-59.1,-55.2C-46.9,-67.4,-31.4,-75.7,-15.3,-79.5C0.8,-83.3,30.7,-83.5,44.3,-76.5Z"
-            transform="translate(100 100)"
-          />
-        </svg>
-
-        {/* Medium strawberry blob - bottom right */}
-        <svg
-          className="absolute -bottom-20 -right-20 h-125 w-125 opacity-40"
-          viewBox="0 0 200 200"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            fill="#FFE2E2"
-            d="M39.5,-65.8C52.9,-59.5,66.8,-52.5,74.8,-41.2C82.8,-29.9,84.9,-14.9,83.8,-0.6C82.7,13.7,78.5,27.4,71.3,39.8C64.1,52.2,54,63.3,41.4,70.8C28.8,78.3,13.7,82.1,-1.4,84.5C-16.5,87,-33,88,-46.4,81.4C-59.8,74.9,-70.1,60.8,-77.3,45.5C-84.5,30.1,-88.6,13.6,-87.1,0.9C-85.6,-11.8,-78.5,-21.1,-70.4,-29.7C-62.2,-38.2,-53.1,-46,-42.6,-54.2C-32.1,-62.4,-20.3,-71,-6.3,-71.3C7.6,-71.6,26.1,-72.1,39.5,-65.8Z"
-            transform="translate(100 100)"
-          />
-        </svg>
-
-        {/* Small accent blob - center right */}
-        <svg
-          className="absolute right-1/4 top-1/3 h-75 w-75 opacity-25"
-          viewBox="0 0 200 200"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            fill="#FFCFCF"
-            d="M47.7,-79.1C62.3,-72.5,75,-61.1,82.8,-46.8C90.6,-32.5,93.5,-15.3,91.1,-0.1C88.7,15.1,81.1,28.3,72.4,40.6C63.7,52.9,53.9,64.2,41.5,71.7C29.1,79.2,14.6,82.8,-0.8,84.2C-16.2,85.6,-32.3,84.8,-45.9,78.4C-59.4,72,-70.3,60,-77.2,46C-84.1,32,-87,16,-86.3,0.4C-85.6,-15.2,-81.3,-30.4,-73.3,-43.2C-65.4,-56,-53.7,-66.3,-40.4,-73.7C-27.1,-81.2,-12.2,-85.7,2.4,-89.9C17.1,-94.2,33.1,-85.8,47.7,-79.1Z"
-            transform="translate(100 100)"
-          />
-        </svg>
+        <div className="absolute -left-24 -top-24 size-[28rem] rounded-full bg-matcha-light/30" />
+        <div className="absolute -bottom-24 -right-24 size-[26rem] rounded-full bg-strawberry-light/55" />
+        <div className="absolute right-1/4 top-1/3 size-56 rounded-full border border-strawberry/20 bg-white/25" />
       </div>
 
       <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
         {/* Section Header */}
         <div className="mb-16 text-center">
-          <span className="mb-4 inline-block rounded-full bg-matcha px-4 py-1.5 text-sm font-medium text-white">
+          <span className="mb-4 inline-block rounded-full bg-matcha px-4 py-1.5 text-sm font-medium text-white shadow-[0_4px_12px_rgba(62,89,64,0.25)]">
             About Zen Berry
           </span>
-          <h2 className="mb-4 text-balance text-3xl font-bold text-foreground sm:text-4xl">
+          <h2 className="mb-4 text-balance text-3xl font-bold text-matcha-dark sm:text-4xl">
             Born from a simple{" "}
             <span className="text-matcha">realization</span>
           </h2>
-          <p className="mx-auto max-w-3xl text-pretty text-lg text-muted-foreground">
+          <p className="mx-auto max-w-3xl text-pretty text-lg text-matcha-dark/75">
             In a world of aggressive productivity tools and endless notifications, we wondered:
             what if focus could feel gentle? What if growth could be sustainable?
             Zen Berry was born from this question — a mindful productivity companion that
@@ -94,16 +57,16 @@ export function About() {
         {/* Story Section */}
         <div className="mb-16 grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
           <div className="space-y-6">
-            <h3 className="text-2xl font-semibold text-foreground">
-              The Strawberry-Matcha Philosophy 🍓🍵
+            <h3 className="text-2xl font-semibold text-matcha-dark">
+              The Strawberry-Matcha Philosophy
             </h3>
-            <p className="text-muted-foreground leading-relaxed">
+            <p className="leading-relaxed text-matcha-dark/80">
               We combined the sweet, energizing essence of strawberries with the calming,
               focused energy of matcha. Just as matcha provides steady, sustainable energy
               without the jitters, and strawberries bring natural sweetness without artificial
               additives, Zen Berry offers productivity tools that are both effective and kind.
             </p>
-            <p className="text-muted-foreground leading-relaxed">
+            <p className="leading-relaxed text-matcha-dark/80">
               Our approach is simple: celebrate small wins, respect your natural rhythms,
               and create space for genuine focus. Because when productivity feels good,
               it becomes sustainable.
@@ -111,17 +74,18 @@ export function About() {
           </div>
 
           <div className="relative">
-            {/* Decorative elements */}
-            <div className="absolute -left-4 -top-4 size-24 rounded-full bg-strawberry/20 blur-xl" />
-            <div className="absolute -right-4 -bottom-4 size-32 rounded-full bg-matcha-light/20 blur-xl" />
+            <div aria-hidden="true" className="absolute -left-4 -top-4 size-24 rounded-full bg-strawberry-light/70" />
+            <div aria-hidden="true" className="absolute -bottom-4 -right-4 size-28 rounded-full bg-matcha-light/45" />
 
-            <div className="relative rounded-2xl border border-strawberry-light/50 bg-white/60 p-8 backdrop-blur-sm">
+            <div className="relative rounded-3xl border border-white/80 bg-white/85 p-8 shadow-[0_18px_40px_-14px_rgba(62,89,64,0.18),0_4px_12px_-2px_rgba(62,89,64,0.08),inset_0_1px_0_rgba(255,255,255,1)] backdrop-blur-md">
               <div className="text-center">
-                <div className="mb-4 text-6xl">🌱</div>
-                <h4 className="mb-2 text-lg font-semibold text-foreground">
+                <div className="mx-auto mb-4 inline-flex size-16 items-center justify-center rounded-2xl border border-matcha/20 bg-matcha-light/45 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9),0_6px_14px_rgba(62,89,64,0.15)]">
+                  <Sprout className="size-8 text-matcha-dark" aria-hidden="true" />
+                </div>
+                <h4 className="mb-2 text-lg font-semibold text-matcha-dark">
                   Grow at Your Own Pace
                 </h4>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-matcha-dark/75">
                   Every seed needs time to sprout. We provide the gentle conditions
                   for your productivity to flourish naturally.
                 </p>
@@ -132,21 +96,21 @@ export function About() {
 
         {/* Values Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {values.map((value, index) => (
+          {values.map((value) => (
             <div
-              key={index}
-              className="group rounded-2xl border border-matcha-light/50 bg-white/60 p-6 backdrop-blur-sm transition-all hover:border-matcha/30 hover:bg-white hover:shadow-lg"
+              key={value.title}
+              className="group rounded-2xl border border-white/80 bg-white/85 p-6 shadow-[0_12px_30px_-12px_rgba(62,89,64,0.14),0_2px_6px_-1px_rgba(62,89,64,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-md transition-all duration-200 hover:-translate-y-1 hover:border-matcha/40 hover:bg-white hover:shadow-[0_20px_40px_-14px_rgba(62,89,64,0.2)]"
             >
               {/* Icon */}
-              <div className={`mb-4 inline-flex size-12 items-center justify-center rounded-xl ${value.color}`}>
-                <value.icon className={`size-6 ${value.iconColor}`} />
+              <div className={`mb-4 inline-flex size-12 items-center justify-center rounded-xl shadow-[inset_0_1px_1px_rgba(255,255,255,0.8),0_4px_10px_rgba(62,89,64,0.1)] ${value.color}`}>
+                <value.icon className={`size-6 ${value.iconColor}`} aria-hidden="true" />
               </div>
 
               {/* Content */}
-              <h3 className="mb-2 text-lg font-semibold text-foreground">
+              <h3 className="mb-2 text-lg font-semibold text-matcha-dark">
                 {value.title}
               </h3>
-              <p className="text-sm leading-relaxed text-muted-foreground">
+              <p className="text-sm leading-relaxed text-matcha-dark/75">
                 {value.description}
               </p>
             </div>
@@ -155,8 +119,8 @@ export function About() {
 
         {/* Closing Message */}
         <div className="mt-16 text-center">
-          <p className="mx-auto max-w-2xl text-pretty text-muted-foreground">
-            Join thousands of mindful professionals who have discovered that productivity
+          <p className="mx-auto max-w-2xl text-pretty text-matcha-dark/75">
+            Join mindful professionals who have discovered that productivity
             doesn&apos;t have to be a battle. It can be a gentle, rewarding journey.
           </p>
         </div>

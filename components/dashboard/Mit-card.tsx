@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CircleCheck, Plus, Loader2 } from "lucide-react";
+import { CircleCheck, Pin, Plus, Loader2, Target } from "lucide-react";
 import { toast } from "sonner"
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import { DnDWrapper } from "@/components/DnDWrapper";
@@ -34,7 +34,7 @@ function StaticMITList({
     return (
       <div className="flex flex-1 items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/20 bg-card/30 p-6">
         <div className="flex flex-col items-center gap-2 text-center">
-          <span className="text-3xl">📌</span>
+          <Pin className="size-8 text-matcha" aria-hidden="true" />
           <p className="text-sm font-medium text-muted-foreground">
             Add your top priorities here.
           </p>
@@ -115,9 +115,8 @@ export function MITCard({
     <div className="flex h-full flex-col rounded-3xl bg-strawberry-light/30 p-4 sm:p-6 border border-matcha-dark/20">
       {/* Header */}
       <div className="mb-4 flex items-center gap-2">
-        <span className="text-base">🎯</span>
+        <Target className="size-5 text-matcha" aria-hidden="true" />
         <h3 className="text-lg font-semibold text-foreground">Top 3 MIT</h3>
-        <span className="text-base">🌱</span>
       </div>
       <p className="mb-4 text-sm text-muted-foreground">
         Your most important tasks today — they stay until done! ({remainingSlots} slot{remainingSlots !== 1 ? "s" : ""} left)
@@ -168,7 +167,7 @@ export function MITCard({
               {mits.length === 0 ? (
                 <div className="flex flex-1 items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/20 bg-card/30 p-6">
                   <div className="flex flex-col items-center gap-2 text-center">
-                    <span className="text-3xl">📌</span>
+                    <Pin className="size-8 text-matcha" aria-hidden="true" />
                     <p className="text-sm font-medium text-muted-foreground">
                       Add your top priorities here.
                     </p>
